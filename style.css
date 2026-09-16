@@ -232,28 +232,11 @@ button {
   text-align: center;
 }
 
-.login-eyebrow {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text);
-  margin: 0 0 10px;
-}
-
-.login-title {
-  font-family: var(--sans);
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0 0 10px;
-}
-
 .login-text {
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text);
-  opacity: 0.85;
-  margin: 0 0 24px;
+  margin: 0 0 20px;
   line-height: 1.5;
 }
 
@@ -267,7 +250,7 @@ button {
   background: #ffffff;
   border: 1px solid #747775;
   color: #1f1f1f;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-family: 'Roboto', var(--sans);
   font-size: 14px;
   font-weight: 500;

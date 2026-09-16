@@ -8,7 +8,7 @@
  * ce sera ajouté plus tard si besoin (ex. cache des réponses API).
  */
 
-const CACHE_VERSION = 'fx-bias-shell-v1';
+const CACHE_VERSION = 'fx-bias-shell-v2';
 
 const APP_SHELL = [
   './',
