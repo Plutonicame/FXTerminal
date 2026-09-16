@@ -9,6 +9,6 @@
  * contrôlé par Supabase (Auth + policies), pas par le secret de cette clé.
  */
 window.APP_CONFIG = {
-  SUPABASE_URL: 'https://TON_PROJECT_REF.supabase.co',
-  SUPABASE_ANON_KEY: 'TON_ANON_PUBLIC_KEY',
+  SUPABASE_URL: 'https://fuxnyuxcqydzoctedmsp.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1eG55dXhjcXlkem9jdGVkbXNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1NDM2ODUsImV4cCI6MjEwNTExOTY4NX0.ac2FOjpaR93sut0yDMSn8EKR_SM4948sbR64t9rLC64',
 };
