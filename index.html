@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101010">
+<meta name="color-scheme" content="dark">
+<title>FX Bias</title>
+<meta name="description" content="Analyse fondamentale des devises : calendrier économique, discours des banques centrales et événements macro.">
+
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-180.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<!-- ===== Écran de connexion (affiché tant qu'il n'y a pas de session) ===== -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <p class="login-eyebrow">FX Bias</p>
+    <h1 class="login-title">Accès réservé</h1>
+    <p class="login-text">Connecte-toi avec ton compte Google pour accéder à l'application.</p>
+    <button type="button" class="btn-google" id="googleSignInBtn">
+      Se connecter avec Google
+    </button>
+    <p class="login-note" id="loginNote" hidden></p>
+  </div>
+</div>
+
+<!-- ===== Appli (masquée tant que non connecté) ===== -->
+<div id="appShell" hidden>
+
+<!-- ===== Barre de navigation ===== -->
+<header class="topbar">
+  <button type="button" class="burger" id="burgerBtn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="sideMenu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="clocks" aria-label="Heures des sessions de trading">
+    <div class="clock">
+      <span class="clock-city">New York</span>
+      <span class="clock-time" id="clock-ny">--:--:--</span>
+    </div>
+    <div class="clock">
+      <span class="clock-city">London</span>
+      <span class="clock-time" id="clock-ldn">--:--:--</span>
+    </div>
+    <div class="clock">
+      <span class="clock-city">Tokyo</span>
+      <span class="clock-time" id="clock-tky">--:--:--</span>
+    </div>
+  </div>
+
+  <div class="session-badge" id="sessionBadge">
+    <span id="sessionLabel">—</span>
+  </div>
+</header>
+
+<nav class="side-menu" id="sideMenu" aria-hidden="true">
+  <button type="button" class="menu-close" id="menuCloseBtn">Fermer ✕</button>
+
+  <button type="button" class="menu-tab is-active" data-tab="tab-1" aria-current="true">
+    Analyse par devise
+  </button>
+
+  <button type="button" class="menu-tab" data-tab="tab-2">
+    Événements secondaires
+  </button>
+
+  <div class="menu-spacer"></div>
+
+  <div class="menu-account" id="menuAccount">
+    <span class="menu-account-email" id="menuAccountEmail"></span>
+    <button type="button" class="menu-logout" id="logoutBtn">Se déconnecter</button>
+  </div>
+</nav>
+
+<main class="app-main">
+
+  <section class="tab-panel is-active" id="tab-1" role="tabpanel" aria-label="Analyse par devise">
+    <!-- Onglet 1 : volontairement vide pour le moment -->
+  </section>
+
+  <section class="tab-panel" id="tab-2" role="tabpanel" aria-label="Événements secondaires" hidden>
+    <!-- Onglet 2 : volontairement vide pour le moment -->
+  </section>
+
+</main>
+
+</div><!-- /#appShell -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="./js/supabase-config.js" defer></script>
+<script src="./js/auth.js" defer></script>
+<script src="./js/app.js" defer></script>
+</body>
+</html>
