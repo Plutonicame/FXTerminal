@@ -8,6 +8,8 @@
  * supabase-js (chargée via CDN dans index.html).
  */
 
+console.log('🔵 [FX-AUTH]', 'auth.js chargé. URL complète :', window.location.href);
+
 let supabaseClient = null;
 let configWarningShown = false;
 
@@ -40,33 +42,43 @@ function getClient() {
     return null;
   }
 
+  console.log('🔵 [FX-AUTH]', 'Création du client Supabase. URL actuelle de la page :', window.location.href);
   const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.APP_CONFIG;
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   return supabaseClient;
 }
 
+const DEBUG_TAG = '🔵 [FX-AUTH]';
+
 async function getSession() {
   const client = getClient();
-  if (!client) return null;
-  const { data, error } = await client.auth.getSession();
-  if (error) {
-    console.error('Erreur lors de la récupération de la session :', error);
+  if (!client) {
+    console.log(DEBUG_TAG, 'getSession() : pas de client (config manquante)');
     return null;
   }
+  const { data, error } = await client.auth.getSession();
+  if (error) {
+    console.error(DEBUG_TAG, 'Erreur lors de la récupération de la session :', error);
+    return null;
+  }
+  console.log(DEBUG_TAG, 'getSession() résultat :', data.session ? `connecté (${data.session.user.email})` : 'aucune session');
   return data.session;
 }
 
 async function signInWithGoogle() {
   const client = getClient();
-  if (!client) return;
+  if (!client) {
+    console.log(DEBUG_TAG, 'signInWithGoogle() : pas de client (config manquante)');
+    return;
+  }
+  const redirectTo = window.location.origin + window.location.pathname;
+  console.log(DEBUG_TAG, 'Lancement signInWithOAuth, redirectTo =', redirectTo);
   const { error } = await client.auth.signInWithOAuth({
     provider: 'google',
-    options: {
-      redirectTo: window.location.origin + window.location.pathname,
-    },
+    options: { redirectTo },
   });
   if (error) {
-    console.error('Erreur lors de la connexion Google :', error);
+    console.error(DEBUG_TAG, 'Erreur lors de la connexion Google :', error);
   }
 }
 
@@ -84,7 +96,10 @@ async function signOut() {
 function onAuthStateChange(callback) {
   const client = getClient();
   if (!client) return;
-  client.auth.onAuthStateChange((_event, session) => callback(session));
+  client.auth.onAuthStateChange((event, session) => {
+    console.log('🔵 [FX-AUTH]', 'onAuthStateChange événement :', event, session ? `session pour ${session.user.email}` : 'pas de session');
+    callback(session);
+  });
 }
 
 window.Auth = {
