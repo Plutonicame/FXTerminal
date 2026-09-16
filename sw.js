@@ -14,11 +14,13 @@ const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
-  './css/style.css',
-  './js/app.js',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-180.png',
+  './style.css',
+  './app.js',
+  './auth.js',
+  './supabase-config.js',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-180.png',
 ];
 
 self.addEventListener('install', (event) => {
