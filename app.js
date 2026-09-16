@@ -177,17 +177,21 @@ async function initAuth() {
     appShell.hidden = true;
   }
 
+  // IMPORTANT : on met en place l'écouteur AVANT de vérifier la session
+  // initiale. Si on faisait l'inverse, l'événement de connexion déclenché
+  // par le retour de redirection Google pourrait arriver pendant qu'on
+  // attend getSession(), et on le raterait complètement.
+  window.Auth.onAuthStateChange((newSession) => {
+    if (newSession) showApp(newSession);
+    else showLogin();
+  });
+
   const session = await window.Auth.getSession();
   if (session) {
     showApp(session);
   } else {
     showLogin();
   }
-
-  window.Auth.onAuthStateChange((newSession) => {
-    if (newSession) showApp(newSession);
-    else showLogin();
-  });
 
   googleBtn.addEventListener('click', () => {
     window.Auth.signInWithGoogle();
