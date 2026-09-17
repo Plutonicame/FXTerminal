@@ -8,7 +8,7 @@
  * ce sera ajouté plus tard si besoin (ex. cache des réponses API).
  */
 
-const CACHE_VERSION = 'fx-bias-shell-v4';
+const CACHE_VERSION = 'fx-bias-shell-v5';
 
 const APP_SHELL = [
   './',
@@ -45,8 +45,15 @@ self.addEventListener('activate', (event) => {
 
 // Stratégie : cache d'abord pour l'app shell, avec repli réseau,
 // et mise à jour silencieuse du cache quand le réseau répond.
+// IMPORTANT : on ne touche JAMAIS aux requêtes vers d'autres origines
+// (API Supabase, polices Google, CDN supabase-js, etc.) — seules nos
+// propres pages/fichiers passent par le cache. Sinon un échec ponctuel
+// (ex. 401 temporaire) resterait bloqué en cache indéfiniment.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
