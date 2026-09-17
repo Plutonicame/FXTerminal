@@ -281,41 +281,15 @@ button {
 /* =========================================================
    Bloc compte (bas du menu burger)
    ========================================================= */
-.menu-spacer {
-  flex: 1 1 auto;
-}
-
-.menu-account {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-dim);
-}
-
 .menu-account-email {
+  display: block;
   font-family: var(--mono);
   font-size: 11px;
   color: var(--text);
-  opacity: 0.75;
+  opacity: 0.6;
   word-break: break-all;
-}
-
-.menu-logout {
-  padding: 10px 14px;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 6px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.menu-logout:hover {
-  border-color: var(--red-light);
-  color: var(--red-light);
+  padding: 0 16px;
+  margin-top: 4px;
 }
 
 /* =========================================================

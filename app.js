@@ -117,7 +117,7 @@ function initBurgerMenu() {
    5. Navigation entre les onglets
    ========================================================= */
 function initTabs(onNavigate) {
-  const tabButtons = Array.from(document.querySelectorAll('.menu-tab'));
+  const tabButtons = Array.from(document.querySelectorAll('.menu-tab[data-tab]'));
   const panels = Array.from(document.querySelectorAll('.tab-panel'));
 
   function activateTab(tabId) {
