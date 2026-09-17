@@ -1,6 +1,6 @@
 {
-  "name": "FX Bias — Analyse fondamentale Forex",
-  "short_name": "FX Bias",
+  "name": "FX Terminal — Analyse fondamentale Forex",
+  "short_name": "FX Terminal",
   "description": "Calendrier économique, discours des banques centrales et événements macro pour dégager un biais par devise.",
   "start_url": "./index.html",
   "scope": "./",
