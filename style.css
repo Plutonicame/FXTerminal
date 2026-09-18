@@ -196,7 +196,7 @@ button {
   letter-spacing: 0.8px;
   text-transform: uppercase;
   padding: 14px 16px;
-  border: 1px solid var(--border-dim);
+  border: 1px solid var(--border);
   border-radius: 6px;
   background: transparent;
   color: var(--text);
@@ -208,7 +208,7 @@ button {
 }
 
 .menu-tab:hover {
-  border-color: var(--border);
+  color: var(--border);
 }
 
 /* =========================================================
