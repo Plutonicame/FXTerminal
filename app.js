@@ -231,42 +231,46 @@ function initThemePanel() {
     }
   });
 
-  // Accordéons : simple bascule visuelle pour le moment (pas de contenu
-  // détaillé par section pour l'instant).
+  // Accordéons : bascule la ligne ET son conteneur parent (qui contrôle
+  // l'affichage du contenu dépliable via CSS).
   const rows = Array.from(document.querySelectorAll('.theme-accordion-row'));
   for (const row of rows) {
     row.addEventListener('click', () => {
       row.classList.toggle('is-open');
+      const wrapper = row.closest('.theme-accordion');
+      if (wrapper) wrapper.classList.toggle('is-open');
     });
   }
 
-  // "Replier les couleurs" : referme uniquement les menus actuellement
-  // dépliés (contrairement au bouton "Thème" qui ferme tout le panneau).
+  // "Replier les couleurs" : referme les menus dépliés ET ferme le
+  // panneau entier (même effet que de recliquer sur "Thème").
   const collapseBtn = document.getElementById('collapseColorsBtn');
   if (collapseBtn) {
     collapseBtn.addEventListener('click', () => {
       for (const row of rows) {
         row.classList.remove('is-open');
+        const wrapper = row.closest('.theme-accordion');
+        if (wrapper) wrapper.classList.remove('is-open');
       }
+      closePanel();
     });
   }
 
-  // "Appliquer" et "Réinitialiser" : pour l'instant il n'existe encore
-  // aucun paramètre personnalisable (pas de données de thème/couleurs
-  // définies), donc ces boutons n'ont rien de concret à sauvegarder ou
-  // réinitialiser. On les laisse prêts, avec un retour visuel simple,
-  // en attendant que le vrai système de paramètres soit construit.
+  // "Appliquer" et "Réinitialiser" pilotent désormais le vrai système de
+  // couleurs personnalisables (voir theme-colors.js). La sauvegarde
+  // cloud (Supabase) n'est pas encore branchée à ce stade — pour
+  // l'instant, tout est sauvegardé en local sur l'appareil.
   const applyBtn = document.getElementById('applySettingsBtn');
   if (applyBtn) {
     applyBtn.addEventListener('click', () => {
-      console.log('🔵 [FX-SETTINGS]', 'Appliquer cliqué — aucun paramètre à sauvegarder pour le moment.');
+      if (window.ThemeColors) window.ThemeColors.apply();
     });
   }
 
   const resetBtn = document.getElementById('resetSettingsBtn');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      console.log('🔵 [FX-SETTINGS]', 'Réinitialiser cliqué — aucun paramètre à réinitialiser pour le moment.');
+      if (window.ThemeColors) window.ThemeColors.reset();
     });
   }
 }

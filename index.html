@@ -119,21 +119,40 @@
   </div>
 
   <div class="theme-panel-body">
-    <button type="button" class="theme-accordion-row" data-section="connexion">
-      <span class="chevron">›</span> Connexion
-    </button>
-    <button type="button" class="theme-accordion-row" data-section="analyse">
-      <span class="chevron">›</span> Analyse
-    </button>
-    <button type="button" class="theme-accordion-row" data-section="evenements">
-      <span class="chevron">›</span> Événements
-    </button>
-    <button type="button" class="theme-accordion-row" data-section="parametres">
-      <span class="chevron">›</span> Paramètres
-    </button>
-    <button type="button" class="theme-accordion-row" data-section="general">
-      <span class="chevron">›</span> Général
-    </button>
+    <div class="theme-accordion" data-section="connexion">
+      <button type="button" class="theme-accordion-row" data-section="connexion">
+        <span class="chevron">›</span> Connexion
+      </button>
+      <div class="theme-accordion-content" id="themeFields-connexion"></div>
+    </div>
+
+    <div class="theme-accordion" data-section="analyse">
+      <button type="button" class="theme-accordion-row" data-section="analyse">
+        <span class="chevron">›</span> Analyse
+      </button>
+      <div class="theme-accordion-content" id="themeFields-analyse"></div>
+    </div>
+
+    <div class="theme-accordion" data-section="evenements">
+      <button type="button" class="theme-accordion-row" data-section="evenements">
+        <span class="chevron">›</span> Événements
+      </button>
+      <div class="theme-accordion-content" id="themeFields-evenements"></div>
+    </div>
+
+    <div class="theme-accordion" data-section="parametres">
+      <button type="button" class="theme-accordion-row" data-section="parametres">
+        <span class="chevron">›</span> Paramètres
+      </button>
+      <div class="theme-accordion-content" id="themeFields-parametres"></div>
+    </div>
+
+    <div class="theme-accordion" data-section="general">
+      <button type="button" class="theme-accordion-row" data-section="general">
+        <span class="chevron">›</span> Général
+      </button>
+      <div class="theme-accordion-content" id="themeFields-general"></div>
+    </div>
   </div>
 
   <div class="theme-panel-footer">
@@ -143,11 +162,33 @@
   </div>
 </div>
 
+<!-- ===== Sélecteur de couleur (une seule instance, réutilisée pour tous les champs) ===== -->
+<div class="cp-overlay" id="cpOverlay">
+  <div class="cp-modal">
+    <div class="cp-title" id="cpTitle">COULEUR</div>
+    <div class="cp-sw" id="cpWrap"><canvas id="cpCanvas"></canvas><div class="cp-cursor" id="cpCursor" style="left:100%;top:0%"></div></div>
+    <label class="cp-hue-lbl">TEINTE</label>
+    <input type="range" class="cp-hue" id="cpHue" min="0" max="360" value="0">
+    <div class="cp-prev-row">
+      <div class="cp-swatch" id="cpSwatch"></div>
+      <input class="cp-hex" type="text" id="cpHex" maxlength="7" placeholder="#000000">
+      <span class="cp-hex-lbl">HEX</span>
+    </div>
+    <div class="cp-mem-lbl">RÉCENTES</div>
+    <div class="cp-mem" id="cpMem"></div>
+    <div class="cp-btns">
+      <button type="button" class="cp-btn cp-btn--ghost" id="cpCancelBtn">Annuler</button>
+      <button type="button" class="cp-btn cp-btn--primary" id="cpConfirmBtn">Appliquer</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /#appShell -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="./supabase-config.js" defer></script>
 <script src="./auth.js" defer></script>
+<script src="./theme-colors.js" defer></script>
 <script src="./app.js" defer></script>
 </body>
 </html>
