@@ -68,8 +68,8 @@ button {
   align-items: center;
   gap: 12px;
   padding: 0 16px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border-dim);
+  background: #404040;
+  border-bottom: 3px solid var(--border);
 }
 
 /* --- Burger --- */
@@ -82,7 +82,7 @@ button {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  background: transparent;
+  background: #404040;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
 }
