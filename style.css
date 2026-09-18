@@ -304,6 +304,7 @@ button {
   background: #464646;
   border: 1px solid var(--border);
   border-radius: 14px;
+  max-width: 420px;
 }
 
 .settings-label {
