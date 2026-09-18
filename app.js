@@ -239,6 +239,36 @@ function initThemePanel() {
       row.classList.toggle('is-open');
     });
   }
+
+  // "Replier les couleurs" : referme uniquement les menus actuellement
+  // dépliés (contrairement au bouton "Thème" qui ferme tout le panneau).
+  const collapseBtn = document.getElementById('collapseColorsBtn');
+  if (collapseBtn) {
+    collapseBtn.addEventListener('click', () => {
+      for (const row of rows) {
+        row.classList.remove('is-open');
+      }
+    });
+  }
+
+  // "Appliquer" et "Réinitialiser" : pour l'instant il n'existe encore
+  // aucun paramètre personnalisable (pas de données de thème/couleurs
+  // définies), donc ces boutons n'ont rien de concret à sauvegarder ou
+  // réinitialiser. On les laisse prêts, avec un retour visuel simple,
+  // en attendant que le vrai système de paramètres soit construit.
+  const applyBtn = document.getElementById('applySettingsBtn');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', () => {
+      console.log('🔵 [FX-SETTINGS]', 'Appliquer cliqué — aucun paramètre à sauvegarder pour le moment.');
+    });
+  }
+
+  const resetBtn = document.getElementById('resetSettingsBtn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      console.log('🔵 [FX-SETTINGS]', 'Réinitialiser cliqué — aucun paramètre à réinitialiser pour le moment.');
+    });
+  }
 }
 
 /* =========================================================
