@@ -40,6 +40,7 @@ const THEME_FIELDS = {
     { v: '--accordion-content-title-color', l: 'Titre', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
     { v: '--accordion-content-text', l: 'Texte', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
     { v: '--accordion-content-border', l: 'Bordure du panneau', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
+    { v: '--accordion-divider-color', l: 'Ligne de séparation entre sections', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
     { v: '--accordion-swatch-border', l: 'Bordure des carrés de couleur', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
 
     { v: '--cp-modal-bg', l: 'Fond', category: 'Sélecteur de couleur', section: 'Fenêtre' },

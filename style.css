@@ -49,6 +49,7 @@
   --accordion-content-text: var(--text);
   --accordion-content-title-color: var(--blue-light);
   --accordion-content-border: var(--border-dim);
+  --accordion-divider-color: #fafafa;
   --accordion-swatch-border: var(--border);
 
   --cp-modal-bg: var(--bg-card);
@@ -569,6 +570,7 @@ button {
 .theme-field-group {
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .theme-field-group-title {
@@ -587,6 +589,7 @@ button {
 .theme-field-category {
   padding: 10px 0;
   border-bottom: 1px solid var(--border-dim);
+  position: relative;
 }
 
 .theme-field-category:last-child {
@@ -876,8 +879,41 @@ button {
    Responsive
    ========================================================= */
 @media (min-width: 720px) {
-  .theme-accordion {
-    flex: 1 1 calc(50% - 5px);
+  .theme-field-category {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 24px;
+  }
+
+  .theme-field-category::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 50%;
+    width: 1px;
+    background: var(--accordion-divider-color);
+  }
+
+  /* Ligne horizontale fine entre chaque rangée de 2 sections,
+     insérée sans toucher les bords gauche/droite */
+  .theme-field-group:nth-child(n+3)::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 12px;
+    right: 12px;
+    height: 1px;
+    background: var(--accordion-divider-color);
+  }
+
+  .theme-field-group:nth-child(n+3) {
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .theme-field-group:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 }
 
