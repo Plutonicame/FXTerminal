@@ -84,8 +84,6 @@
   <button type="button" class="menu-tab" id="logoutBtn">
     Se déconnecter
   </button>
-
-  <span class="menu-account-email" id="menuAccountEmail"></span>
 </nav>
 
 <main class="app-main">
@@ -110,10 +108,8 @@
 <!-- ===== Panneau Thème & Mode Stylo (plein écran) ===== -->
 <div class="theme-panel" id="themePanel" hidden>
   <div class="theme-panel-topbar">
-    <span class="theme-panel-title">Thème &amp; Mode Stylo</span>
+    <span class="theme-panel-title">Thème</span>
     <div class="theme-panel-actions">
-      <button type="button" class="theme-pill-btn">Stylo</button>
-      <button type="button" class="theme-pill-btn theme-pill-btn--icon" aria-label="Réinitialiser">↻</button>
       <button type="button" class="theme-pill-btn" id="themePanelToggleBtn">Thème</button>
     </div>
   </div>
@@ -186,6 +182,8 @@
 </div><!-- /#appShell -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<div class="save-spinner" id="saveSpinner" aria-hidden="true"></div>
+
 <script src="./supabase-config.js" defer></script>
 <script src="./auth.js" defer></script>
 <script src="./theme-colors.js" defer></script>

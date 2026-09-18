@@ -20,15 +20,54 @@ const THEME_STORAGE_KEY = 'fx_theme_vars';
    ========================================================= */
 const THEME_FIELDS = {
   connexion: [
-    { v: '--auth-bg', l: 'Fond de la connexion' },
-    { v: '--auth-google-btn-bg', l: 'Bouton Google — fond' },
-    { v: '--auth-text-color', l: 'Texte au-dessus' },
-    { v: '--auth-google-text-color', l: 'Texte du bouton Google' },
+    { v: '--auth-bg', l: 'Fond de la connexion', section: 'Écran de connexion' },
+    { v: '--auth-google-btn-bg', l: 'Bouton Google — fond', section: 'Écran de connexion' },
+    { v: '--auth-text-color', l: 'Texte au-dessus', section: 'Écran de connexion' },
+    { v: '--auth-google-text-color', l: 'Texte du bouton Google', section: 'Écran de connexion' },
   ],
   analyse: [],
   evenements: [],
-  parametres: [],
-  general: [],
+  parametres: [
+    { v: '--settings-row-bg', l: 'Fond', section: 'Bandeau "Thème"' },
+    { v: '--settings-row-border', l: 'Bordure', section: 'Bandeau "Thème"' },
+    { v: '--settings-row-text', l: 'Texte', section: 'Bandeau "Thème"' },
+
+    { v: '--settings-btn-bg', l: 'Fond', section: 'Bouton "Thème"' },
+    { v: '--settings-btn-border', l: 'Bordure', section: 'Bouton "Thème"' },
+    { v: '--settings-btn-text', l: 'Texte', section: 'Bouton "Thème"' },
+
+    { v: '--accordion-content-bg', l: 'Fond', section: 'Menu déplié (ex. Connexion)' },
+    { v: '--accordion-content-text', l: 'Texte', section: 'Menu déplié (ex. Connexion)' },
+    { v: '--accordion-swatch-border', l: 'Bordure des carrés de couleur', section: 'Menu déplié (ex. Connexion)' },
+
+    { v: '--cp-modal-bg', l: 'Fond', section: 'Fenêtre de sélection de couleur' },
+    { v: '--cp-modal-border', l: 'Bordure', section: 'Fenêtre de sélection de couleur' },
+    { v: '--cp-modal-text', l: 'Texte', section: 'Fenêtre de sélection de couleur' },
+
+    { v: '--btn-collapse-bg', l: 'Fond', section: 'Bouton "Replier les couleurs"' },
+    { v: '--btn-collapse-border', l: 'Bordure', section: 'Bouton "Replier les couleurs"' },
+    { v: '--btn-collapse-text', l: 'Texte', section: 'Bouton "Replier les couleurs"' },
+
+    { v: '--btn-reset-bg', l: 'Fond', section: 'Bouton "Réinitialiser"' },
+    { v: '--btn-reset-border', l: 'Bordure', section: 'Bouton "Réinitialiser"' },
+    { v: '--btn-reset-text', l: 'Texte', section: 'Bouton "Réinitialiser"' },
+
+    { v: '--btn-apply-bg', l: 'Fond', section: 'Bouton "Appliquer"' },
+    { v: '--btn-apply-border', l: 'Bordure', section: 'Bouton "Appliquer"' },
+    { v: '--btn-apply-text', l: 'Texte', section: 'Bouton "Appliquer"' },
+  ],
+  general: [
+    { v: '--nav-bg', l: 'Fond', section: 'Barre de navigation' },
+    { v: '--nav-border', l: 'Bordure (en dessous)', section: 'Barre de navigation' },
+    { v: '--clock-time-color', l: "Texte de l'heure", section: 'Horloges' },
+    { v: '--clock-city-color', l: 'Texte au-dessus (villes)', section: 'Horloges' },
+    { v: '--session-bg', l: 'Fond', section: 'Case des sessions' },
+    { v: '--session-text-color', l: 'Texte', section: 'Case des sessions' },
+    { v: '--session-border', l: 'Bordure', section: 'Case des sessions' },
+    { v: '--burger-bg', l: 'Fond', section: 'Menu burger' },
+    { v: '--burger-border', l: 'Bordure', section: 'Menu burger' },
+    { v: '--burger-bars-color', l: 'Les 3 traits', section: 'Menu burger' },
+  ],
 };
 
 /* =========================================================
@@ -46,11 +85,33 @@ function loadThemeVars() {
 }
 
 function saveThemeVars() {
+  showSaveSpinner();
   try {
     localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(themeVars));
   } catch (e) {
     console.error('Impossible de sauvegarder les couleurs en local :', e);
   }
+  // La sauvegarde locale est instantanée ; on garde le rond visible un
+  // court instant pour qu'il soit perceptible (utile aussi le jour où
+  // ce sera une vraie sauvegarde cloud, potentiellement plus longue).
+  window.setTimeout(hideSaveSpinner, 500);
+}
+
+let saveSpinnerTimeout = null;
+
+function showSaveSpinner() {
+  const el = document.getElementById('saveSpinner');
+  if (!el) return;
+  if (saveSpinnerTimeout) {
+    window.clearTimeout(saveSpinnerTimeout);
+    saveSpinnerTimeout = null;
+  }
+  el.classList.add('is-visible');
+}
+
+function hideSaveSpinner() {
+  const el = document.getElementById('saveSpinner');
+  if (el) el.classList.remove('is-visible');
 }
 
 function previewThemeVars() {
@@ -286,13 +347,30 @@ function renderThemeFields(sectionKey) {
     return;
   }
 
-  container.innerHTML = fields
-    .map((f) => {
-      const hex = currentValueFor(f.v);
-      return `<div class="theme-field-row">
-        <span class="theme-field-label">${f.l}</span>
-        <button type="button" class="theme-field-swatch" style="background:${hex}" data-var="${f.v}" data-label="${f.l}"></button>
-      </div>`;
+  // Regroupement par sous-section (ex. "Barre de navigation", "Horloges"...)
+  const groups = [];
+  for (const f of fields) {
+    let group = groups.find((g) => g.title === f.section);
+    if (!group) {
+      group = { title: f.section, items: [] };
+      groups.push(group);
+    }
+    group.items.push(f);
+  }
+
+  container.innerHTML = groups
+    .map((group) => {
+      const rows = group.items
+        .map((f) => {
+          const hex = currentValueFor(f.v);
+          return `<div class="theme-field-row">
+            <span class="theme-field-label">${f.l}</span>
+            <button type="button" class="theme-field-swatch" style="background:${hex}" data-var="${f.v}" data-label="${f.l}"></button>
+          </div>`;
+        })
+        .join('');
+      const heading = group.title ? `<p class="theme-field-group-title">${group.title}</p>` : '';
+      return `<div class="theme-field-group">${heading}${rows}</div>`;
     })
     .join('');
 

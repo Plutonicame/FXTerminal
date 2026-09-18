@@ -27,6 +27,42 @@
   --auth-text-color: var(--text);
   --auth-google-text-color: #1f1f1f;
 
+  --nav-bg: #404040;
+  --nav-border: var(--border);
+  --clock-time-color: var(--text);
+  --clock-city-color: var(--text);
+  --session-bg: transparent;
+  --session-text-color: var(--text);
+  --session-border: var(--border);
+  --burger-bg: #404040;
+  --burger-border: var(--border);
+  --burger-bars-color: var(--text);
+
+  --settings-row-bg: #464646;
+  --settings-row-border: var(--border);
+  --settings-row-text: var(--text);
+  --settings-btn-bg: var(--bg);
+  --settings-btn-border: var(--border);
+  --settings-btn-text: var(--text);
+
+  --accordion-content-bg: transparent;
+  --accordion-content-text: var(--text);
+  --accordion-swatch-border: var(--border);
+
+  --cp-modal-bg: var(--bg-card);
+  --cp-modal-border: var(--border-dim);
+  --cp-modal-text: var(--blue-light);
+
+  --btn-collapse-bg: var(--bg);
+  --btn-collapse-border: var(--border);
+  --btn-collapse-text: var(--text);
+  --btn-reset-bg: var(--bg);
+  --btn-reset-border: var(--border);
+  --btn-reset-text: var(--text);
+  --btn-apply-bg: #fafafa;
+  --btn-apply-border: #fafafa;
+  --btn-apply-text: #101010;
+
   --topbar-h: 64px;
 }
 
@@ -73,8 +109,8 @@ button {
   align-items: center;
   gap: 12px;
   padding: 0 16px;
-  background: #404040;
-  border-bottom: 3px solid var(--border);
+  background: var(--nav-bg);
+  border-bottom: 3px solid var(--nav-border);
 }
 
 /* --- Burger --- */
@@ -87,8 +123,8 @@ button {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  background: #404040;
-  border: 1px solid var(--border);
+  background: var(--burger-bg);
+  border: 1px solid var(--burger-border);
   border-radius: var(--radius-sm);
 }
 
@@ -96,7 +132,7 @@ button {
   display: block;
   width: 18px;
   height: 2px;
-  background: var(--text);
+  background: var(--burger-bars-color);
   border-radius: 2px;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
@@ -134,7 +170,7 @@ button {
   font-size: 13px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--clock-city-color);
   white-space: nowrap;
 }
 
@@ -145,6 +181,7 @@ button {
   letter-spacing: 0.5px;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  color: var(--clock-time-color);
 }
 
 /* --- Badge de session (tout à droite) --- */
@@ -153,7 +190,9 @@ button {
   display: inline-flex;
   align-items: center;
   padding: 6px 10px;
-  border: 1px solid var(--border);
+  background: var(--session-bg);
+  color: var(--session-text-color);
+  border: 1px solid var(--session-border);
   border-radius: var(--radius-sm);
   font-family: var(--mono);
   font-size: 11px;
@@ -286,17 +325,6 @@ button {
 /* =========================================================
    Bloc compte (bas du menu burger)
    ========================================================= */
-.menu-account-email {
-  display: block;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text);
-  opacity: 0.6;
-  word-break: break-all;
-  padding: 0 16px;
-  margin-top: 4px;
-}
-
 /* =========================================================
    Paramètres — ligne "Thème"
    ========================================================= */
@@ -306,8 +334,8 @@ button {
   justify-content: space-between;
   gap: 16px;
   padding: 10px 10px;
-  background: #464646;
-  border: 1px solid var(--border);
+  background: var(--settings-row-bg);
+  border: 1px solid var(--settings-row-border);
   border-radius: 14px;
   width: 100%;
 }
@@ -317,14 +345,14 @@ button {
   font-size: 13px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--settings-row-text);
 }
 
 .settings-btn {
   padding: 8px 18px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: var(--settings-btn-bg);
+  border: 1px solid var(--settings-btn-border);
+  color: var(--settings-btn-text);
   border-radius: var(--radius-sm);
   font-family: var(--mono);
   font-size: 11px;
@@ -449,10 +477,6 @@ button {
   text-transform: uppercase;
 }
 
-.theme-pill-btn--icon {
-  padding: 8px 12px;
-}
-
 .theme-panel-body {
   display: flex;
   flex-direction: column;
@@ -491,6 +515,7 @@ button {
   flex-direction: column;
   gap: 8px;
   padding: 12px 20px 4px;
+  background: var(--accordion-content-bg);
 }
 
 .theme-accordion.is-open .theme-accordion-content {
@@ -509,7 +534,7 @@ button {
 .theme-field-label {
   font-family: var(--sans);
   font-size: 13px;
-  color: var(--text);
+  color: var(--accordion-content-text);
 }
 
 .theme-field-swatch {
@@ -517,7 +542,7 @@ button {
   height: 30px;
   flex: 0 0 auto;
   border-radius: 6px;
-  border: 2px solid var(--border);
+  border: 2px solid var(--accordion-swatch-border);
   cursor: pointer;
 }
 
@@ -527,6 +552,24 @@ button {
   color: var(--text-dim);
   padding: 6px 0;
   margin: 0;
+}
+
+.theme-field-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.theme-field-group-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--blue-light);
+  margin: 10px 0 4px;
+}
+
+.theme-field-group:first-child .theme-field-group-title {
+  margin-top: 0;
 }
 
 /* =========================================================
@@ -548,8 +591,8 @@ button {
 }
 
 .cp-modal {
-  background: var(--bg-card);
-  border: 1px solid var(--border-dim);
+  background: var(--cp-modal-bg);
+  border: 1px solid var(--cp-modal-border);
   border-radius: 10px;
   padding: 18px;
   width: 340px;
@@ -563,7 +606,7 @@ button {
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--blue-light);
+  color: var(--cp-modal-text);
   margin-bottom: 11px;
 }
 
@@ -747,6 +790,50 @@ button {
   background: #fafafa;
   border-color: #fafafa;
   color: #101010;
+}
+
+#collapseColorsBtn {
+  background: var(--btn-collapse-bg);
+  border-color: var(--btn-collapse-border);
+  color: var(--btn-collapse-text);
+}
+
+#resetSettingsBtn {
+  background: var(--btn-reset-bg);
+  border-color: var(--btn-reset-border);
+  color: var(--btn-reset-text);
+}
+
+#applySettingsBtn {
+  background: var(--btn-apply-bg);
+  border-color: var(--btn-apply-border);
+  color: var(--btn-apply-text);
+}
+
+/* =========================================================
+   Rond de chargement (affiché pendant une sauvegarde)
+   ========================================================= */
+.save-spinner {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 26px;
+  height: 26px;
+  z-index: 500;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #ffffff;
+  animation: save-spin 0.8s linear infinite;
+  pointer-events: none;
+}
+
+.save-spinner.is-visible {
+  display: block;
+}
+
+@keyframes save-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* =========================================================

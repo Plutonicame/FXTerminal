@@ -151,7 +151,6 @@ async function initAuth() {
   const googleBtn = document.getElementById('googleSignInBtn');
   const loginNote = document.getElementById('loginNote');
   const logoutBtn = document.getElementById('logoutBtn');
-  const emailEl = document.getElementById('menuAccountEmail');
 
   if (!loginScreen || !appShell || !googleBtn) return;
 
@@ -167,9 +166,6 @@ async function initAuth() {
   function showApp(session) {
     loginScreen.hidden = true;
     appShell.hidden = false;
-    if (emailEl && session && session.user) {
-      emailEl.textContent = session.user.email || '';
-    }
   }
 
   function showLogin() {
