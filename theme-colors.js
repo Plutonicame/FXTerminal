@@ -28,33 +28,35 @@ const THEME_FIELDS = {
   analyse: [],
   evenements: [],
   parametres: [
-    { v: '--settings-row-bg', l: 'Fond', section: 'Bandeau "Thème"' },
-    { v: '--settings-row-border', l: 'Bordure', section: 'Bandeau "Thème"' },
-    { v: '--settings-row-text', l: 'Texte', section: 'Bandeau "Thème"' },
+    { v: '--settings-row-bg', l: 'Fond', category: 'Thème', section: 'Bandeau' },
+    { v: '--settings-row-border', l: 'Bordure', category: 'Thème', section: 'Bandeau' },
+    { v: '--settings-row-text', l: 'Texte', category: 'Thème', section: 'Bandeau' },
 
-    { v: '--settings-btn-bg', l: 'Fond', section: 'Bouton "Thème"' },
-    { v: '--settings-btn-border', l: 'Bordure', section: 'Bouton "Thème"' },
-    { v: '--settings-btn-text', l: 'Texte', section: 'Bouton "Thème"' },
+    { v: '--settings-btn-bg', l: 'Fond', category: 'Thème', section: 'Bouton' },
+    { v: '--settings-btn-border', l: 'Bordure', category: 'Thème', section: 'Bouton' },
+    { v: '--settings-btn-text', l: 'Texte', category: 'Thème', section: 'Bouton' },
 
-    { v: '--accordion-content-bg', l: 'Fond', section: 'Menu déplié (ex. Connexion)' },
-    { v: '--accordion-content-text', l: 'Texte', section: 'Menu déplié (ex. Connexion)' },
-    { v: '--accordion-swatch-border', l: 'Bordure des carrés de couleur', section: 'Menu déplié (ex. Connexion)' },
+    { v: '--accordion-content-bg', l: 'Fond', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
+    { v: '--accordion-content-title-color', l: 'Titre', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
+    { v: '--accordion-content-text', l: 'Texte', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
+    { v: '--accordion-content-border', l: 'Bordure du panneau', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
+    { v: '--accordion-swatch-border', l: 'Bordure des carrés de couleur', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
 
-    { v: '--cp-modal-bg', l: 'Fond', section: 'Fenêtre de sélection de couleur' },
-    { v: '--cp-modal-border', l: 'Bordure', section: 'Fenêtre de sélection de couleur' },
-    { v: '--cp-modal-text', l: 'Texte', section: 'Fenêtre de sélection de couleur' },
+    { v: '--cp-modal-bg', l: 'Fond', category: 'Sélecteur de couleur', section: 'Fenêtre' },
+    { v: '--cp-modal-border', l: 'Bordure', category: 'Sélecteur de couleur', section: 'Fenêtre' },
+    { v: '--cp-modal-text', l: 'Texte', category: 'Sélecteur de couleur', section: 'Fenêtre' },
 
-    { v: '--btn-collapse-bg', l: 'Fond', section: 'Bouton "Replier les couleurs"' },
-    { v: '--btn-collapse-border', l: 'Bordure', section: 'Bouton "Replier les couleurs"' },
-    { v: '--btn-collapse-text', l: 'Texte', section: 'Bouton "Replier les couleurs"' },
+    { v: '--btn-collapse-bg', l: 'Fond', category: 'Boutons du bas', section: 'Replier les couleurs' },
+    { v: '--btn-collapse-border', l: 'Bordure', category: 'Boutons du bas', section: 'Replier les couleurs' },
+    { v: '--btn-collapse-text', l: 'Texte', category: 'Boutons du bas', section: 'Replier les couleurs' },
 
-    { v: '--btn-reset-bg', l: 'Fond', section: 'Bouton "Réinitialiser"' },
-    { v: '--btn-reset-border', l: 'Bordure', section: 'Bouton "Réinitialiser"' },
-    { v: '--btn-reset-text', l: 'Texte', section: 'Bouton "Réinitialiser"' },
+    { v: '--btn-reset-bg', l: 'Fond', category: 'Boutons du bas', section: 'Réinitialiser' },
+    { v: '--btn-reset-border', l: 'Bordure', category: 'Boutons du bas', section: 'Réinitialiser' },
+    { v: '--btn-reset-text', l: 'Texte', category: 'Boutons du bas', section: 'Réinitialiser' },
 
-    { v: '--btn-apply-bg', l: 'Fond', section: 'Bouton "Appliquer"' },
-    { v: '--btn-apply-border', l: 'Bordure', section: 'Bouton "Appliquer"' },
-    { v: '--btn-apply-text', l: 'Texte', section: 'Bouton "Appliquer"' },
+    { v: '--btn-apply-bg', l: 'Fond', category: 'Boutons du bas', section: 'Appliquer' },
+    { v: '--btn-apply-border', l: 'Bordure', category: 'Boutons du bas', section: 'Appliquer' },
+    { v: '--btn-apply-text', l: 'Texte', category: 'Boutons du bas', section: 'Appliquer' },
   ],
   general: [
     { v: '--nav-bg', l: 'Fond', section: 'Barre de navigation' },
@@ -347,30 +349,44 @@ function renderThemeFields(sectionKey) {
     return;
   }
 
-  // Regroupement par sous-section (ex. "Barre de navigation", "Horloges"...)
-  const groups = [];
+  // Regroupement à 2 niveaux : catégorie (ex. "Thème") puis sous-section
+  // (ex. "Bandeau", "Bouton"). Les champs sans "category" tombent dans
+  // une catégorie implicite unique (pas de titre de catégorie affiché).
+  const categories = [];
   for (const f of fields) {
-    let group = groups.find((g) => g.title === f.section);
+    const catKey = f.category || '';
+    let cat = categories.find((c) => c.title === catKey);
+    if (!cat) {
+      cat = { title: catKey, groups: [] };
+      categories.push(cat);
+    }
+    let group = cat.groups.find((g) => g.title === f.section);
     if (!group) {
       group = { title: f.section, items: [] };
-      groups.push(group);
+      cat.groups.push(group);
     }
     group.items.push(f);
   }
 
-  container.innerHTML = groups
-    .map((group) => {
-      const rows = group.items
-        .map((f) => {
-          const hex = currentValueFor(f.v);
-          return `<div class="theme-field-row">
-            <span class="theme-field-label">${f.l}</span>
-            <button type="button" class="theme-field-swatch" style="background:${hex}" data-var="${f.v}" data-label="${f.l}"></button>
-          </div>`;
+  container.innerHTML = categories
+    .map((cat) => {
+      const groupsHtml = cat.groups
+        .map((group) => {
+          const rows = group.items
+            .map((f) => {
+              const hex = currentValueFor(f.v);
+              return `<div class="theme-field-row">
+                <span class="theme-field-label">${f.l}</span>
+                <button type="button" class="theme-field-swatch" style="background:${hex}" data-var="${f.v}" data-label="${f.l}"></button>
+              </div>`;
+            })
+            .join('');
+          const groupHeading = group.title ? `<p class="theme-field-group-title">${group.title}</p>` : '';
+          return `<div class="theme-field-group">${groupHeading}${rows}</div>`;
         })
         .join('');
-      const heading = group.title ? `<p class="theme-field-group-title">${group.title}</p>` : '';
-      return `<div class="theme-field-group">${heading}${rows}</div>`;
+      const catHeading = cat.title ? `<p class="theme-field-category-title">${cat.title}</p>` : '';
+      return `<div class="theme-field-category">${catHeading}${groupsHtml}</div>`;
     })
     .join('');
 

@@ -47,6 +47,8 @@
 
   --accordion-content-bg: transparent;
   --accordion-content-text: var(--text);
+  --accordion-content-title-color: var(--blue-light);
+  --accordion-content-border: var(--border-dim);
   --accordion-swatch-border: var(--border);
 
   --cp-modal-bg: var(--bg-card);
@@ -479,8 +481,15 @@ button {
 
 .theme-panel-body {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-content: flex-start;
   gap: 10px;
+}
+
+.theme-accordion {
+  flex: 1 1 100%;
+  min-width: 0;
 }
 
 .theme-accordion-row {
@@ -514,8 +523,11 @@ button {
   display: none;
   flex-direction: column;
   gap: 8px;
-  padding: 12px 20px 4px;
+  padding: 12px 20px 14px;
   background: var(--accordion-content-bg);
+  border: 1px solid var(--accordion-content-border);
+  border-radius: 10px;
+  margin-top: 4px;
 }
 
 .theme-accordion.is-open .theme-accordion-content {
@@ -564,12 +576,36 @@ button {
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--blue-light);
+  color: var(--accordion-content-title-color);
   margin: 10px 0 4px;
 }
 
 .theme-field-group:first-child .theme-field-group-title {
   margin-top: 0;
+}
+
+.theme-field-category {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.theme-field-category:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.theme-field-category:first-child {
+  padding-top: 0;
+}
+
+.theme-field-category-title {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text);
+  margin: 0 0 4px;
 }
 
 /* =========================================================
@@ -839,6 +875,12 @@ button {
 /* =========================================================
    Responsive
    ========================================================= */
+@media (min-width: 720px) {
+  .theme-accordion {
+    flex: 1 1 calc(50% - 5px);
+  }
+}
+
 @media (max-width: 640px) {
   .clock-city { font-size: 10px; }
   .session-badge { padding: 6px 8px; font-size: 9px; }
