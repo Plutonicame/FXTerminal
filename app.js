@@ -205,6 +205,43 @@ async function initAuth() {
 }
 
 /* =========================================================
+   6. Panneau Thème & Mode Stylo
+   ========================================================= */
+function initThemePanel() {
+  const openBtn = document.getElementById('themeBtn');
+  const closeBtn = document.getElementById('themePanelToggleBtn');
+  const panel = document.getElementById('themePanel');
+
+  if (!openBtn || !closeBtn || !panel) return;
+
+  function openPanel() {
+    panel.classList.add('is-open');
+  }
+
+  function closePanel() {
+    panel.classList.remove('is-open');
+  }
+
+  openBtn.addEventListener('click', openPanel);
+  closeBtn.addEventListener('click', closePanel);
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && panel.classList.contains('is-open')) {
+      closePanel();
+    }
+  });
+
+  // Accordéons : simple bascule visuelle pour le moment (pas de contenu
+  // détaillé par section pour l'instant).
+  const rows = Array.from(document.querySelectorAll('.theme-accordion-row'));
+  for (const row of rows) {
+    row.addEventListener('click', () => {
+      row.classList.toggle('is-open');
+    });
+  }
+}
+
+/* =========================================================
    7. Enregistrement du Service Worker (installabilité PWA)
    ========================================================= */
 function registerServiceWorker() {
@@ -227,5 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs(() => menu && menu.closeMenu());
 
   initAuth();
+  initThemePanel();
   registerServiceWorker();
 });
