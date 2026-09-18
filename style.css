@@ -293,6 +293,40 @@ button {
 }
 
 /* =========================================================
+   Paramètres — ligne "Thème"
+   ========================================================= */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #464646;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.settings-label {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.settings-btn {
+  padding: 8px 18px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* =========================================================
    Contenu principal
    ========================================================= */
 .app-main {
