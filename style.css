@@ -446,15 +446,52 @@ button {
   display: flex;
 }
 
+.theme-panel-frame {
+  display: flex;
+  flex-direction: column;
+  background: #464646;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
 .theme-panel-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 16px 20px;
-  background: #464646;
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.theme-accordion {
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.theme-accordion:last-child {
+  border-bottom: none;
+}
+
+.theme-accordion-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.theme-accordion-row .chevron {
+  color: var(--text);
+  font-size: 14px;
+  transition: transform 0.15s ease;
 }
 
 .theme-panel-title {
@@ -482,42 +519,6 @@ button {
   text-transform: uppercase;
 }
 
-.theme-panel-body {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 10px;
-}
-
-.theme-accordion {
-  flex: 1 1 100%;
-  min-width: 0;
-}
-
-.theme-accordion-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 16px 20px;
-  background: #464646;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  text-align: left;
-}
-
-.theme-accordion-row .chevron {
-  color: var(--text);
-  font-size: 14px;
-  transition: transform 0.15s ease;
-}
-
 .theme-accordion-row.is-open .chevron {
   transform: rotate(90deg);
 }
@@ -526,11 +527,9 @@ button {
   display: none;
   flex-direction: column;
   gap: 8px;
-  padding: 12px 20px 14px;
+  padding: 12px 20px 16px;
   background: var(--accordion-content-bg);
-  border: 1px solid var(--accordion-content-border);
-  border-radius: 10px;
-  margin-top: 4px;
+  border-top: 1px solid var(--accordion-content-border);
   position: relative;
 }
 
@@ -898,8 +897,8 @@ button {
   .theme-accordion-content::after {
     content: '';
     position: absolute;
-    top: 12px;
-    bottom: 14px;
+    top: 0;
+    bottom: 0;
     left: 50%;
     width: 1px;
     background: var(--accordion-divider-color);
@@ -909,9 +908,9 @@ button {
      plutôt que de s'étirer sur toute la largeur, pour que chaque texte
      reste toujours collé à son carré de couleur.) */
 
-  /* Ligne horizontale fine entre rangées, calculée côté JS (classe
-     posée sur les groupes qui démarrent une 2e rangée ou plus au sein
-     de leur catégorie), sans toucher les bords gauche/droite. */
+  /* Ligne horizontale fine pleine largeur entre rangées, calculée côté
+     JS (classe posée sur les groupes qui démarrent une 2e rangée ou
+     plus au sein de leur catégorie) — comme dans TJP. */
   .theme-field-group.has-divider {
     margin-top: 8px;
     padding-top: 16px;
@@ -922,8 +921,8 @@ button {
     content: '';
     position: absolute;
     top: 0;
-    left: 12px;
-    right: 12px;
+    left: -20px;
+    right: -20px;
     height: 1px;
     background: var(--accordion-divider-color);
   }
