@@ -216,6 +216,17 @@ function initThemePanel() {
 
   function closePanel() {
     panel.classList.remove('is-open');
+    // Referme tout ce qui aurait pu rester ouvert (menus dépliés,
+    // sélecteur de couleur), pour repartir sur une base propre la
+    // prochaine fois qu'on rouvre le panneau.
+    document.querySelectorAll('.theme-accordion-row.is-open').forEach((row) => {
+      row.classList.remove('is-open');
+    });
+    document.querySelectorAll('.theme-accordion.is-open').forEach((wrapper) => {
+      wrapper.classList.remove('is-open');
+    });
+    const cpOverlay = document.getElementById('cpOverlay');
+    if (cpOverlay) cpOverlay.classList.remove('is-open');
   }
 
   openBtn.addEventListener('click', openPanel);

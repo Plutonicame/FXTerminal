@@ -336,7 +336,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 10px 10px;
+  padding: 16px 20px;
   background: var(--settings-row-bg);
   border: 1px solid var(--settings-row-border);
   border-radius: 14px;
@@ -430,8 +430,11 @@ button {
 .theme-panel {
   display: none;
   position: fixed;
-  inset: 0;
-  z-index: 250;
+  top: var(--topbar-h);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
   background: var(--bg);
   flex-direction: column;
   padding: 16px;
@@ -529,6 +532,7 @@ button {
   border: 1px solid var(--accordion-content-border);
   border-radius: 10px;
   margin-top: 4px;
+  position: relative;
 }
 
 .theme-accordion.is-open .theme-accordion-content {
@@ -586,21 +590,6 @@ button {
   margin-top: 0;
 }
 
-.theme-field-category {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border-dim);
-  position: relative;
-}
-
-.theme-field-category:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.theme-field-category:first-child {
-  padding-top: 0;
-}
-
 .theme-field-category-title {
   font-family: var(--sans);
   font-size: 12px;
@@ -608,7 +597,15 @@ button {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text);
-  margin: 0 0 4px;
+  margin: 14px 0 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-dim);
+}
+
+.theme-field-category-title:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 /* =========================================================
@@ -879,41 +876,55 @@ button {
    Responsive
    ========================================================= */
 @media (min-width: 720px) {
-  .theme-field-category {
+  .theme-accordion.is-open .theme-accordion-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
     column-gap: 24px;
+    row-gap: 8px;
+    align-items: start;
   }
 
-  .theme-field-category::after {
+  /* Les titres de catégorie occupent toute la largeur, ce qui force
+     un retour à la ligne avant chaque nouvelle catégorie. */
+  .theme-accordion-content > .theme-field-category-title {
+    grid-column: 1 / -1;
+  }
+
+  /* Ligne verticale UNIQUE et continue sur toute la hauteur du menu
+     déplié (ne se coupe plus à chaque catégorie). */
+  .theme-accordion-content::after {
     content: '';
     position: absolute;
-    top: 10px;
-    bottom: 10px;
+    top: 12px;
+    bottom: 14px;
     left: 50%;
     width: 1px;
     background: var(--accordion-divider-color);
   }
 
-  /* Ligne horizontale fine entre chaque rangée de 2 sections,
-     insérée sans toucher les bords gauche/droite */
-  .theme-field-group:nth-child(n+3)::before {
+  /* Si une section se retrouve seule sur sa ligne (calculé en JS via
+     la classe .full-span), elle prend toute la largeur. */
+  .theme-field-group.full-span {
+    grid-column: 1 / -1;
+  }
+
+  /* Ligne horizontale fine entre rangées, calculée côté JS (classe
+     posée sur les groupes qui démarrent une 2e rangée ou plus au sein
+     de leur catégorie), sans toucher les bords gauche/droite. */
+  .theme-field-group.has-divider {
+    margin-top: 8px;
+    padding-top: 16px;
+    position: relative;
+  }
+
+  .theme-field-group.has-divider::before {
     content: '';
     position: absolute;
-    top: -8px;
+    top: 0;
     left: 12px;
     right: 12px;
     height: 1px;
     background: var(--accordion-divider-color);
-  }
-
-  .theme-field-group:nth-child(n+3) {
-    margin-top: 8px;
-    padding-top: 8px;
-  }
-
-  .theme-field-group:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
   }
 }
 

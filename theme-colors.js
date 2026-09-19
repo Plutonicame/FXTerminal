@@ -369,27 +369,42 @@ function renderThemeFields(sectionKey) {
     group.items.push(f);
   }
 
-  container.innerHTML = categories
-    .map((cat) => {
-      const groupsHtml = cat.groups
-        .map((group) => {
-          const rows = group.items
-            .map((f) => {
-              const hex = currentValueFor(f.v);
-              return `<div class="theme-field-row">
-                <span class="theme-field-label">${f.l}</span>
-                <button type="button" class="theme-field-swatch" style="background:${hex}" data-var="${f.v}" data-label="${f.l}"></button>
-              </div>`;
-            })
-            .join('');
-          const groupHeading = group.title ? `<p class="theme-field-group-title">${group.title}</p>` : '';
-          return `<div class="theme-field-group">${groupHeading}${rows}</div>`;
+  // IMPORTANT : les titres de catégorie et les groupes sont des éléments
+  // directs de la grille (pas imbriqués dans un conteneur par catégorie),
+  // pour que la grille à 2 colonnes — et la ligne de séparation verticale —
+  // reste continue sur tout le menu déplié, sans se couper à chaque
+  // catégorie. Chaque titre de catégorie force un retour à la ligne
+  // (grid-column: 1 / -1), donc les groupes qui suivent redémarrent
+  // proprement en colonne 1.
+  let html = '';
+  for (const cat of categories) {
+    if (cat.title) {
+      html += `<p class="theme-field-category-title">${cat.title}</p>`;
+    }
+    cat.groups.forEach((group, i) => {
+      const rows = group.items
+        .map((f) => {
+          const hex = currentValueFor(f.v);
+          return `<div class="theme-field-row">
+            <span class="theme-field-label">${f.l}</span>
+            <button type="button" class="theme-field-swatch" style="background:${hex}" data-var="${f.v}" data-label="${f.l}"></button>
+          </div>`;
         })
         .join('');
-      const catHeading = cat.title ? `<p class="theme-field-category-title">${cat.title}</p>` : '';
-      return `<div class="theme-field-category">${catHeading}${groupsHtml}</div>`;
-    })
-    .join('');
+      const groupHeading = group.title ? `<p class="theme-field-group-title">${group.title}</p>` : '';
+      // i >= 2 : ce groupe est sur une 2e rangée (ou plus) au sein de sa
+      // catégorie -> il reçoit la ligne de séparation horizontale au-dessus.
+      const isLast = i === cat.groups.length - 1;
+      const startsRowAlone = i % 2 === 0;
+      const classes = [
+        'theme-field-group',
+        i >= 2 ? 'has-divider' : '',
+        isLast && startsRowAlone ? 'full-span' : '',
+      ].filter(Boolean).join(' ');
+      html += `<div class="${classes}">${groupHeading}${rows}</div>`;
+    });
+  }
+  container.innerHTML = html;
 
   container.querySelectorAll('.theme-field-swatch').forEach((btn) => {
     btn.addEventListener('click', () => {
