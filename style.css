@@ -546,12 +546,15 @@ button {
   gap: 12px;
   padding: 8px 0;
   border-bottom: 1px solid var(--border-dim);
+  min-width: 0;
 }
 
 .theme-field-label {
   font-family: var(--sans);
   font-size: 13px;
   color: var(--accordion-content-text);
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .theme-field-swatch {
@@ -575,6 +578,7 @@ button {
   display: flex;
   flex-direction: column;
   position: relative;
+  min-width: 0;
 }
 
 .theme-field-group-title {
