@@ -905,11 +905,9 @@ button {
     background: var(--accordion-divider-color);
   }
 
-  /* Si une section se retrouve seule sur sa ligne (calculé en JS via
-     la classe .full-span), elle prend toute la largeur. */
-  .theme-field-group.full-span {
-    grid-column: 1 / -1;
-  }
+  /* (Les sections seules sur leur ligne restent dans une seule colonne
+     plutôt que de s'étirer sur toute la largeur, pour que chaque texte
+     reste toujours collé à son carré de couleur.) */
 
   /* Ligne horizontale fine entre rangées, calculée côté JS (classe
      posée sur les groupes qui démarrent une 2e rangée ou plus au sein

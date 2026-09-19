@@ -394,12 +394,9 @@ function renderThemeFields(sectionKey) {
       const groupHeading = group.title ? `<p class="theme-field-group-title">${group.title}</p>` : '';
       // i >= 2 : ce groupe est sur une 2e rangée (ou plus) au sein de sa
       // catégorie -> il reçoit la ligne de séparation horizontale au-dessus.
-      const isLast = i === cat.groups.length - 1;
-      const startsRowAlone = i % 2 === 0;
       const classes = [
         'theme-field-group',
         i >= 2 ? 'has-divider' : '',
-        isLast && startsRowAlone ? 'full-span' : '',
       ].filter(Boolean).join(' ');
       html += `<div class="${classes}">${groupHeading}${rows}</div>`;
     });
