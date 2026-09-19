@@ -49,7 +49,6 @@
   --accordion-content-text: var(--text);
   --accordion-content-title-color: var(--blue-light);
   --accordion-content-border: var(--border-dim);
-  --accordion-divider-color: #fafafa;
   --accordion-swatch-border: var(--border);
 
   --cp-modal-bg: var(--bg-card);
@@ -446,12 +445,10 @@ button {
   display: flex;
 }
 
-.theme-panel-frame {
-  display: flex;
-  flex-direction: column;
-  background: #464646;
-  border: 1px solid var(--border);
-  border-radius: 14px;
+.theme-panel-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-card);
   overflow: hidden;
 }
 
@@ -460,44 +457,15 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-dim);
-}
-
-.theme-accordion {
-  border-bottom: 1px solid var(--border-dim);
-}
-
-.theme-accordion:last-child {
-  border-bottom: none;
-}
-
-.theme-accordion-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 16px 20px;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  text-align: left;
-}
-
-.theme-accordion-row .chevron {
-  color: var(--text);
-  font-size: 14px;
-  transition: transform 0.15s ease;
 }
 
 .theme-panel-title {
   font-family: var(--mono);
-  font-size: 15px;
-  letter-spacing: 1.5px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--text);
 }
@@ -519,49 +487,98 @@ button {
   text-transform: uppercase;
 }
 
+.theme-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+}
+
+.theme-accordion {
+  border: 1px solid var(--border-dim);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.theme-accordion-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+}
+
+.theme-accordion-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.theme-accordion-row .chevron {
+  color: var(--text);
+  font-size: 10px;
+  transition: transform 0.15s ease;
+}
+
 .theme-accordion-row.is-open .chevron {
   transform: rotate(90deg);
 }
 
 .theme-accordion-content {
   display: none;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 20px 16px;
-  background: var(--accordion-content-bg);
-  border-top: 1px solid var(--accordion-content-border);
-  position: relative;
 }
 
 .theme-accordion.is-open .theme-accordion-content {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  padding: 4px 12px 12px;
 }
 
 .theme-field-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-dim);
+  gap: 10px;
+  padding: 5px 7px;
+  border-radius: 4px;
+  transition: background 0.1s;
   min-width: 0;
+}
+
+.theme-field-row:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .theme-field-label {
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 11px;
   color: var(--accordion-content-text);
   min-width: 0;
   overflow-wrap: break-word;
 }
 
 .theme-field-swatch {
-  width: 30px;
-  height: 30px;
+  width: 25px;
+  height: 25px;
   flex: 0 0 auto;
-  border-radius: 6px;
+  border-radius: 4px;
   border: 2px solid var(--accordion-swatch-border);
   cursor: pointer;
+  transition: border-color 0.12s;
+}
+
+.theme-field-swatch:hover {
+  border-color: var(--accordion-content-title-color);
 }
 
 .theme-field-empty {
@@ -575,21 +592,18 @@ button {
 .theme-field-group {
   display: flex;
   flex-direction: column;
-  position: relative;
   min-width: 0;
 }
 
 .theme-field-group-title {
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 1.5px;
+  font-size: 9px;
+  letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--accordion-content-title-color);
-  margin: 10px 0 4px;
-}
-
-.theme-field-group:first-child .theme-field-group-title {
-  margin-top: 0;
+  margin-bottom: 5px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--accordion-content-border);
 }
 
 .theme-field-category-title {
@@ -879,52 +893,13 @@ button {
    ========================================================= */
 @media (min-width: 720px) {
   .theme-accordion.is-open .theme-accordion-content {
-    display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap: 24px;
-    row-gap: 8px;
-    align-items: start;
   }
 
   /* Les titres de catégorie occupent toute la largeur, ce qui force
      un retour à la ligne avant chaque nouvelle catégorie. */
   .theme-accordion-content > .theme-field-category-title {
     grid-column: 1 / -1;
-  }
-
-  /* Ligne verticale UNIQUE et continue sur toute la hauteur du menu
-     déplié (ne se coupe plus à chaque catégorie). */
-  .theme-accordion-content::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 1px;
-    background: var(--accordion-divider-color);
-  }
-
-  /* (Les sections seules sur leur ligne restent dans une seule colonne
-     plutôt que de s'étirer sur toute la largeur, pour que chaque texte
-     reste toujours collé à son carré de couleur.) */
-
-  /* Ligne horizontale fine pleine largeur entre rangées, calculée côté
-     JS (classe posée sur les groupes qui démarrent une 2e rangée ou
-     plus au sein de leur catégorie) — comme dans TJP. */
-  .theme-field-group.has-divider {
-    margin-top: 8px;
-    padding-top: 16px;
-    position: relative;
-  }
-
-  .theme-field-group.has-divider::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -20px;
-    right: -20px;
-    height: 1px;
-    background: var(--accordion-divider-color);
   }
 }
 

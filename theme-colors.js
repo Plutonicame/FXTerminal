@@ -40,7 +40,6 @@ const THEME_FIELDS = {
     { v: '--accordion-content-title-color', l: 'Titre', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
     { v: '--accordion-content-text', l: 'Texte', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
     { v: '--accordion-content-border', l: 'Bordure du panneau', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
-    { v: '--accordion-divider-color', l: 'Ligne de séparation entre sections', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
     { v: '--accordion-swatch-border', l: 'Bordure des carrés de couleur', category: 'Menu déplié', section: 'Contenu (ex. Connexion)' },
 
     { v: '--cp-modal-bg', l: 'Fond', category: 'Sélecteur de couleur', section: 'Fenêtre' },
@@ -392,13 +391,7 @@ function renderThemeFields(sectionKey) {
         })
         .join('');
       const groupHeading = group.title ? `<p class="theme-field-group-title">${group.title}</p>` : '';
-      // i >= 2 : ce groupe est sur une 2e rangée (ou plus) au sein de sa
-      // catégorie -> il reçoit la ligne de séparation horizontale au-dessus.
-      const classes = [
-        'theme-field-group',
-        i >= 2 ? 'has-divider' : '',
-      ].filter(Boolean).join(' ');
-      html += `<div class="${classes}">${groupHeading}${rows}</div>`;
+      html += `<div class="theme-field-group">${groupHeading}${rows}</div>`;
     });
   }
   container.innerHTML = html;
