@@ -23,9 +23,13 @@
   --radius-round: 50%;
 
   --auth-bg: var(--bg-card);
+  --auth-border: var(--border-dim);
   --auth-google-btn-bg: #ffffff;
+  --auth-google-btn-border: #747775;
+  --auth-google-btn-hover-bg: #f8f8f8;
   --auth-text-color: var(--text);
   --auth-google-text-color: #1f1f1f;
+  --auth-error-text: var(--red-light);
 
   --nav-bg: #404040;
   --nav-border: var(--border);
@@ -38,12 +42,27 @@
   --burger-border: var(--border);
   --burger-bars-color: var(--text);
 
+  --menu-overlay-bg: rgba(0, 0, 0, 0.92);
+  --menu-close-bg: transparent;
+  --menu-close-border: var(--border);
+  --menu-close-text: var(--text);
+  --menu-tab-border: var(--border);
+  --menu-tab-text: var(--text);
+  --menu-tab-hover-text: var(--border);
+
   --settings-row-bg: #464646;
   --settings-row-border: var(--border);
   --settings-row-text: var(--text);
   --settings-btn-bg: var(--bg);
   --settings-btn-border: var(--border);
   --settings-btn-text: var(--text);
+
+  --theme-panel-bg: var(--bg-card);
+  --theme-panel-border: var(--border-dim);
+  --theme-accordion-bg: var(--bg);
+  --theme-accordion-border: var(--border-dim);
+  --theme-accordion-row-hover-bg: rgba(255, 255, 255, 0.04);
+  --theme-field-row-hover-bg: rgba(255, 255, 255, 0.05);
 
   --accordion-content-bg: transparent;
   --accordion-content-text: var(--text);
@@ -54,6 +73,21 @@
   --cp-modal-bg: var(--bg-card);
   --cp-modal-border: var(--border-dim);
   --cp-modal-text: var(--blue-light);
+  --cp-overlay-bg: rgba(0, 0, 0, 0.78);
+  --cp-hue-thumb-bg: #ffffff;
+  --cp-hue-label-color: var(--text-dim);
+  --cp-hex-bg: var(--bg);
+  --cp-hex-border: var(--border-dim);
+  --cp-hex-text: var(--text);
+  --cp-mem-label-color: var(--text-dim);
+  --cp-swatch-border: var(--border-dim);
+  --cp-cursor-border: #ffffff;
+  --cp-btn-ghost-bg: transparent;
+  --cp-btn-ghost-border: var(--border);
+  --cp-btn-ghost-text: var(--text);
+  --cp-btn-primary-bg: var(--blue);
+  --cp-btn-primary-border: var(--blue);
+  --cp-btn-primary-text: var(--text);
 
   --btn-collapse-bg: var(--bg);
   --btn-collapse-border: var(--border);
@@ -64,6 +98,10 @@
   --btn-apply-bg: #fafafa;
   --btn-apply-border: #fafafa;
   --btn-apply-text: #101010;
+
+  --save-spinner-track: rgba(255, 255, 255, 0.25);
+  --save-spinner-active: #ffffff;
+
 
   --topbar-h: 64px;
 }
@@ -210,7 +248,7 @@ button {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.92);
+  background: var(--menu-overlay-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 200;
@@ -225,9 +263,9 @@ button {
 
 .menu-close {
   align-self: flex-end;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: var(--menu-close-bg);
+  border: 1px solid var(--menu-close-border);
+  color: var(--menu-close-text);
   border-radius: var(--radius-sm);
   padding: 8px 16px;
   font-family: var(--mono);
@@ -242,19 +280,19 @@ button {
   letter-spacing: 0.8px;
   text-transform: uppercase;
   padding: 14px 16px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--menu-tab-border);
   border-radius: 6px;
   background: transparent;
-  color: var(--text);
+  color: var(--menu-tab-text);
   text-align: left;
 }
 
 .menu-tab.is-active {
-  border-color: var(--border);
+  border-color: var(--menu-tab-border);
 }
 
 .menu-tab:hover {
-  color: var(--border);
+  color: var(--menu-tab-hover-text);
 }
 
 /* =========================================================
@@ -276,7 +314,7 @@ button {
   width: 100%;
   max-width: 360px;
   background: var(--auth-bg);
-  border: 1px solid var(--border-dim);
+  border: 1px solid var(--auth-border);
   border-radius: var(--radius-card);
   padding: 32px 24px;
   text-align: center;
@@ -298,7 +336,7 @@ button {
   gap: 10px;
   padding: 11px 16px;
   background: var(--auth-google-btn-bg);
-  border: 1px solid #747775;
+  border: 1px solid var(--auth-google-btn-border);
   color: var(--auth-google-text-color);
   border-radius: var(--radius-sm);
   font-family: 'Roboto', var(--sans);
@@ -313,14 +351,14 @@ button {
 }
 
 .btn-google:hover {
-  background: #f8f8f8;
+  background: var(--auth-google-btn-hover-bg);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
 }
 
 .login-note {
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--red-light);
+  color: var(--auth-error-text);
   margin: 16px 0 0;
 }
 
@@ -446,8 +484,8 @@ button {
 }
 
 .theme-panel-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-dim);
+  background: var(--theme-panel-bg);
+  border: 1px solid var(--theme-panel-border);
   border-radius: var(--radius-card);
   overflow: hidden;
 }
@@ -495,10 +533,10 @@ button {
 }
 
 .theme-accordion {
-  border: 1px solid var(--border-dim);
+  border: 1px solid var(--theme-accordion-border);
   border-radius: 6px;
   overflow: hidden;
-  background: var(--bg);
+  background: var(--theme-accordion-bg);
 }
 
 .theme-accordion-row {
@@ -520,7 +558,7 @@ button {
 }
 
 .theme-accordion-row:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--theme-accordion-row-hover-bg);
 }
 
 .theme-accordion-row .chevron {
@@ -542,6 +580,7 @@ button {
   grid-template-columns: 1fr;
   gap: 10px;
   padding: 4px 12px 12px;
+  background: var(--accordion-content-bg);
 }
 
 .theme-field-row {
@@ -556,7 +595,7 @@ button {
 }
 
 .theme-field-row:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--theme-field-row-hover-bg);
 }
 
 .theme-field-label {
@@ -630,7 +669,7 @@ button {
 .cp-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.78);
+  background: var(--cp-overlay-bg);
   z-index: 400;
   display: none;
   align-items: center;
@@ -684,7 +723,7 @@ button {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  border: 2px solid #fff;
+  border: 2px solid var(--cp-cursor-border);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
   transform: translate(-50%, -50%);
   pointer-events: none;
@@ -692,7 +731,7 @@ button {
 
 .cp-hue-lbl {
   font-size: 8px;
-  color: var(--text-dim);
+  color: var(--cp-hue-label-color);
   font-family: var(--mono);
   letter-spacing: 1px;
   display: block;
@@ -717,7 +756,7 @@ button {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--cp-hue-thumb-bg);
   border: 2px solid rgba(0, 0, 0, 0.4);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   cursor: grab;
@@ -735,15 +774,15 @@ button {
   width: 34px;
   height: 34px;
   border-radius: 5px;
-  border: 2px solid var(--border-dim);
+  border: 2px solid var(--cp-swatch-border);
   flex-shrink: 0;
 }
 
 .cp-hex {
-  background: var(--bg);
-  border: 1px solid var(--border-dim);
+  background: var(--cp-hex-bg);
+  border: 1px solid var(--cp-hex-border);
   border-radius: 4px;
-  color: var(--text);
+  color: var(--cp-hex-text);
   font-family: var(--mono);
   font-size: 11px;
   padding: 5px 8px;
@@ -757,13 +796,13 @@ button {
 
 .cp-hex-lbl {
   font-size: 10px;
-  color: var(--text-dim);
+  color: var(--cp-hue-label-color);
   font-family: var(--mono);
 }
 
 .cp-mem-lbl {
   font-size: 9px;
-  color: var(--text-dim);
+  color: var(--cp-mem-label-color);
   font-family: var(--mono);
   letter-spacing: 1px;
   margin-bottom: 4px;
@@ -783,7 +822,7 @@ button {
   height: 21px;
   border-radius: 4px;
   cursor: pointer;
-  border: 2px solid var(--border-dim);
+  border: 2px solid var(--cp-swatch-border);
   transition: border-color 0.12s;
   flex-shrink: 0;
 }
@@ -808,15 +847,15 @@ button {
 }
 
 .cp-btn--ghost {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: var(--cp-btn-ghost-bg);
+  border: 1px solid var(--cp-btn-ghost-border);
+  color: var(--cp-btn-ghost-text);
 }
 
 .cp-btn--primary {
-  background: var(--blue);
-  border: 1px solid var(--blue);
-  color: var(--text);
+  background: var(--cp-btn-primary-bg);
+  border: 1px solid var(--cp-btn-primary-border);
+  color: var(--cp-btn-primary-text);
 }
 
 .theme-panel-footer {
@@ -836,12 +875,6 @@ button {
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
-}
-
-.theme-footer-btn--primary {
-  background: #fafafa;
-  border-color: #fafafa;
-  color: #101010;
 }
 
 #collapseColorsBtn {
@@ -874,8 +907,8 @@ button {
   height: 26px;
   z-index: 500;
   border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.25);
-  border-top-color: #ffffff;
+  border: 3px solid var(--save-spinner-track);
+  border-top-color: var(--save-spinner-active);
   animation: save-spin 0.8s linear infinite;
   pointer-events: none;
 }
