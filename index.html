@@ -69,20 +69,25 @@
 <nav class="side-menu" id="sideMenu" aria-hidden="true">
   <button type="button" class="menu-close" id="menuCloseBtn">Fermer ✕</button>
 
-  <button type="button" class="menu-tab is-active" data-tab="tab-1" aria-current="true">
+  <button type="button" class="menu-tab menu-tab--analyse is-active" data-tab="tab-1" aria-current="true">
     Analyse par devise
   </button>
 
-  <button type="button" class="menu-tab" data-tab="tab-2">
+  <button type="button" class="menu-tab menu-tab--evenements" data-tab="tab-2">
     Événements secondaires
   </button>
 
-  <button type="button" class="menu-tab" data-tab="tab-3">
+  <button type="button" class="menu-tab menu-tab--parametres" data-tab="tab-3">
     Paramètres
   </button>
 
-  <button type="button" class="menu-tab" id="logoutBtn">
-    Se déconnecter
+  <button type="button" class="menu-tab menu-tab--deconnexion" id="logoutBtn">
+    <svg class="menu-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+    <span>Déconnexion</span>
   </button>
 </nav>
 

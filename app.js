@@ -159,13 +159,13 @@ async function initAuth() {
   if (!window.Auth || !window.Auth.isConfigured()) {
     if (loginNote) {
       loginNote.hidden = false;
-      loginNote.textContent = 'Supabase non configuré — renseigne js/supabase-config.js.';
+      loginNote.textContent = 'Supabase non configuré — renseigne supabase-config.js.';
     }
     googleBtn.disabled = true;
     return;
   }
 
-  function showApp(session) {
+  function showApp() {
     loginScreen.hidden = true;
     appShell.hidden = false;
   }
@@ -180,13 +180,13 @@ async function initAuth() {
   // par le retour de redirection Google pourrait arriver pendant qu'on
   // attend getSession(), et on le raterait complètement.
   window.Auth.onAuthStateChange((newSession) => {
-    if (newSession) showApp(newSession);
+    if (newSession) showApp();
     else showLogin();
   });
 
   const session = await window.Auth.getSession();
   if (session) {
-    showApp(session);
+    showApp();
   } else {
     showLogin();
   }
@@ -203,7 +203,7 @@ async function initAuth() {
 }
 
 /* =========================================================
-   6. Panneau Thème & Mode Stylo
+   7. Panneau Thème & Mode Stylo
    ========================================================= */
 function initThemePanel() {
   const openBtn = document.getElementById('themeBtn');
@@ -285,7 +285,7 @@ function initThemePanel() {
 }
 
 /* =========================================================
-   7. Enregistrement du Service Worker (installabilité PWA)
+   8. Enregistrement du Service Worker (installabilité PWA)
    ========================================================= */
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;

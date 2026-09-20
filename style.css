@@ -52,6 +52,22 @@
   --menu-tab-border: var(--border);
   --menu-tab-text: var(--text);
   --menu-tab-hover-text: var(--border);
+  --menu-tab-analyse-bg: transparent;
+  --menu-tab-analyse-border: var(--menu-tab-border);
+  --menu-tab-analyse-text: var(--menu-tab-text);
+  --menu-tab-analyse-hover-text: var(--menu-tab-hover-text);
+  --menu-tab-evenements-bg: transparent;
+  --menu-tab-evenements-border: var(--menu-tab-border);
+  --menu-tab-evenements-text: var(--menu-tab-text);
+  --menu-tab-evenements-hover-text: var(--menu-tab-hover-text);
+  --menu-tab-parametres-bg: transparent;
+  --menu-tab-parametres-border: var(--menu-tab-border);
+  --menu-tab-parametres-text: var(--menu-tab-text);
+  --menu-tab-parametres-hover-text: var(--menu-tab-hover-text);
+  --menu-tab-deconnexion-bg: transparent;
+  --menu-tab-deconnexion-border: var(--menu-tab-border);
+  --menu-tab-deconnexion-text: var(--menu-tab-text);
+  --menu-tab-deconnexion-hover-text: var(--menu-tab-hover-text);
 
   --settings-row-bg: #464646;
   --settings-row-border: var(--border);
@@ -286,19 +302,50 @@ button {
   letter-spacing: 0.8px;
   text-transform: uppercase;
   padding: 14px 16px;
-  border: 1px solid var(--menu-tab-border);
+  border: 1px solid var(--tab-border);
   border-radius: 6px;
-  background: transparent;
-  color: var(--menu-tab-text);
+  background: var(--tab-bg);
+  color: var(--tab-text);
   text-align: left;
 }
 
-.menu-tab.is-active {
-  border-color: var(--menu-tab-border);
+.menu-tab:hover {
+  color: var(--tab-hover-text);
 }
 
-.menu-tab:hover {
-  color: var(--menu-tab-hover-text);
+/* Chaque onglet a ses propres couleurs (réglables dans Thème > Général). */
+.menu-tab--analyse {
+  --tab-bg: var(--menu-tab-analyse-bg);
+  --tab-border: var(--menu-tab-analyse-border);
+  --tab-text: var(--menu-tab-analyse-text);
+  --tab-hover-text: var(--menu-tab-analyse-hover-text);
+}
+.menu-tab--evenements {
+  --tab-bg: var(--menu-tab-evenements-bg);
+  --tab-border: var(--menu-tab-evenements-border);
+  --tab-text: var(--menu-tab-evenements-text);
+  --tab-hover-text: var(--menu-tab-evenements-hover-text);
+}
+.menu-tab--parametres {
+  --tab-bg: var(--menu-tab-parametres-bg);
+  --tab-border: var(--menu-tab-parametres-border);
+  --tab-text: var(--menu-tab-parametres-text);
+  --tab-hover-text: var(--menu-tab-parametres-hover-text);
+}
+.menu-tab--deconnexion {
+  --tab-bg: var(--menu-tab-deconnexion-bg);
+  --tab-border: var(--menu-tab-deconnexion-border);
+  --tab-text: var(--menu-tab-deconnexion-text);
+  --tab-hover-text: var(--menu-tab-deconnexion-hover-text);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-tab-icon {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
 }
 
 /* =========================================================
@@ -505,7 +552,11 @@ button {
   justify-content: space-between;
   gap: 16px;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border-dim);
+  /* Le bandeau déplié reprend les couleurs du bandeau "Thème" plié
+     (réglages "Bandeau" et "Bouton"), et non celles de la carte
+     englobante, qui garde son propre fond. */
+  background: var(--settings-row-bg);
+  border-bottom: 1px solid var(--settings-row-border);
 }
 
 .theme-panel-title {
@@ -514,7 +565,7 @@ button {
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--text);
+  color: var(--settings-row-text);
 }
 
 .theme-panel-actions {
@@ -524,9 +575,9 @@ button {
 
 .theme-pill-btn {
   padding: 8px 16px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text);
+  background: var(--settings-btn-bg);
+  border: 1px solid var(--settings-btn-border);
+  color: var(--settings-btn-text);
   border-radius: var(--radius-sm);
   font-family: var(--mono);
   font-size: 11px;
@@ -963,5 +1014,7 @@ button {
 
 @media (max-width: 640px) {
   .clock-city { font-size: 10px; }
-  .session-badge { padding: 6px 8px; font-size: 9px; }
+  /* Sur téléphone, le badge de session est masqué pour laisser toute la
+     place aux horloges. */
+  .session-badge { display: none; }
 }
