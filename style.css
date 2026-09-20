@@ -477,6 +477,8 @@ button {
   padding: 16px;
   gap: 12px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .theme-panel.is-open {
@@ -488,6 +490,7 @@ button {
   border: 1px solid var(--theme-panel-border);
   border-radius: var(--radius-card);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .theme-panel-topbar {
