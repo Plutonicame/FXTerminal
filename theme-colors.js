@@ -30,9 +30,12 @@ const THEME_FIELDS = {
     { v: '--auth-google-text-color', l: 'Texte', section: 'Bouton Google' },
   ],
   analyse: [
-    { v: '--currency-card-bg', l: 'Fond', section: 'Fenêtres des devises' },
-    { v: '--currency-card-border', l: 'Bordure', section: 'Fenêtres des devises' },
-    { v: '--currency-card-text', l: 'Texte (USD, EUR...)', section: 'Fenêtres des devises' },
+    { v: '--currency-card-bg', l: 'Fond', section: 'Boutons des devises' },
+    { v: '--currency-card-border', l: 'Bordure', section: 'Boutons des devises' },
+    { v: '--currency-card-text', l: 'Texte (USD, EUR...)', section: 'Boutons des devises' },
+    { v: '--currency-card-active-bg', l: 'Fond', section: 'Devise sélectionnée' },
+    { v: '--currency-card-active-border', l: 'Bordure', section: 'Devise sélectionnée' },
+    { v: '--currency-card-active-text', l: 'Texte', section: 'Devise sélectionnée' },
   ],
   evenements: [],
   parametres: [

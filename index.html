@@ -94,16 +94,46 @@
 <main class="app-main">
 
   <section class="tab-panel is-active" id="tab-1" role="tabpanel" aria-label="Analyse par devise">
-    <div class="currency-grid" aria-label="Devises">
-      <div class="currency-card" data-currency="USD"><span class="currency-code">USD</span></div>
-      <div class="currency-card" data-currency="EUR"><span class="currency-code">EUR</span></div>
-      <div class="currency-card" data-currency="JPY"><span class="currency-code">JPY</span></div>
-      <div class="currency-card" data-currency="GBP"><span class="currency-code">GBP</span></div>
-      <div class="currency-card" data-currency="CHF"><span class="currency-code">CHF</span></div>
-      <div class="currency-card" data-currency="CAD"><span class="currency-code">CAD</span></div>
-      <div class="currency-card" data-currency="AUD"><span class="currency-code">AUD</span></div>
-      <div class="currency-card" data-currency="NZD"><span class="currency-code">NZD</span></div>
-      <div class="currency-card" data-currency="CNY"><span class="currency-code">CNY</span></div>
+    <div class="currency-bar" role="tablist" aria-label="Devises">
+      <button type="button" class="currency-card" role="tab" data-currency="USD" aria-selected="false" aria-controls="currency-panel-USD">USD</button>
+      <button type="button" class="currency-card" role="tab" data-currency="EUR" aria-selected="false" aria-controls="currency-panel-EUR">EUR</button>
+      <button type="button" class="currency-card" role="tab" data-currency="JPY" aria-selected="false" aria-controls="currency-panel-JPY">JPY</button>
+      <button type="button" class="currency-card" role="tab" data-currency="GBP" aria-selected="false" aria-controls="currency-panel-GBP">GBP</button>
+      <button type="button" class="currency-card" role="tab" data-currency="CHF" aria-selected="false" aria-controls="currency-panel-CHF">CHF</button>
+      <button type="button" class="currency-card" role="tab" data-currency="CAD" aria-selected="false" aria-controls="currency-panel-CAD">CAD</button>
+      <button type="button" class="currency-card" role="tab" data-currency="AUD" aria-selected="false" aria-controls="currency-panel-AUD">AUD</button>
+      <button type="button" class="currency-card" role="tab" data-currency="NZD" aria-selected="false" aria-controls="currency-panel-NZD">NZD</button>
+      <button type="button" class="currency-card" role="tab" data-currency="CNY" aria-selected="false" aria-controls="currency-panel-CNY">CNY</button>
+    </div>
+
+    <div class="currency-panels">
+      <section class="currency-panel" id="currency-panel-USD" role="tabpanel" data-currency="USD" aria-label="Analyse USD" hidden>
+        <!-- Fenêtre USD : volontairement vide pour le moment -->
+      </section>
+      <section class="currency-panel" id="currency-panel-EUR" role="tabpanel" data-currency="EUR" aria-label="Analyse EUR" hidden>
+        <!-- Fenêtre EUR : volontairement vide pour le moment -->
+      </section>
+      <section class="currency-panel" id="currency-panel-JPY" role="tabpanel" data-currency="JPY" aria-label="Analyse JPY" hidden>
+        <!-- Fenêtre JPY : volontairement vide pour le moment -->
+      </section>
+      <section class="currency-panel" id="currency-panel-GBP" role="tabpanel" data-currency="GBP" aria-label="Analyse GBP" hidden>
+        <!-- Fenêtre GBP : volontairement vide pour le moment -->
+      </section>
+      <section class="currency-panel" id="currency-panel-CHF" role="tabpanel" data-currency="CHF" aria-label="Analyse CHF" hidden>
+        <!-- Fenêtre CHF : volontairement vide pour le moment -->
+      </section>
+      <section class="currency-panel" id="currency-panel-CAD" role="tabpanel" data-currency="CAD" aria-label="Analyse CAD" hidden>
+        <!-- Fenêtre CAD : volontairement vide pour le moment -->
+      </section>
+      <section class="currency-panel" id="currency-panel-AUD" role="tabpanel" data-currency="AUD" aria-label="Analyse AUD" hidden>
+        <!-- Fenêtre AUD : volontairement vide pour le moment -->
+      </section>
+      <section class="currency-panel" id="currency-panel-NZD" role="tabpanel" data-currency="NZD" aria-label="Analyse NZD" hidden>
+        <!-- Fenêtre NZD : volontairement vide pour le moment -->
+      </section>
+      <section class="currency-panel" id="currency-panel-CNY" role="tabpanel" data-currency="CNY" aria-label="Analyse CNY" hidden>
+        <!-- Fenêtre CNY : volontairement vide pour le moment -->
+      </section>
     </div>
   </section>
 

@@ -297,6 +297,37 @@ function registerServiceWorker() {
 }
 
 /* =========================================================
+   6bis. Barre des devises (onglet Analyse par devise)
+   Un clic sur une devise affiche sa propre fenêtre.
+   ========================================================= */
+function initCurrencyTabs() {
+  const buttons = Array.from(document.querySelectorAll('.currency-card[data-currency]'));
+  const panels = Array.from(document.querySelectorAll('.currency-panel'));
+  if (!buttons.length) return;
+
+  function selectCurrency(code) {
+    for (const btn of buttons) {
+      const isActive = btn.dataset.currency === code;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    }
+    for (const panel of panels) {
+      panel.hidden = panel.dataset.currency !== code;
+    }
+  }
+
+  for (const btn of buttons) {
+    btn.addEventListener('click', () => {
+      selectCurrency(btn.dataset.currency);
+      btn.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+    });
+  }
+
+  // Devise affichée au démarrage : la première de la liste (USD).
+  selectCurrency(buttons[0].dataset.currency);
+}
+
+/* =========================================================
    Init
    ========================================================= */
 document.addEventListener('DOMContentLoaded', () => {
@@ -305,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const menu = initBurgerMenu();
   initTabs(() => menu && menu.closeMenu());
+  initCurrencyTabs();
 
   initAuth();
   initThemePanel();

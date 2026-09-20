@@ -75,6 +75,9 @@
   --currency-card-bg: var(--bg-card);
   --currency-card-border: var(--border-dim);
   --currency-card-text: var(--text);
+  --currency-card-active-bg: #404040;
+  --currency-card-active-border: var(--border);
+  --currency-card-active-text: var(--text);
 
   --theme-panel-bg: var(--bg-card);
   --theme-panel-border: var(--border-dim);
@@ -466,33 +469,57 @@ button {
 }
 
 /* =========================================================
-   Onglet Analyse par devise — fenêtres des devises
+   Onglet Analyse par devise — barre des devises
+   Une seule ligne collée sous la barre de navigation : le haut des
+   boutons est carré et sans bordure, comme s'ils sortaient de la barre
+   (qui en cache le début). Le bas garde ses coins arrondis.
    ========================================================= */
-.currency-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  max-width: 720px;
-  margin: 0 auto;
+.currency-bar {
+  display: flex;
+  gap: 4px;
+  /* Annule le padding haut/côtés de .app-main pour coller la barre à la
+     barre de navigation et la faire aller d'un bord à l'autre. */
+  margin: -20px calc(-1 * clamp(12px, 4vw, 32px)) 16px;
+  padding: 0 clamp(12px, 4vw, 32px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.currency-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .currency-card {
+  flex: 1 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 22px 8px;
+  min-height: 44px;
+  padding: 0 8px;
   background: var(--currency-card-bg);
   border: 1px solid var(--currency-card-border);
-  border-radius: var(--radius-card);
+  border-top: none;
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+  color: var(--currency-card-text);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-.currency-code {
-  font-family: var(--mono);
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--currency-card-text);
+.currency-card.is-active {
+  background: var(--currency-card-active-bg);
+  border-color: var(--currency-card-active-border);
+  color: var(--currency-card-active-text);
+}
+
+@media (min-width: 720px) {
+  .currency-card {
+    font-size: 14px;
+    padding: 0 16px;
+  }
 }
 
 /* =========================================================
