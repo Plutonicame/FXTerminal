@@ -56,7 +56,8 @@ const THEME_FIELDS = {
     { v: '--cp-modal-bg', l: 'Fond', category: 'Sélecteur de couleur', section: 'Fenêtre' },
     { v: '--cp-modal-border', l: 'Bordure', category: 'Sélecteur de couleur', section: 'Fenêtre' },
     { v: '--cp-modal-text', l: 'Titre', category: 'Sélecteur de couleur', section: 'Fenêtre' },
-    { v: '--cp-overlay-bg', l: 'Fond assombri derrière', category: 'Sélecteur de couleur', section: 'Fenêtre' },
+    { v: '--cp-overlay-color', l: 'Couleur du fond assombri', category: 'Sélecteur de couleur', section: 'Fenêtre' },
+    { v: '--cp-overlay-alpha', l: 'Opacité', type: 'alpha', category: 'Sélecteur de couleur', section: 'Fenêtre' },
     { v: '--cp-overlay-blur', l: 'Niveau de flou', type: 'range', maxPx: 24, category: 'Sélecteur de couleur', section: 'Fenêtre' },
     { v: '--cp-cursor-border', l: 'Curseur sur la roue', category: 'Sélecteur de couleur', section: 'Fenêtre' },
     { v: '--cp-hue-thumb-bg', l: 'Curseur du curseur de teinte', category: 'Sélecteur de couleur', section: 'Fenêtre' },
@@ -100,7 +101,8 @@ const THEME_FIELDS = {
     { v: '--burger-border', l: 'Bordure', category: 'Barre de navigation', section: 'Menu burger (bouton)' },
     { v: '--burger-bars-color', l: 'Les 3 traits', category: 'Barre de navigation', section: 'Menu burger (bouton)' },
 
-    { v: '--menu-overlay-bg', l: 'Fond flouté', category: 'Menu burger déplié', section: 'Fond' },
+    { v: '--menu-overlay-color', l: 'Couleur du fond', category: 'Menu burger déplié', section: 'Fond' },
+    { v: '--menu-overlay-alpha', l: 'Opacité', type: 'alpha', category: 'Menu burger déplié', section: 'Fond' },
     { v: '--menu-overlay-blur', l: 'Niveau de flou', type: 'range', maxPx: 24, category: 'Menu burger déplié', section: 'Fond' },
     { v: '--menu-close-bg', l: 'Fond', category: 'Menu burger déplié', section: 'Bouton "Fermer"' },
     { v: '--menu-close-border', l: 'Bordure', category: 'Menu burger déplié', section: 'Bouton "Fermer"' },
@@ -167,10 +169,42 @@ function hideSaveSpinner() {
   if (el) el.classList.remove('is-visible');
 }
 
+// Champs "fond + opacité" : la valeur réellement appliquée en CSS
+// (target) est recalculée à partir d'une couleur (hex) et d'une
+// opacité (0-100) stockées séparément.
+const RGBA_COMBOS = [
+  { target: '--menu-overlay-bg', color: '--menu-overlay-color', alpha: '--menu-overlay-alpha' },
+  { target: '--cp-overlay-bg', color: '--cp-overlay-color', alpha: '--cp-overlay-alpha' },
+];
+
+function hexToRgbArr(value) {
+  if (!value) return [0, 0, 0];
+  const rgbaMatch = value.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (rgbaMatch) {
+    return [parseInt(rgbaMatch[1], 10), parseInt(rgbaMatch[2], 10), parseInt(rgbaMatch[3], 10)];
+  }
+  const hex = value.trim();
+  if (/^#[0-9a-f]{6}$/i.test(hex)) {
+    return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+  }
+  return [0, 0, 0];
+}
+
+function recomputeRgbaCombos() {
+  for (const combo of RGBA_COMBOS) {
+    const [r, g, b] = hexToRgbArr(currentValueFor(combo.color));
+    const alphaPct = parseFloat(currentValueFor(combo.alpha)) || 0;
+    const rgba = `rgba(${r}, ${g}, ${b}, ${alphaPct / 100})`;
+    themeVars[combo.target] = rgba;
+    document.documentElement.style.setProperty(combo.target, rgba);
+  }
+}
+
 function previewThemeVars() {
   Object.entries(themeVars).forEach(([v, c]) => {
     document.documentElement.style.setProperty(v, c);
   });
+  recomputeRgbaCombos();
 }
 
 /* =========================================================
@@ -450,7 +484,17 @@ function renderThemeFields(sectionKey) {
             return `<div class="theme-field-row">
               <span class="theme-field-label">${f.l}</span>
               <span style="display:flex;align-items:center;gap:8px;">
-                <input type="range" class="theme-field-range" min="0" max="100" value="${percent}" data-var="${f.v}" data-max-px="${f.maxPx}">
+                <input type="range" class="theme-field-range" min="0" max="100" value="${percent}" data-var="${f.v}" data-field-type="range" data-max-px="${f.maxPx}">
+                <span class="theme-field-range-value">${percent}%</span>
+              </span>
+            </div>`;
+          }
+          if (f.type === 'alpha') {
+            const percent = Math.max(0, Math.min(100, Math.round(parseFloat(currentValueFor(f.v)) || 0)));
+            return `<div class="theme-field-row">
+              <span class="theme-field-label">${f.l}</span>
+              <span style="display:flex;align-items:center;gap:8px;">
+                <input type="range" class="theme-field-range" min="0" max="100" value="${percent}" data-var="${f.v}" data-field-type="alpha">
                 <span class="theme-field-range-value">${percent}%</span>
               </span>
             </div>`;
@@ -484,9 +528,12 @@ function renderThemeFields(sectionKey) {
     const valueLabel = input.parentElement.querySelector('.theme-field-range-value');
     input.addEventListener('input', () => {
       const varName = input.dataset.var;
-      const maxPx = parseFloat(input.dataset.maxPx);
-      const px = percentToPx(input.value, maxPx);
-      themeVars[varName] = px;
+      if (input.dataset.fieldType === 'alpha') {
+        themeVars[varName] = input.value;
+      } else {
+        const maxPx = parseFloat(input.dataset.maxPx);
+        themeVars[varName] = percentToPx(input.value, maxPx);
+      }
       previewThemeVars();
       if (valueLabel) valueLabel.textContent = `${input.value}%`;
     });

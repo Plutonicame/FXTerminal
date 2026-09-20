@@ -42,6 +42,8 @@
   --burger-border: var(--border);
   --burger-bars-color: var(--text);
 
+  --menu-overlay-color: #000000;
+  --menu-overlay-alpha: 92;
   --menu-overlay-bg: rgba(0, 0, 0, 0.92);
   --menu-overlay-blur: 12px;
   --menu-close-bg: transparent;
@@ -74,6 +76,8 @@
   --cp-modal-bg: var(--bg-card);
   --cp-modal-border: var(--border-dim);
   --cp-modal-text: var(--blue-light);
+  --cp-overlay-color: #000000;
+  --cp-overlay-alpha: 78;
   --cp-overlay-bg: rgba(0, 0, 0, 0.78);
   --cp-overlay-blur: 0px;
   --cp-hue-thumb-bg: #ffffff;
