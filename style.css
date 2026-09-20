@@ -942,5 +942,4 @@ button {
 @media (max-width: 640px) {
   .clock-city { font-size: 10px; }
   .session-badge { padding: 6px 8px; font-size: 9px; }
-  .clock-seconds { font-size: 50%; vertical-align: middle; }
 }

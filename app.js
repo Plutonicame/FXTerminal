@@ -15,18 +15,13 @@ const CLOCKS = [
   { id: 'clock-tky', timeZone: 'Asia/Tokyo' },
 ];
 
-function formatTimeParts(date, timeZone) {
-  const hm = new Intl.DateTimeFormat('fr-FR', {
+function formatTime(date, timeZone) {
+  return new Intl.DateTimeFormat('fr-FR', {
     timeZone,
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   }).format(date);
-  const ss = new Intl.DateTimeFormat('fr-FR', {
-    timeZone,
-    second: '2-digit',
-  }).format(date);
-  return { hm, ss };
 }
 
 function updateClocks() {
@@ -34,12 +29,7 @@ function updateClocks() {
   for (const clock of CLOCKS) {
     const el = document.getElementById(clock.id);
     if (!el) continue;
-    const { hm, ss } = formatTimeParts(now, clock.timeZone);
-    el.textContent = '';
-    el.append(hm + ':', Object.assign(document.createElement('span'), {
-      className: 'clock-seconds',
-      textContent: ss,
-    }));
+    el.textContent = formatTime(now, clock.timeZone);
   }
 }
 
