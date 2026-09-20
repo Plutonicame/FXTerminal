@@ -52,19 +52,15 @@
   --menu-tab-border: var(--border);
   --menu-tab-text: var(--text);
   --menu-tab-hover-text: var(--border);
-  --menu-tab-analyse-bg: transparent;
   --menu-tab-analyse-border: var(--menu-tab-border);
   --menu-tab-analyse-text: var(--menu-tab-text);
   --menu-tab-analyse-hover-text: var(--menu-tab-hover-text);
-  --menu-tab-evenements-bg: transparent;
   --menu-tab-evenements-border: var(--menu-tab-border);
   --menu-tab-evenements-text: var(--menu-tab-text);
   --menu-tab-evenements-hover-text: var(--menu-tab-hover-text);
-  --menu-tab-parametres-bg: transparent;
   --menu-tab-parametres-border: var(--menu-tab-border);
   --menu-tab-parametres-text: var(--menu-tab-text);
   --menu-tab-parametres-hover-text: var(--menu-tab-hover-text);
-  --menu-tab-deconnexion-bg: transparent;
   --menu-tab-deconnexion-border: var(--menu-tab-border);
   --menu-tab-deconnexion-text: var(--menu-tab-text);
   --menu-tab-deconnexion-hover-text: var(--menu-tab-hover-text);
@@ -304,7 +300,7 @@ button {
   padding: 14px 16px;
   border: 1px solid var(--tab-border);
   border-radius: 6px;
-  background: var(--tab-bg);
+  background: transparent;
   color: var(--tab-text);
   text-align: left;
 }
@@ -315,25 +311,21 @@ button {
 
 /* Chaque onglet a ses propres couleurs (réglables dans Thème > Général). */
 .menu-tab--analyse {
-  --tab-bg: var(--menu-tab-analyse-bg);
   --tab-border: var(--menu-tab-analyse-border);
   --tab-text: var(--menu-tab-analyse-text);
   --tab-hover-text: var(--menu-tab-analyse-hover-text);
 }
 .menu-tab--evenements {
-  --tab-bg: var(--menu-tab-evenements-bg);
   --tab-border: var(--menu-tab-evenements-border);
   --tab-text: var(--menu-tab-evenements-text);
   --tab-hover-text: var(--menu-tab-evenements-hover-text);
 }
 .menu-tab--parametres {
-  --tab-bg: var(--menu-tab-parametres-bg);
   --tab-border: var(--menu-tab-parametres-border);
   --tab-text: var(--menu-tab-parametres-text);
   --tab-hover-text: var(--menu-tab-parametres-hover-text);
 }
 .menu-tab--deconnexion {
-  --tab-bg: var(--menu-tab-deconnexion-bg);
   --tab-border: var(--menu-tab-deconnexion-border);
   --tab-text: var(--menu-tab-deconnexion-text);
   --tab-hover-text: var(--menu-tab-deconnexion-hover-text);
