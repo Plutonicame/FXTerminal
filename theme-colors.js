@@ -29,7 +29,11 @@ const THEME_FIELDS = {
     { v: '--auth-google-btn-hover-bg', l: 'Fond au survol', section: 'Bouton Google' },
     { v: '--auth-google-text-color', l: 'Texte', section: 'Bouton Google' },
   ],
-  analyse: [],
+  analyse: [
+    { v: '--currency-card-bg', l: 'Fond', section: 'Fenêtres des devises' },
+    { v: '--currency-card-border', l: 'Bordure', section: 'Fenêtres des devises' },
+    { v: '--currency-card-text', l: 'Texte (USD, EUR...)', section: 'Fenêtres des devises' },
+  ],
   evenements: [],
   parametres: [
     { v: '--settings-row-bg', l: 'Fond', category: 'Thème', section: 'Bandeau' },

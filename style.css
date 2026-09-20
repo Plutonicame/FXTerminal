@@ -72,6 +72,10 @@
   --settings-btn-border: var(--border);
   --settings-btn-text: var(--text);
 
+  --currency-card-bg: var(--bg-card);
+  --currency-card-border: var(--border-dim);
+  --currency-card-text: var(--text);
+
   --theme-panel-bg: var(--bg-card);
   --theme-panel-border: var(--border-dim);
   --theme-accordion-bg: var(--bg);
@@ -459,6 +463,36 @@ button {
 
 .tab-panel.is-active {
   display: block;
+}
+
+/* =========================================================
+   Onglet Analyse par devise — fenêtres des devises
+   ========================================================= */
+.currency-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.currency-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 8px;
+  background: var(--currency-card-bg);
+  border: 1px solid var(--currency-card-border);
+  border-radius: var(--radius-card);
+}
+
+.currency-code {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--currency-card-text);
 }
 
 /* =========================================================
