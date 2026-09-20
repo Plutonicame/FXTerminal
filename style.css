@@ -522,6 +522,14 @@ button {
   }
 }
 
+/* TEST temporaire : point de couleur dans chaque fenêtre de devise */
+.currency-test-dot {
+  width: 56px;
+  height: 56px;
+  margin: 24px auto;
+  border-radius: 50%;
+}
+
 /* =========================================================
    Éléments réutilisables (cartes / graphiques)
    à disposition pour les prochains onglets
