@@ -463,13 +463,108 @@ function renderAllThemeFields() {
 }
 
 /* =========================================================
-   6. Appliquer / Réinitialiser (appelés depuis app.js)
+   6. Synchronisation cloud (Supabase) — un enregistrement par compte,
+   partagé en temps réel entre tous les appareils connectés avec le
+   même compte Google. Nécessite la table "user_settings" (voir
+   supabase-user-settings.sql) et fonctionne uniquement si connecté.
+   ========================================================= */
+const CLOUD_TABLE = 'user_settings';
+let cloudUserId = null;
+let cloudChannel = null;
+
+async function pullCloudTheme() {
+  if (!window.Auth || !cloudUserId) return;
+  const client = window.Auth.getClient();
+  if (!client) return;
+  const { data, error } = await client
+    .from(CLOUD_TABLE)
+    .select('theme_vars')
+    .eq('user_id', cloudUserId)
+    .maybeSingle();
+  if (error) {
+    console.error('🔵 [FX-THEME]', 'Erreur lecture cloud :', error);
+    return;
+  }
+  if (data && data.theme_vars) {
+    themeVars = data.theme_vars;
+    previewThemeVars();
+    try { localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(themeVars)); } catch (e) {}
+    renderAllThemeFields();
+    console.log('🔵 [FX-THEME]', 'Paramètres récupérés depuis le cloud pour ce compte.');
+  }
+}
+
+async function pushCloudTheme() {
+  if (!window.Auth || !cloudUserId) return;
+  const client = window.Auth.getClient();
+  if (!client) return;
+  const { error } = await client
+    .from(CLOUD_TABLE)
+    .upsert(
+      { user_id: cloudUserId, theme_vars: themeVars, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
+  if (error) {
+    console.error('🔵 [FX-THEME]', 'Erreur sauvegarde cloud :', error);
+  }
+}
+
+function subscribeCloudTheme() {
+  if (!window.Auth || !cloudUserId) return;
+  const client = window.Auth.getClient();
+  if (!client) return;
+
+  unsubscribeCloudTheme();
+
+  cloudChannel = client
+    .channel('user_settings_' + cloudUserId)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: CLOUD_TABLE, filter: `user_id=eq.${cloudUserId}` },
+      (payload) => {
+        const newVars = payload.new && payload.new.theme_vars;
+        if (newVars) {
+          themeVars = newVars;
+          previewThemeVars();
+          try { localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(themeVars)); } catch (e) {}
+          renderAllThemeFields();
+          console.log('🔵 [FX-THEME]', 'Thème mis à jour en direct depuis un autre appareil.');
+        }
+      }
+    )
+    .subscribe();
+}
+
+function unsubscribeCloudTheme() {
+  if (cloudChannel && window.Auth) {
+    const client = window.Auth.getClient();
+    if (client) client.removeChannel(cloudChannel);
+  }
+  cloudChannel = null;
+}
+
+function initCloudSync() {
+  if (!window.Auth) return;
+
+  window.Auth.onAuthStateChange((session) => {
+    const userId = session && session.user ? session.user.id : null;
+    if (userId && userId !== cloudUserId) {
+      cloudUserId = userId;
+      pullCloudTheme().then(subscribeCloudTheme);
+    } else if (!userId && cloudUserId) {
+      cloudUserId = null;
+      unsubscribeCloudTheme();
+    }
+  });
+}
+
+/* =========================================================
+   7. Appliquer / Réinitialiser (appelés depuis app.js)
    ========================================================= */
 function applyThemeVars() {
   previewThemeVars();
   saveThemeVars();
-  // TODO : sauvegarde cloud (Supabase) — nécessite une table de
-  // paramètres utilisateur, pas encore créée à ce stade du projet.
+  pushCloudTheme();
 }
 
 function resetThemeVars() {
@@ -477,6 +572,7 @@ function resetThemeVars() {
   saveThemeVars();
   document.documentElement.removeAttribute('style');
   renderAllThemeFields();
+  pushCloudTheme();
 }
 
 /* =========================================================
@@ -487,6 +583,7 @@ function initThemeColors() {
   previewThemeVars();
   initColorPickerEngine();
   renderAllThemeFields();
+  initCloudSync();
 }
 
 window.ThemeColors = {

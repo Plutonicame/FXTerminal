@@ -104,6 +104,7 @@ function onAuthStateChange(callback) {
 
 window.Auth = {
   isConfigured,
+  getClient,
   getSession,
   signInWithGoogle,
   signOut,
