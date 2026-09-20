@@ -57,6 +57,7 @@ const THEME_FIELDS = {
     { v: '--cp-modal-border', l: 'Bordure', category: 'Sélecteur de couleur', section: 'Fenêtre' },
     { v: '--cp-modal-text', l: 'Titre', category: 'Sélecteur de couleur', section: 'Fenêtre' },
     { v: '--cp-overlay-bg', l: 'Fond assombri derrière', category: 'Sélecteur de couleur', section: 'Fenêtre' },
+    { v: '--cp-overlay-blur', l: 'Niveau de flou', type: 'range', maxPx: 24, category: 'Sélecteur de couleur', section: 'Fenêtre' },
     { v: '--cp-cursor-border', l: 'Curseur sur la roue', category: 'Sélecteur de couleur', section: 'Fenêtre' },
     { v: '--cp-hue-thumb-bg', l: 'Curseur du curseur de teinte', category: 'Sélecteur de couleur', section: 'Fenêtre' },
     { v: '--cp-hue-label-color', l: 'Libellé "Teinte"', category: 'Sélecteur de couleur', section: 'Champ hexadécimal' },
@@ -100,6 +101,7 @@ const THEME_FIELDS = {
     { v: '--burger-bars-color', l: 'Les 3 traits', category: 'Barre de navigation', section: 'Menu burger (bouton)' },
 
     { v: '--menu-overlay-bg', l: 'Fond flouté', category: 'Menu burger déplié', section: 'Fond' },
+    { v: '--menu-overlay-blur', l: 'Niveau de flou', type: 'range', maxPx: 24, category: 'Menu burger déplié', section: 'Fond' },
     { v: '--menu-close-bg', l: 'Fond', category: 'Menu burger déplié', section: 'Bouton "Fermer"' },
     { v: '--menu-close-border', l: 'Bordure', category: 'Menu burger déplié', section: 'Bouton "Fermer"' },
     { v: '--menu-close-text', l: 'Texte', category: 'Menu burger déplié', section: 'Bouton "Fermer"' },
@@ -382,6 +384,17 @@ function initColorPickerEngine() {
 /* =========================================================
    5. Construction des lignes de champs par section
    ========================================================= */
+function pxToPercent(value, maxPx) {
+  const px = parseFloat(value) || 0;
+  const pct = Math.round((px / maxPx) * 100);
+  return Math.max(0, Math.min(100, pct));
+}
+
+function percentToPx(percent, maxPx) {
+  const pct = Math.max(0, Math.min(100, parseFloat(percent) || 0));
+  return `${(pct / 100) * maxPx}px`;
+}
+
 function currentValueFor(varName) {
   if (themeVars[varName]) return themeVars[varName];
   const computed = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
@@ -432,6 +445,16 @@ function renderThemeFields(sectionKey) {
     cat.groups.forEach((group, i) => {
       const rows = group.items
         .map((f) => {
+          if (f.type === 'range') {
+            const percent = pxToPercent(currentValueFor(f.v), f.maxPx);
+            return `<div class="theme-field-row">
+              <span class="theme-field-label">${f.l}</span>
+              <span style="display:flex;align-items:center;gap:8px;">
+                <input type="range" class="theme-field-range" min="0" max="100" value="${percent}" data-var="${f.v}" data-max-px="${f.maxPx}">
+                <span class="theme-field-range-value">${percent}%</span>
+              </span>
+            </div>`;
+          }
           const hex = currentValueFor(f.v);
           return `<div class="theme-field-row">
             <span class="theme-field-label">${f.l}</span>
@@ -454,6 +477,21 @@ function renderThemeFields(sectionKey) {
         previewThemeVars();
         btn.style.background = newHex;
       });
+    });
+  });
+
+  container.querySelectorAll('.theme-field-range').forEach((input) => {
+    const valueLabel = input.parentElement.querySelector('.theme-field-range-value');
+    input.addEventListener('input', () => {
+      const varName = input.dataset.var;
+      const maxPx = parseFloat(input.dataset.maxPx);
+      const px = percentToPx(input.value, maxPx);
+      themeVars[varName] = px;
+      previewThemeVars();
+      if (valueLabel) valueLabel.textContent = `${input.value}%`;
+    });
+    input.addEventListener('change', () => {
+      applyThemeVars();
     });
   });
 }

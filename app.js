@@ -15,11 +15,14 @@ const CLOCKS = [
   { id: 'clock-tky', timeZone: 'Asia/Tokyo' },
 ];
 
+const MOBILE_QUERY = window.matchMedia('(max-width: 640px)');
+
 function formatTime(date, timeZone) {
   return new Intl.DateTimeFormat('fr-FR', {
     timeZone,
     hour: '2-digit',
     minute: '2-digit',
+    second: MOBILE_QUERY.matches ? undefined : '2-digit',
     hour12: false,
   }).format(date);
 }

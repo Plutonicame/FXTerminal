@@ -43,6 +43,7 @@
   --burger-bars-color: var(--text);
 
   --menu-overlay-bg: rgba(0, 0, 0, 0.92);
+  --menu-overlay-blur: 12px;
   --menu-close-bg: transparent;
   --menu-close-border: var(--border);
   --menu-close-text: var(--text);
@@ -74,6 +75,7 @@
   --cp-modal-border: var(--border-dim);
   --cp-modal-text: var(--blue-light);
   --cp-overlay-bg: rgba(0, 0, 0, 0.78);
+  --cp-overlay-blur: 0px;
   --cp-hue-thumb-bg: #ffffff;
   --cp-hue-label-color: var(--text-dim);
   --cp-hex-bg: var(--bg);
@@ -249,8 +251,8 @@ button {
   position: fixed;
   inset: 0;
   background: var(--menu-overlay-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(var(--menu-overlay-blur));
+  -webkit-backdrop-filter: blur(var(--menu-overlay-blur));
   z-index: 200;
   flex-direction: column;
   padding: 20px;
@@ -623,6 +625,20 @@ button {
   border-color: var(--accordion-content-title-color);
 }
 
+.theme-field-range {
+  width: 120px;
+  accent-color: var(--accordion-content-title-color);
+  cursor: pointer;
+}
+
+.theme-field-range-value {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--accordion-content-text);
+  min-width: 32px;
+  text-align: right;
+}
+
 .theme-field-empty {
   font-family: var(--sans);
   font-size: 12px;
@@ -673,6 +689,8 @@ button {
   position: fixed;
   inset: 0;
   background: var(--cp-overlay-bg);
+  backdrop-filter: blur(var(--cp-overlay-blur));
+  -webkit-backdrop-filter: blur(var(--cp-overlay-blur));
   z-index: 400;
   display: none;
   align-items: center;
