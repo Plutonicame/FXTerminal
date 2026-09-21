@@ -384,6 +384,51 @@ function actualDirection(ev) {
   return '';
 }
 
+// Abréviations affichées dans la colonne "Événement". Chaque règle remplace
+// le texte de gauche par celui de droite, dans l'ordre : les règles
+// les plus précises d'abord. Le nom complet reste visible en maintenant
+// le doigt (ou en survolant) le nom. Pour ajouter une abréviation,
+// ajouter simplement une ligne à cette liste.
+const CALENDAR_ABBREVIATIONS = [
+  ['Non-Farm Employment Change', 'NFP'],
+  ['Non-Farm Payrolls', 'NFP'],
+  ['FOMC Statement', 'FOMC'],
+  ['MPC Official Bank Rate Votes', 'MPC Votes'],
+  ['Official Bank Rate', 'BoE Rate'],
+  ['Official Cash Rate', 'OCR'],
+  ['Federal Funds Rate', 'Fed Funds Rate'],
+  ['ECB Main Refinancing Rate', 'ECB Rate'],
+  ['BOJ Policy Rate', 'BOJ Rate'],
+  ['SNB Policy Rate', 'SNB Rate'],
+  ['SNB Monetary Policy Assessment', 'SNB Assessment'],
+  ['Overnight Rate', 'BOC Rate'],
+  ['Rate Statement', 'Statement'],
+  ['Press Conference', 'Press Conf.'],
+  ['Average Hourly Earnings', 'AHE'],
+  ['Average Cash Earnings', 'Avg Cash Earnings'],
+  ['Average Earnings Index', 'Avg Earnings'],
+  ['Wage Price Index', 'WPI'],
+  ['GDT Price Index', 'GDT'],
+  ['KOF Economic Barometer', 'KOF'],
+  ['ZEW Economic Sentiment', 'ZEW'],
+  ['Consumer Price Index', 'CPI'],
+  ['Producer Price Index', 'PPI'],
+  ['Gross Domestic Product', 'GDP'],
+  ['Core PCE Price Index', 'Core PCE'],
+  ['CPI Flash Estimate', 'CPI Flash'],
+  ['Tankan Manufacturing Index', 'Tankan Mfg'],
+  ['Non-Manufacturing', 'Non-Mfg'],
+  ['Manufacturing', 'Mfg'],
+];
+
+function abbreviateEventTitle(title) {
+  let result = String(title);
+  for (const [from, to] of CALENDAR_ABBREVIATIONS) {
+    result = result.split(from).join(to);
+  }
+  return result;
+}
+
 function calendarCell(value, extraClass) {
   const text = value === null || value === undefined || value === '' ? '—' : escapeHtml(value);
   return `<td class="calendar-value${extraClass ? ' ' + extraClass : ''}">${text}</td>`;
@@ -407,12 +452,12 @@ function renderCalendar(code, events, isDemo) {
   const rows = events.map((ev) => {
     const impact = ev.impact === 'high' ? 'high' : 'medium';
     return `<tr>
-      <td><span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name">${escapeHtml(ev.title)}</span></td>
-      ${calendarCell(ev.previous)}
-      ${calendarCell(ev.forecast_low)}
-      ${calendarCell(ev.forecast_mid)}
-      ${calendarCell(ev.forecast_high)}
+      <td><span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(abbreviateEventTitle(ev.title))}</span></td>
       ${calendarCell(ev.actual, 'calendar-value--actual' + (actualDirection(ev) ? ' calendar-value--' + actualDirection(ev) : ''))}
+      ${calendarCell(ev.forecast_high)}
+      ${calendarCell(ev.forecast_mid)}
+      ${calendarCell(ev.forecast_low)}
+      ${calendarCell(ev.previous)}
     </tr>`;
   }).join('');
 
@@ -421,11 +466,11 @@ function renderCalendar(code, events, isDemo) {
       <thead>
         <tr>
           <th scope="col">Événement</th>
-          <th scope="col">Avant</th>
-          <th scope="col">Prév. basse</th>
-          <th scope="col">Prév. moy.</th>
-          <th scope="col">Prév. haute</th>
           <th scope="col">Sortie</th>
+          <th scope="col">Prév. haute</th>
+          <th scope="col">Prév. moy.</th>
+          <th scope="col">Prév. basse</th>
+          <th scope="col">Avant</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
