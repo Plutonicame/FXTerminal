@@ -297,15 +297,141 @@ function registerServiceWorker() {
 }
 
 /* =========================================================
-   6bis. Barre des devises (onglet Analyse par devise)
-   Un clic sur une devise affiche sa propre fenêtre.
+   6bis. Barre des devises + calendrier économique
+   (onglet Analyse par devise). Un clic sur une devise affiche sa
+   propre fenêtre, avec les événements importants (impact rouge et
+   orange) lus dans la table Supabase "calendar_events".
    ========================================================= */
+const CALENDAR_IMPACTS = ['high', 'medium'];
+const CALENDAR_REFRESH_MS = 60000;
+
+// Données FICTIVES, affichées seulement tant que la table Supabase
+// "calendar_events" est inaccessible (pas encore créée), avec un bandeau
+// "Données d'exemple". Dès que la table existe, elles ne servent plus.
+// Ligne : [nom, impact, avant, prév. basse, prév. moyenne, prév. haute, sortie]
+const CALENDAR_DEMO = {
+  USD: [["Non-Farm Employment Change", "high", "73K", "40K", "75K", "110K", null], ["CPI m/m", "high", "0.2%", "0.1%", "0.3%", "0.4%", "0.3%"], ["Unemployment Claims", "medium", "231K", "225K", "230K", "238K", null]],
+  EUR: [["ECB Main Refinancing Rate", "high", "2.15%", "2.15%", "2.15%", "2.15%", "2.15%"], ["CPI Flash Estimate y/y", "high", "2.0%", "1.9%", "2.1%", "2.2%", null], ["German ZEW Economic Sentiment", "medium", "34.7", "30.0", "36.0", "41.0", null]],
+  JPY: [["BOJ Policy Rate", "high", "0.50%", "0.50%", "0.50%", "0.75%", null], ["National Core CPI y/y", "medium", "3.1%", "2.9%", "3.0%", "3.2%", "3.0%"]],
+  GBP: [["Official Bank Rate", "high", "4.00%", "4.00%", "4.00%", "4.00%", null], ["CPI y/y", "high", "3.8%", "3.7%", "3.8%", "3.9%", null], ["GDP m/m", "medium", "0.0%", "-0.1%", "0.1%", "0.2%", null]],
+  CHF: [["SNB Policy Rate", "high", "0.00%", "0.00%", "0.00%", "0.00%", "0.00%"], ["CPI m/m", "medium", "0.0%", "-0.1%", "0.0%", "0.1%", null]],
+  CAD: [["Employment Change", "high", "-40.8K", "-5.0K", "5.0K", "15.0K", null], ["BOC Rate Statement", "high", "", "", "", "", null], ["CPI m/m", "medium", "0.3%", "0.1%", "0.2%", "0.3%", null]],
+  AUD: [["Cash Rate", "high", "3.60%", "3.60%", "3.60%", "3.60%", null], ["Employment Change", "high", "24.5K", "15.0K", "22.0K", "30.0K", null], ["Wage Price Index q/q", "medium", "0.9%", "0.8%", "0.9%", "1.0%", null]],
+  NZD: [["Official Cash Rate", "high", "3.00%", "2.75%", "3.00%", "3.00%", null], ["GDP q/q", "high", "-0.9%", "0.1%", "0.3%", "0.5%", null], ["Trade Balance", "medium", "-390M", "-450M", "-300M", "-150M", null]],
+  CNY: [["GDP q/y", "high", "5.2%", "4.9%", "5.1%", "5.3%", null], ["Manufacturing PMI", "medium", "49.4", "49.3", "49.5", "49.8", "49.4"], ["CPI y/y", "medium", "0.0%", "-0.1%", "0.1%", "0.2%", null]],
+};
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function demoCalendarEvents(code) {
+  return (CALENDAR_DEMO[code] || []).map((r) => ({
+    title: r[0],
+    impact: r[1],
+    previous: r[2],
+    forecast_low: r[3],
+    forecast_mid: r[4],
+    forecast_high: r[5],
+    actual: r[6],
+  }));
+}
+
+// Renvoie { events } (tableau, éventuellement vide) ou { events: null }
+// si la lecture est impossible (client absent, table inexistante...).
+async function fetchCalendarEvents(code) {
+  const client = window.Auth && window.Auth.getClient ? window.Auth.getClient() : null;
+  if (!client) return { events: null };
+  const { data, error } = await client
+    .from('calendar_events')
+    .select('title, impact, previous, forecast_low, forecast_mid, forecast_high, actual, event_time')
+    .eq('currency', code)
+    .in('impact', CALENDAR_IMPACTS)
+    .order('event_time', { ascending: true });
+  if (error) {
+    console.error('Calendrier économique : lecture impossible :', error);
+    return { events: null };
+  }
+  return { events: data || [] };
+}
+
+function calendarCell(value, extraClass) {
+  const text = value === null || value === undefined || value === '' ? '—' : escapeHtml(value);
+  return `<td class="calendar-value${extraClass ? ' ' + extraClass : ''}">${text}</td>`;
+}
+
+function renderCalendar(code, events, isDemo) {
+  const container = document.querySelector(`.calendar[data-currency="${code}"]`);
+  if (!container) return;
+
+  let html = '';
+  if (isDemo) {
+    html += '<p class="calendar-note">Données d\'exemple — calendrier réel pas encore branché</p>';
+  }
+
+  if (!events.length) {
+    html += '<div class="calendar-scroll"><p class="calendar-empty">Aucun événement important</p></div>';
+    container.innerHTML = html;
+    return;
+  }
+
+  const rows = events.map((ev) => {
+    const impact = ev.impact === 'high' ? 'high' : 'medium';
+    return `<tr>
+      <td><span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name">${escapeHtml(ev.title)}</span></td>
+      ${calendarCell(ev.previous)}
+      ${calendarCell(ev.forecast_low)}
+      ${calendarCell(ev.forecast_mid)}
+      ${calendarCell(ev.forecast_high)}
+      ${calendarCell(ev.actual, 'calendar-value--actual')}
+    </tr>`;
+  }).join('');
+
+  html += `<div class="calendar-scroll">
+    <table class="calendar-table">
+      <thead>
+        <tr>
+          <th scope="col">Événement</th>
+          <th scope="col">Avant</th>
+          <th scope="col">Prév. basse</th>
+          <th scope="col">Prév. moy.</th>
+          <th scope="col">Prév. haute</th>
+          <th scope="col">Sortie</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+  container.innerHTML = html;
+}
+
+const calendarRequestId = {};
+
+async function loadCalendar(code) {
+  const requestId = (calendarRequestId[code] || 0) + 1;
+  calendarRequestId[code] = requestId;
+
+  const { events } = await fetchCalendarEvents(code);
+  // Une réponse plus récente est déjà arrivée : on ignore celle-ci.
+  if (calendarRequestId[code] !== requestId) return;
+
+  if (events === null) renderCalendar(code, demoCalendarEvents(code), true);
+  else renderCalendar(code, events, false);
+}
+
 function initCurrencyTabs() {
   const buttons = Array.from(document.querySelectorAll('.currency-card[data-currency]'));
   const panels = Array.from(document.querySelectorAll('.currency-panel'));
   if (!buttons.length) return;
 
+  let activeCode = null;
+
   function selectCurrency(code) {
+    activeCode = code;
     for (const btn of buttons) {
       const isActive = btn.dataset.currency === code;
       btn.classList.toggle('is-active', isActive);
@@ -314,12 +440,27 @@ function initCurrencyTabs() {
     for (const panel of panels) {
       panel.hidden = panel.dataset.currency !== code;
     }
+    loadCalendar(code);
   }
 
   for (const btn of buttons) {
     btn.addEventListener('click', () => {
       selectCurrency(btn.dataset.currency);
       btn.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+    });
+  }
+
+  // Les valeurs "sortie" arrivent après la publication : on rafraîchit
+  // la devise affichée toutes les minutes.
+  window.setInterval(() => {
+    if (activeCode && !document.hidden) loadCalendar(activeCode);
+  }, CALENDAR_REFRESH_MS);
+
+  // Au démarrage, la session peut ne pas être encore restaurée : on
+  // recharge dès qu'elle l'est (sinon les règles d'accès renverraient 0 ligne).
+  if (window.Auth && window.Auth.onAuthStateChange) {
+    window.Auth.onAuthStateChange((session) => {
+      if (session && activeCode) loadCalendar(activeCode);
     });
   }
 

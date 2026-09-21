@@ -36,6 +36,16 @@ const THEME_FIELDS = {
     { v: '--currency-card-active-bg', l: 'Fond', section: 'Devise sélectionnée' },
     { v: '--currency-card-active-border', l: 'Bordure', section: 'Devise sélectionnée' },
     { v: '--currency-card-active-text', l: 'Texte', section: 'Devise sélectionnée' },
+
+    { v: '--calendar-bg', l: 'Fond', section: 'Calendrier — tableau' },
+    { v: '--calendar-border', l: 'Bordure et lignes', section: 'Calendrier — tableau' },
+    { v: '--calendar-head-bg', l: 'Fond', section: 'Calendrier — en-tête' },
+    { v: '--calendar-head-text', l: 'Texte', section: 'Calendrier — en-tête' },
+    { v: '--calendar-name-text', l: "Nom de l'événement", section: 'Calendrier — textes' },
+    { v: '--calendar-value-text', l: 'Valeurs (avant, prévisions)', section: 'Calendrier — textes' },
+    { v: '--calendar-actual-text', l: 'Valeur sortie', section: 'Calendrier — textes' },
+    { v: '--calendar-impact-high', l: 'Rouge (impact fort)', section: 'Calendrier — impact' },
+    { v: '--calendar-impact-medium', l: 'Orange (impact moyen)', section: 'Calendrier — impact' },
   ],
   evenements: [],
   parametres: [

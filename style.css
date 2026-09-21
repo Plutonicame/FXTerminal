@@ -79,6 +79,16 @@
   --currency-card-active-border: var(--border);
   --currency-card-active-text: var(--text);
 
+  --calendar-bg: var(--bg-card);
+  --calendar-border: var(--border-dim);
+  --calendar-head-bg: var(--bg);
+  --calendar-head-text: var(--text-dim);
+  --calendar-name-text: var(--text);
+  --calendar-value-text: var(--text);
+  --calendar-actual-text: var(--blue-light);
+  --calendar-impact-high: var(--red);
+  --calendar-impact-medium: #ff9800;
+
   --theme-panel-bg: var(--bg-card);
   --theme-panel-border: var(--border-dim);
   --theme-accordion-bg: var(--bg);
@@ -520,6 +530,114 @@ button {
     font-size: 14px;
     padding: 0 16px;
   }
+}
+
+/* =========================================================
+   Calendrier économique (dans chaque fenêtre de devise)
+   ========================================================= */
+.calendar-note {
+  margin: 0 0 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--red-light);
+}
+
+.calendar-empty {
+  padding: 24px 16px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.calendar-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--calendar-bg);
+  border: 1px solid var(--calendar-border);
+  border-radius: var(--radius-card);
+}
+
+.calendar-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.calendar-table th,
+.calendar-table td {
+  padding: 10px 8px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--calendar-border);
+}
+
+.calendar-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Première colonne (nom) figée à gauche quand le tableau défile. */
+.calendar-table th:first-child,
+.calendar-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 160px;
+  max-width: 200px;
+  padding-left: 12px;
+  text-align: left;
+  white-space: normal;
+}
+
+.calendar-table td:first-child {
+  background: var(--calendar-bg);
+}
+
+.calendar-table th {
+  background: var(--calendar-head-bg);
+  color: var(--calendar-head-text);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.calendar-impact {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: var(--radius-round);
+  vertical-align: middle;
+}
+
+.calendar-impact--high { background: var(--calendar-impact-high); }
+.calendar-impact--medium { background: var(--calendar-impact-medium); }
+
+.calendar-name {
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--calendar-name-text);
+  vertical-align: middle;
+}
+
+.calendar-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--calendar-value-text);
+}
+
+.calendar-value--actual {
+  font-weight: 700;
+  color: var(--calendar-actual-text);
 }
 
 /* =========================================================
