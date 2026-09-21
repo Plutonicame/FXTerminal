@@ -384,49 +384,67 @@ function actualDirection(ev) {
   return '';
 }
 
-// Abréviations affichées dans la colonne "Événement". Chaque règle remplace
-// le texte de gauche par celui de droite, dans l'ordre : les règles
-// les plus précises d'abord. Le nom complet reste visible en maintenant
-// le doigt (ou en survolant) le nom. Pour ajouter une abréviation,
-// ajouter simplement une ligne à cette liste.
-const CALENDAR_ABBREVIATIONS = [
-  ['Non-Farm Employment Change', 'NFP'],
-  ['Non-Farm Payrolls', 'NFP'],
-  ['FOMC Statement', 'FOMC'],
-  ['MPC Official Bank Rate Votes', 'MPC Votes'],
-  ['Official Bank Rate', 'BoE Rate'],
-  ['Official Cash Rate', 'OCR'],
-  ['Federal Funds Rate', 'Fed Funds Rate'],
-  ['ECB Main Refinancing Rate', 'ECB Rate'],
-  ['BOJ Policy Rate', 'BOJ Rate'],
-  ['SNB Policy Rate', 'SNB Rate'],
-  ['SNB Monetary Policy Assessment', 'SNB Assessment'],
-  ['Overnight Rate', 'BOC Rate'],
-  ['Rate Statement', 'Statement'],
-  ['Press Conference', 'Press Conf.'],
-  ['Average Hourly Earnings', 'AHE'],
-  ['Average Cash Earnings', 'Avg Cash Earnings'],
-  ['Average Earnings Index', 'Avg Earnings'],
-  ['Wage Price Index', 'WPI'],
-  ['GDT Price Index', 'GDT'],
-  ['KOF Economic Barometer', 'KOF'],
-  ['ZEW Economic Sentiment', 'ZEW'],
-  ['Consumer Price Index', 'CPI'],
-  ['Producer Price Index', 'PPI'],
-  ['Gross Domestic Product', 'GDP'],
-  ['Core PCE Price Index', 'Core PCE'],
-  ['CPI Flash Estimate', 'CPI Flash'],
-  ['Tankan Manufacturing Index', 'Tankan Mfg'],
-  ['Non-Manufacturing', 'Non-Mfg'],
-  ['Manufacturing', 'Mfg'],
-];
+// Noms des événements en français. Les clés sont les noms d'origine
+// (en anglais, tels que Forex Factory les publie). Un événement absent de
+// cette liste s'affiche avec son nom d'origine. Le nom d'origine reste
+// visible en maintenant le doigt (ou en survolant) le nom. Pour ajouter
+// une traduction, ajouter simplement une ligne à cette liste.
+const CALENDAR_TRANSLATIONS = {
+  "Non-Farm Employment Change": "Créations d'emplois non agricoles",
+  "Unemployment Rate": "Taux de chômage",
+  "Average Hourly Earnings m/m": "Salaire horaire moyen (mensuel)",
+  "Unemployment Claims": "Demandes d'allocations chômage",
+  "CPI m/m": "Inflation (IPC) mensuelle",
+  "Core CPI m/m": "Inflation de base (IPC) mensuelle",
+  "Core Retail Sales m/m": "Ventes au détail de base (mensuel)",
+  "Federal Funds Rate": "Taux directeur de la Fed",
+  "FOMC Statement": "Communiqué de la Fed",
+  "German Flash Manufacturing PMI": "PMI manufacturier allemand (flash)",
+  "German ZEW Economic Sentiment": "Confiance des investisseurs allemands (ZEW)",
+  "Core CPI Flash Estimate y/y": "Inflation de base, estimation flash (annuelle)",
+  "CPI Flash Estimate y/y": "Inflation, estimation flash (annuelle)",
+  "ECB Main Refinancing Rate": "Taux directeur de la BCE",
+  "ECB Press Conference": "Conférence de presse de la BCE",
+  "Tokyo Core CPI y/y": "Inflation de base de Tokyo (annuelle)",
+  "Average Cash Earnings y/y": "Salaires moyens en espèces (annuel)",
+  "National Core CPI y/y": "Inflation de base nationale (annuelle)",
+  "Prelim GDP q/q": "PIB préliminaire (trimestriel)",
+  "Tankan Manufacturing Index": "Enquête Tankan, industrie manufacturière",
+  "BOJ Policy Rate": "Taux directeur de la BoJ",
+  "BOJ Press Conference": "Conférence de presse de la BoJ",
+  "Average Earnings Index 3m/y": "Salaires moyens sur 3 mois (annuel)",
+  "Claimant Count Change": "Variation du nombre de demandeurs d'emploi",
+  "CPI y/y": "Inflation (IPC) annuelle",
+  "GDP m/m": "PIB (mensuel)",
+  "Retail Sales m/m": "Ventes au détail (mensuel)",
+  "MPC Official Bank Rate Votes": "Votes du comité de politique monétaire",
+  "Official Bank Rate": "Taux directeur de la BoE",
+  "Trade Balance": "Balance commerciale",
+  "KOF Economic Barometer": "Baromètre économique KOF",
+  "Retail Sales y/y": "Ventes au détail (annuel)",
+  "SNB Policy Rate": "Taux directeur de la BNS",
+  "SNB Monetary Policy Assessment": "Évaluation de politique monétaire de la BNS",
+  "Employment Change": "Variation de l'emploi",
+  "Ivey PMI": "PMI Ivey",
+  "Overnight Rate": "Taux directeur de la Banque du Canada",
+  "BOC Rate Statement": "Communiqué de la Banque du Canada",
+  "Westpac Consumer Sentiment": "Confiance des consommateurs Westpac",
+  "Wage Price Index q/q": "Indice des salaires (trimestriel)",
+  "Cash Rate": "Taux directeur de la Banque d'Australie",
+  "RBA Rate Statement": "Communiqué de la Banque d'Australie",
+  "GDT Price Index": "Prix des produits laitiers (GDT)",
+  "CPI q/q": "Inflation (IPC) trimestrielle",
+  "GDP q/q": "PIB (trimestriel)",
+  "Official Cash Rate": "Taux directeur de la Banque de Nouvelle-Zélande",
+  "RBNZ Rate Statement": "Communiqué de la Banque de Nouvelle-Zélande",
+  "Manufacturing PMI": "PMI manufacturier",
+  "Non-Manufacturing PMI": "PMI non manufacturier",
+  "Caixin Manufacturing PMI": "PMI manufacturier Caixin",
+  "GDP q/y": "PIB (annuel)",
+};
 
-function abbreviateEventTitle(title) {
-  let result = String(title);
-  for (const [from, to] of CALENDAR_ABBREVIATIONS) {
-    result = result.split(from).join(to);
-  }
-  return result;
+function translateEventTitle(title) {
+  return CALENDAR_TRANSLATIONS[title] || String(title);
 }
 
 function calendarCell(value, extraClass) {
@@ -452,7 +470,7 @@ function renderCalendar(code, events, isDemo) {
   const rows = events.map((ev) => {
     const impact = ev.impact === 'high' ? 'high' : 'medium';
     return `<tr>
-      <td><span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(abbreviateEventTitle(ev.title))}</span></td>
+      <td><span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(translateEventTitle(ev.title))}</span></td>
       ${calendarCell(ev.actual, 'calendar-value--actual' + (actualDirection(ev) ? ' calendar-value--' + actualDirection(ev) : ''))}
       ${calendarCell(ev.forecast_high)}
       ${calendarCell(ev.forecast_mid)}
@@ -467,9 +485,9 @@ function renderCalendar(code, events, isDemo) {
         <tr>
           <th scope="col">Événement</th>
           <th scope="col">Sortie</th>
-          <th scope="col">Prév. haute</th>
-          <th scope="col">Prév. moy.</th>
-          <th scope="col">Prév. basse</th>
+          <th scope="col">Prévision haute</th>
+          <th scope="col">Prévision moyenne</th>
+          <th scope="col">Prévision basse</th>
           <th scope="col">Avant</th>
         </tr>
       </thead>

@@ -139,6 +139,7 @@ const THEME_FIELDS = {
     { v: '--menu-tab-deconnexion-border', l: 'Bordure', category: 'Menu burger déplié', section: 'Onglet Déconnexion' },
     { v: '--menu-tab-deconnexion-text', l: 'Texte', category: 'Menu burger déplié', section: 'Onglet Déconnexion' },
     { v: '--menu-tab-deconnexion-hover-text', l: 'Texte au survol', category: 'Menu burger déplié', section: 'Onglet Déconnexion' },
+    { v: '--menu-tab-deconnexion-icon', l: 'Icône', category: 'Menu burger déplié', section: 'Onglet Déconnexion' },
 
     { v: '--bg', l: "Fond général de l'appli", category: 'Palette de base', section: '' },
     { v: '--bg-card', l: 'Fond des cartes', category: 'Palette de base', section: '' },
