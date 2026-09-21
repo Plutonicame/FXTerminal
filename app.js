@@ -363,6 +363,27 @@ async function fetchCalendarEvents(code) {
   return { events: data || [] };
 }
 
+// Convertit "73K", "-40.8K", "4.3%", "3.85B"... en nombre. Renvoie null si
+// la valeur n'est pas un simple nombre (ex. "5-4-0", vide).
+function parseCalendarNumber(value) {
+  if (value === null || value === undefined) return null;
+  const m = String(value).trim().match(/^(-?\d+(?:\.\d+)?)\s*([KMBT])?\s*%?$/i);
+  if (!m) return null;
+  const multipliers = { K: 1e3, M: 1e6, B: 1e9, T: 1e12 };
+  return parseFloat(m[1]) * (m[2] ? multipliers[m[2].toUpperCase()] : 1);
+}
+
+// Sens de la valeur sortie par rapport à la prévision moyenne :
+// 'up' (au-dessus), 'down' (en dessous) ou '' (égale / non comparable).
+function actualDirection(ev) {
+  const actual = parseCalendarNumber(ev.actual);
+  const forecast = parseCalendarNumber(ev.forecast_mid);
+  if (actual === null || forecast === null) return '';
+  if (actual > forecast) return 'up';
+  if (actual < forecast) return 'down';
+  return '';
+}
+
 function calendarCell(value, extraClass) {
   const text = value === null || value === undefined || value === '' ? '—' : escapeHtml(value);
   return `<td class="calendar-value${extraClass ? ' ' + extraClass : ''}">${text}</td>`;
@@ -391,7 +412,7 @@ function renderCalendar(code, events, isDemo) {
       ${calendarCell(ev.forecast_low)}
       ${calendarCell(ev.forecast_mid)}
       ${calendarCell(ev.forecast_high)}
-      ${calendarCell(ev.actual, 'calendar-value--actual')}
+      ${calendarCell(ev.actual, 'calendar-value--actual' + (actualDirection(ev) ? ' calendar-value--' + actualDirection(ev) : ''))}
     </tr>`;
   }).join('');
 

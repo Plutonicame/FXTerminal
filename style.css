@@ -81,11 +81,14 @@
 
   --calendar-bg: var(--bg-card);
   --calendar-border: var(--border-dim);
+  --calendar-row-hover-bg: #222222;
   --calendar-head-bg: var(--bg);
   --calendar-head-text: var(--text-dim);
   --calendar-name-text: var(--text);
   --calendar-value-text: var(--text);
   --calendar-actual-text: var(--blue-light);
+  --calendar-actual-up: #35c46b;
+  --calendar-actual-down: #ff4d4d;
   --calendar-impact-high: var(--red);
   --calendar-impact-medium: #ff9800;
 
@@ -581,6 +584,11 @@ button {
   border-bottom: none;
 }
 
+/* Ligne survolée (ou touchée sur téléphone) */
+.calendar-table tbody tr:hover td {
+  background: var(--calendar-row-hover-bg);
+}
+
 /* Première colonne (nom) figée à gauche quand le tableau défile. */
 .calendar-table th:first-child,
 .calendar-table td:first-child {
@@ -639,6 +647,10 @@ button {
   font-weight: 700;
   color: var(--calendar-actual-text);
 }
+
+/* Valeur sortie comparée à la prévision moyenne */
+.calendar-value--up { color: var(--calendar-actual-up); }
+.calendar-value--down { color: var(--calendar-actual-down); }
 
 /* =========================================================
    Éléments réutilisables (cartes / graphiques)
