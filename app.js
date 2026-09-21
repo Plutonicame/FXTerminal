@@ -305,20 +305,24 @@ function registerServiceWorker() {
 const CALENDAR_IMPACTS = ['high', 'medium'];
 const CALENDAR_REFRESH_MS = 60000;
 
-// Données FICTIVES, affichées seulement tant que la table Supabase
-// "calendar_events" est inaccessible (pas encore créée), avec un bandeau
-// "Données d'exemple". Dès que la table existe, elles ne servent plus.
+// MODE DÉMONSTRATION : tant que c'est à true, le calendrier affiche
+// uniquement les données FICTIVES ci-dessous (événements rouges et
+// orange dans le style de Forex Factory) et ne lit pas Supabase.
+// Passer à false quand les vraies données seront branchées dans la
+// table "calendar_events".
+const CALENDAR_USE_DEMO = true;
+
 // Ligne : [nom, impact, avant, prév. basse, prév. moyenne, prév. haute, sortie]
 const CALENDAR_DEMO = {
-  USD: [["Non-Farm Employment Change", "high", "73K", "40K", "75K", "110K", null], ["CPI m/m", "high", "0.2%", "0.1%", "0.3%", "0.4%", "0.3%"], ["Unemployment Claims", "medium", "231K", "225K", "230K", "238K", null]],
-  EUR: [["ECB Main Refinancing Rate", "high", "2.15%", "2.15%", "2.15%", "2.15%", "2.15%"], ["CPI Flash Estimate y/y", "high", "2.0%", "1.9%", "2.1%", "2.2%", null], ["German ZEW Economic Sentiment", "medium", "34.7", "30.0", "36.0", "41.0", null]],
-  JPY: [["BOJ Policy Rate", "high", "0.50%", "0.50%", "0.50%", "0.75%", null], ["National Core CPI y/y", "medium", "3.1%", "2.9%", "3.0%", "3.2%", "3.0%"]],
-  GBP: [["Official Bank Rate", "high", "4.00%", "4.00%", "4.00%", "4.00%", null], ["CPI y/y", "high", "3.8%", "3.7%", "3.8%", "3.9%", null], ["GDP m/m", "medium", "0.0%", "-0.1%", "0.1%", "0.2%", null]],
-  CHF: [["SNB Policy Rate", "high", "0.00%", "0.00%", "0.00%", "0.00%", "0.00%"], ["CPI m/m", "medium", "0.0%", "-0.1%", "0.0%", "0.1%", null]],
-  CAD: [["Employment Change", "high", "-40.8K", "-5.0K", "5.0K", "15.0K", null], ["BOC Rate Statement", "high", "", "", "", "", null], ["CPI m/m", "medium", "0.3%", "0.1%", "0.2%", "0.3%", null]],
-  AUD: [["Cash Rate", "high", "3.60%", "3.60%", "3.60%", "3.60%", null], ["Employment Change", "high", "24.5K", "15.0K", "22.0K", "30.0K", null], ["Wage Price Index q/q", "medium", "0.9%", "0.8%", "0.9%", "1.0%", null]],
-  NZD: [["Official Cash Rate", "high", "3.00%", "2.75%", "3.00%", "3.00%", null], ["GDP q/q", "high", "-0.9%", "0.1%", "0.3%", "0.5%", null], ["Trade Balance", "medium", "-390M", "-450M", "-300M", "-150M", null]],
-  CNY: [["GDP q/y", "high", "5.2%", "4.9%", "5.1%", "5.3%", null], ["Manufacturing PMI", "medium", "49.4", "49.3", "49.5", "49.8", "49.4"], ["CPI y/y", "medium", "0.0%", "-0.1%", "0.1%", "0.2%", null]],
+  USD: [["Non-Farm Employment Change", "high", "73K", "45K", "75K", "110K", "82K"], ["Unemployment Rate", "high", "4.3%", "4.2%", "4.3%", "4.4%", "4.3%"], ["Average Hourly Earnings m/m", "high", "0.3%", "0.2%", "0.3%", "0.4%", "0.4%"], ["Unemployment Claims", "medium", "231K", "224K", "230K", "238K", "228K"], ["CPI m/m", "high", "0.2%", "0.1%", "0.3%", "0.4%", null], ["Core CPI m/m", "high", "0.3%", "0.2%", "0.3%", "0.4%", null], ["Core Retail Sales m/m", "medium", "0.4%", "0.1%", "0.3%", "0.6%", null], ["Federal Funds Rate", "high", "4.25%", "4.00%", "4.00%", "4.25%", null], ["FOMC Statement", "high", "", "", "", "", null]],
+  EUR: [["German Flash Manufacturing PMI", "medium", "49.8", "49.5", "50.2", "51.0", "50.4"], ["German ZEW Economic Sentiment", "medium", "34.7", "30.0", "36.0", "41.0", "37.3"], ["Core CPI Flash Estimate y/y", "high", "2.3%", "2.2%", "2.3%", "2.4%", "2.3%"], ["CPI Flash Estimate y/y", "high", "2.0%", "1.9%", "2.1%", "2.2%", null], ["Unemployment Rate", "medium", "6.2%", "6.2%", "6.3%", "6.4%", null], ["ECB Main Refinancing Rate", "high", "2.15%", "2.15%", "2.15%", "2.15%", null], ["ECB Press Conference", "high", "", "", "", "", null]],
+  JPY: [["Tokyo Core CPI y/y", "medium", "2.5%", "2.4%", "2.6%", "2.8%", "2.6%"], ["Average Cash Earnings y/y", "medium", "3.4%", "2.8%", "3.2%", "3.6%", "3.1%"], ["National Core CPI y/y", "medium", "3.1%", "2.9%", "3.0%", "3.2%", null], ["Prelim GDP q/q", "medium", "0.5%", "-0.3%", "0.1%", "0.4%", null], ["Tankan Manufacturing Index", "medium", "13", "11", "13", "15", null], ["BOJ Policy Rate", "high", "0.50%", "0.50%", "0.50%", "0.75%", null], ["BOJ Press Conference", "high", "", "", "", "", null]],
+  GBP: [["Average Earnings Index 3m/y", "high", "5.0%", "4.7%", "4.9%", "5.1%", "4.8%"], ["Claimant Count Change", "medium", "8.9K", "5.0K", "10.0K", "18.0K", "12.4K"], ["CPI y/y", "high", "3.8%", "3.7%", "3.8%", "3.9%", null], ["GDP m/m", "medium", "0.0%", "-0.1%", "0.1%", "0.2%", null], ["Retail Sales m/m", "medium", "0.6%", "-0.4%", "0.2%", "0.6%", null], ["MPC Official Bank Rate Votes", "high", "5-4-0", "6-3-0", "6-3-0", "6-3-0", null], ["Official Bank Rate", "high", "4.00%", "4.00%", "4.00%", "4.00%", null]],
+  CHF: [["Trade Balance", "medium", "3.85B", "3.50B", "3.90B", "4.30B", "3.72B"], ["CPI m/m", "medium", "0.0%", "-0.1%", "0.0%", "0.1%", "0.1%"], ["KOF Economic Barometer", "medium", "98.4", "97.0", "98.5", "100.0", null], ["Retail Sales y/y", "medium", "0.6%", "-0.2%", "0.5%", "1.1%", null], ["SNB Policy Rate", "high", "0.00%", "0.00%", "0.00%", "0.00%", null], ["SNB Monetary Policy Assessment", "high", "", "", "", "", null]],
+  CAD: [["Employment Change", "high", "-40.8K", "-8.0K", "5.0K", "18.0K", "12.3K"], ["Unemployment Rate", "high", "7.1%", "7.1%", "7.2%", "7.3%", "7.1%"], ["CPI m/m", "high", "0.3%", "0.1%", "0.2%", "0.3%", null], ["Core Retail Sales m/m", "medium", "0.2%", "0.0%", "0.3%", "0.6%", null], ["GDP m/m", "high", "0.1%", "-0.1%", "0.1%", "0.3%", null], ["Ivey PMI", "medium", "54.1", "51.0", "53.0", "56.0", null], ["Overnight Rate", "high", "2.50%", "2.50%", "2.50%", "2.50%", null], ["BOC Rate Statement", "high", "", "", "", "", null]],
+  AUD: [["Westpac Consumer Sentiment", "medium", "-3.5%", "-2.0%", "0.5%", "3.0%", "1.2%"], ["Wage Price Index q/q", "high", "0.9%", "0.8%", "0.9%", "1.0%", "0.9%"], ["Employment Change", "high", "24.5K", "15.0K", "22.0K", "30.0K", null], ["Unemployment Rate", "high", "4.2%", "4.2%", "4.3%", "4.4%", null], ["Retail Sales m/m", "medium", "0.5%", "0.1%", "0.4%", "0.7%", null], ["Cash Rate", "high", "3.60%", "3.60%", "3.60%", "3.60%", null], ["RBA Rate Statement", "high", "", "", "", "", null]],
+  NZD: [["GDT Price Index", "medium", "-1.2%", "-2.0%", "0.0%", "1.5%", "0.6%"], ["Trade Balance", "medium", "-390M", "-450M", "-300M", "-150M", "-262M"], ["CPI q/q", "high", "0.5%", "0.4%", "0.6%", "0.8%", null], ["Employment Change", "high", "0.1%", "-0.2%", "0.1%", "0.3%", null], ["GDP q/q", "high", "-0.9%", "0.1%", "0.3%", "0.5%", null], ["Official Cash Rate", "high", "3.00%", "2.75%", "3.00%", "3.00%", null], ["RBNZ Rate Statement", "high", "", "", "", "", null]],
+  CNY: [["Manufacturing PMI", "medium", "49.4", "49.3", "49.5", "49.8", "49.6"], ["Non-Manufacturing PMI", "medium", "50.1", "50.0", "50.2", "50.5", "50.3"], ["Caixin Manufacturing PMI", "medium", "50.3", "49.8", "50.2", "50.6", null], ["CPI y/y", "medium", "0.0%", "-0.1%", "0.1%", "0.2%", null], ["Trade Balance", "medium", "98.2B", "90.0B", "96.0B", "102.0B", null], ["Retail Sales y/y", "medium", "3.4%", "2.6%", "3.0%", "3.5%", null], ["GDP q/y", "high", "5.2%", "4.9%", "5.1%", "5.3%", null]],
 };
 
 function escapeHtml(value) {
@@ -414,6 +418,11 @@ const calendarRequestId = {};
 async function loadCalendar(code) {
   const requestId = (calendarRequestId[code] || 0) + 1;
   calendarRequestId[code] = requestId;
+
+  if (CALENDAR_USE_DEMO) {
+    renderCalendar(code, demoCalendarEvents(code), false);
+    return;
+  }
 
   const { events } = await fetchCalendarEvents(code);
   // Une réponse plus récente est déjà arrivée : on ignore celle-ci.
