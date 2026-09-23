@@ -497,6 +497,45 @@ function renderCalendar(code, events, isDemo) {
 
 const calendarRequestId = {};
 
+// =========================================================
+// Point de réinitialisation par devise : la dernière réunion de la
+// banque centrale de cette devise. Tout ce qui précède cette réunion
+// n'est plus affiché ; tout ce qui suit reste affiché indéfiniment
+// (même sans valeur "Sortie", que Forex Factory ne donne jamais),
+// jusqu'à la réunion suivante.
+const CENTRAL_BANK_ANCHORS = {
+  USD: 'FOMC Statement',
+  EUR: 'ECB Press Conference',
+  JPY: 'BOJ Press Conference',
+  GBP: 'Official Bank Rate',
+  CHF: 'SNB Monetary Policy Assessment',
+  CAD: 'BOC Rate Statement',
+  AUD: 'RBA Rate Statement',
+  NZD: 'RBNZ Rate Statement',
+  CNY: 'Loan Prime Rate', // PBoC, annoncé chaque mois (pas de réunion à date fixe comme les autres).
+};
+
+// Ne garde que les événements arrivés depuis la dernière réunion déjà
+// passée de la banque centrale de cette devise (elle reste incluse).
+// Si aucune réunion n'a encore été repérée dans les données reçues
+// (le bot ne tourne peut-être pas encore depuis assez longtemps),
+// on garde tout en attendant.
+function filterSinceLastCentralBankMeeting(code, events) {
+  const anchorTitle = CENTRAL_BANK_ANCHORS[code];
+  if (!anchorTitle) return events;
+
+  const now = Date.now();
+  let cutoff = null;
+  for (const ev of events) {
+    if (!ev.title || !ev.title.toLowerCase().includes(anchorTitle.toLowerCase())) continue;
+    const t = new Date(ev.event_time).getTime();
+    if (t <= now && (cutoff === null || t > cutoff)) cutoff = t;
+  }
+  if (cutoff === null) return events;
+
+  return events.filter((ev) => new Date(ev.event_time).getTime() >= cutoff);
+}
+
 async function loadCalendar(code) {
   const requestId = (calendarRequestId[code] || 0) + 1;
   calendarRequestId[code] = requestId;
@@ -511,7 +550,7 @@ async function loadCalendar(code) {
   if (calendarRequestId[code] !== requestId) return;
 
   if (events === null) renderCalendar(code, demoCalendarEvents(code), true);
-  else renderCalendar(code, events, false);
+  else renderCalendar(code, filterSinceLastCentralBankMeeting(code, events), false);
 }
 
 function initCurrencyTabs() {
