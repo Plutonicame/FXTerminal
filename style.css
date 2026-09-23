@@ -124,6 +124,10 @@
   --calendar-translate-btn-active-border: #00e5a0;
   --calendar-translate-btn-active-icon: #0b0f1a;
 
+  /* Statut du bot : "à jour" (gris discret) vs "en retard" (orange, alerte) */
+  --calendar-status-ok-text: var(--text-dim);
+  --calendar-status-stale-text: #ff9800;
+
   --theme-panel-bg: var(--bg-card);
   --theme-panel-border: var(--border-dim);
   --theme-accordion-bg: var(--bg);
@@ -630,6 +634,20 @@ button {
   background: var(--calendar-translate-btn-active-bg);
   border-color: var(--calendar-translate-btn-active-border);
   color: var(--calendar-translate-btn-active-icon);
+}
+
+.calendar-status {
+  max-width: 720px;
+  margin: -4px auto 12px;
+  padding: 0 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--calendar-status-ok-text);
+}
+
+.calendar-status.is-stale {
+  color: var(--calendar-status-stale-text);
 }
 
 /* =========================================================

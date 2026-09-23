@@ -745,10 +745,13 @@ function initCurrencyTabs() {
   }
 
   // Les valeurs "sortie" arrivent après la publication : on rafraîchit
-  // la devise affichée toutes les minutes.
+  // la devise affichée toutes les minutes. Le statut du bot (fraîcheur
+  // des données) est vérifié en même temps.
   window.setInterval(() => {
     if (currentCalendarCurrency && !document.hidden) loadCalendar(currentCalendarCurrency);
+    if (!document.hidden) refreshCalendarStatus();
   }, CALENDAR_REFRESH_MS);
+  refreshCalendarStatus();
 
   // Au démarrage, la session peut ne pas être encore restaurée : on
   // recharge dès qu'elle l'est (sinon les règles d'accès renverraient 0 ligne).
@@ -760,6 +763,38 @@ function initCurrencyTabs() {
 
   // Devise affichée au démarrage : la première de la liste (USD).
   selectCurrency(buttons[0].dataset.currency);
+}
+
+// Fraîcheur du calendrier : lit l'heure de dernière exécution du bot
+// (table "bot_status") et prévient si elle date de plus de 40 minutes
+// (le bot tourne toutes les 30 minutes normalement) — un moyen simple
+// de voir si le bot s'est arrêté de tourner, sans avoir à vérifier sur
+// Supabase à chaque fois.
+const CALENDAR_STATUS_STALE_MS = 40 * 60 * 1000;
+
+async function refreshCalendarStatus() {
+  const el = document.getElementById('calendarStatus');
+  if (!el) return;
+  const client = window.Auth && window.Auth.getClient ? window.Auth.getClient() : null;
+  if (!client) return;
+
+  const { data, error } = await client
+    .from('bot_status')
+    .select('last_run, ok, events_written')
+    .eq('id', 'fetch-calendar')
+    .maybeSingle();
+
+  if (error || !data) { el.hidden = true; return; }
+
+  const elapsedMs = Date.now() - new Date(data.last_run).getTime();
+  const elapsedMin = Math.max(0, Math.round(elapsedMs / 60000));
+  const isStale = elapsedMs > CALENDAR_STATUS_STALE_MS || !data.ok;
+
+  el.hidden = false;
+  el.classList.toggle('is-stale', isStale);
+  el.textContent = isStale
+    ? `⚠ Calendrier peut-être en retard — dernière mise à jour il y a ${elapsedMin} min`
+    : `Calendrier à jour — dernière mise à jour il y a ${elapsedMin} min`;
 }
 
 // =========================================================
