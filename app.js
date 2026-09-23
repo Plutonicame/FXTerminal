@@ -302,8 +302,24 @@ function registerServiceWorker() {
    propre fenêtre, avec les événements importants (impact rouge et
    orange) lus dans la table Supabase "calendar_events".
    ========================================================= */
-const CALENDAR_IMPACTS = ['high', 'medium'];
 const CALENDAR_REFRESH_MS = 60000;
+
+// Filtre d'impact (orange seul / les deux / rouge seul) : partagé entre
+// TOUTES les devises (le curseur ne fait pas partie d'une fenêtre de
+// devise en particulier, voir index.html). Mémorisé sur l'appareil pour
+// rester d'une session à l'autre.
+const CALENDAR_IMPACT_STORAGE_KEY = 'fx-calendar-impact-filter';
+let calendarImpactFilter = 'both'; // 'medium' | 'both' | 'high'
+try {
+  const stored = localStorage.getItem(CALENDAR_IMPACT_STORAGE_KEY);
+  if (stored === 'medium' || stored === 'both' || stored === 'high') calendarImpactFilter = stored;
+} catch (e) { /* stockage indisponible : on garde la valeur par défaut */ }
+
+function getCalendarImpacts() {
+  if (calendarImpactFilter === 'medium') return ['medium'];
+  if (calendarImpactFilter === 'high') return ['high'];
+  return ['high', 'medium'];
+}
 
 // MODE DÉMONSTRATION : si mis à true, le calendrier affiche
 // uniquement les données FICTIVES ci-dessous et ne lit pas Supabase.
@@ -336,15 +352,18 @@ function escapeHtml(value) {
 }
 
 function demoCalendarEvents(code) {
-  return (CALENDAR_DEMO[code] || []).map((r) => ({
-    title: r[0],
-    impact: r[1],
-    previous: r[2],
-    forecast_low: r[3],
-    forecast_mid: r[4],
-    forecast_high: r[5],
-    actual: r[6],
-  }));
+  const impacts = getCalendarImpacts();
+  return (CALENDAR_DEMO[code] || [])
+    .filter((r) => impacts.includes(r[1]))
+    .map((r) => ({
+      title: r[0],
+      impact: r[1],
+      previous: r[2],
+      forecast_low: r[3],
+      forecast_mid: r[4],
+      forecast_high: r[5],
+      actual: r[6],
+    }));
 }
 
 // Renvoie { events } (tableau, éventuellement vide) ou { events: null }
@@ -356,7 +375,7 @@ async function fetchCalendarEvents(code) {
     .from('calendar_events')
     .select('title, impact, previous, forecast_low, forecast_mid, forecast_high, actual, event_time')
     .eq('currency', code)
-    .in('impact', CALENDAR_IMPACTS)
+    .in('impact', getCalendarImpacts())
     .order('event_time', { ascending: true });
   if (error) {
     console.error('Calendrier économique : lecture impossible :', error);
@@ -449,6 +468,139 @@ function translateEventTitle(title) {
   return CALENDAR_TRANSLATIONS[title] || String(title);
 }
 
+// =========================================================
+// Traduction automatique (bouton "Traduire" de la barre d'outils).
+// Complète les titres absents de CALENDAR_TRANSLATIONS ci-dessus, via
+// un service gratuit mais NON officiel de Google (aucune clé, aucune
+// inscription) : il peut ralentir, se limiter ou changer sans préavis,
+// contrairement à une vraie API de traduction payante. Les traductions
+// obtenues sont mémorisées (jamais redemandées deux fois pour le même
+// texte) et persistées sur l'appareil.
+// =========================================================
+const CALENDAR_AUTO_TRANSLATE_STORAGE_KEY = 'fx-calendar-auto-translate';
+const CALENDAR_TRANSLATE_CACHE_STORAGE_KEY = 'fx-calendar-translate-cache';
+let calendarAutoTranslate = false;
+let calendarTranslateCache = new Map();
+try {
+  calendarAutoTranslate = localStorage.getItem(CALENDAR_AUTO_TRANSLATE_STORAGE_KEY) === '1';
+  const rawCache = localStorage.getItem(CALENDAR_TRANSLATE_CACHE_STORAGE_KEY);
+  if (rawCache) calendarTranslateCache = new Map(Object.entries(JSON.parse(rawCache)));
+} catch (e) { /* stockage indisponible : on repart sans historique */ }
+
+function saveCalendarTranslateCache() {
+  try {
+    localStorage.setItem(CALENDAR_TRANSLATE_CACHE_STORAGE_KEY, JSON.stringify(Object.fromEntries(calendarTranslateCache)));
+  } catch (e) { /* stockage indisponible : tant pis, on retraduira la prochaine fois */ }
+}
+
+// Titre affiché : dictionnaire connu en priorité, sinon (si la
+// traduction automatique est activée) une traduction déjà en cache,
+// sinon le titre d'origine en attendant.
+function resolveEventTitle(title) {
+  if (CALENDAR_TRANSLATIONS[title]) return CALENDAR_TRANSLATIONS[title];
+  if (calendarAutoTranslate && calendarTranslateCache.has(title)) return calendarTranslateCache.get(title);
+  return String(title);
+}
+
+async function translateToFrench(text) {
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=fr&dt=t&q=${encodeURIComponent(text)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Traduction : HTTP ${res.status}`);
+  const data = await res.json();
+  return data[0].map((chunk) => chunk[0]).join('');
+}
+
+// Traduit tous les titres de la liste qui ne sont ni dans le
+// dictionnaire ni déjà en cache, puis redessine le calendrier une fois
+// que c'est fait (peu importe l'ordre d'arrivée des réponses).
+async function autoTranslateMissingTitles(code, events) {
+  const missing = [...new Set(
+    events
+      .map((ev) => ev.title)
+      .filter((title) => !CALENDAR_TRANSLATIONS[title] && !calendarTranslateCache.has(title)),
+  )];
+  if (!missing.length) return;
+
+  await Promise.all(missing.map(async (title) => {
+    try {
+      const translated = await translateToFrench(title);
+      calendarTranslateCache.set(title, translated);
+    } catch (e) {
+      console.error('Traduction automatique impossible pour « ' + title + ' » :', e);
+    }
+  }));
+
+  saveCalendarTranslateCache();
+  if (calendarAutoTranslate && lastCalendarEventsByCurrency[code] === events) {
+    renderCalendar(code, events, false);
+  }
+}
+
+// Icône "calendrier" — reprise à l'identique de period-calendar.js (TJP).
+const CALENDAR_DATE_ICON =
+  '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" ' +
+  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5.5 1.5v3M10.5 1.5v3"/></svg>';
+
+// "Prévue le ..." si l'événement n'a pas encore eu lieu, "Publiée le ..."
+// sinon (Forex Factory ne donne jamais l'heure exacte de publication de
+// la donnée sortie, seulement l'heure prévue de l'annonce).
+function formatCalendarDateTime(iso) {
+  const d = new Date(iso);
+  const datePart = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+  const timePart = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const label = d.getTime() > Date.now() ? 'Prévue le' : 'Publiée le';
+  return `${label} ${datePart} à ${timePart}`;
+}
+
+// Une seule bulle réutilisée pour tous les boutons calendrier du tableau.
+let calendarDatePopup = null;
+let calendarDateOpenBtn = null;
+
+function closeCalendarDatePopup() {
+  if (calendarDateOpenBtn) calendarDateOpenBtn.classList.remove('is-open');
+  calendarDateOpenBtn = null;
+  if (calendarDatePopup) calendarDatePopup.hidden = true;
+}
+
+function openCalendarDatePopup(btn) {
+  if (calendarDateOpenBtn === btn) { closeCalendarDatePopup(); return; }
+  closeCalendarDatePopup();
+
+  if (!calendarDatePopup) {
+    calendarDatePopup = document.createElement('div');
+    calendarDatePopup.className = 'calendar-date-popup';
+    calendarDatePopup.hidden = true;
+    document.body.appendChild(calendarDatePopup);
+  }
+
+  calendarDatePopup.textContent = formatCalendarDateTime(btn.dataset.eventTime);
+  calendarDatePopup.hidden = false;
+  btn.classList.add('is-open');
+  calendarDateOpenBtn = btn;
+
+  // Positionnée juste sous le bouton, sans déborder de l'écran.
+  const rect = btn.getBoundingClientRect();
+  const popupRect = calendarDatePopup.getBoundingClientRect();
+  let left = rect.left;
+  if (left + popupRect.width > window.innerWidth - 8) left = window.innerWidth - popupRect.width - 8;
+  if (left < 8) left = 8;
+  calendarDatePopup.style.left = `${left}px`;
+  calendarDatePopup.style.top = `${rect.bottom + 6}px`;
+}
+
+// Délégation sur tout le document : les lignes du calendrier sont
+// régénérées à chaque rafraîchissement, un écouteur par bouton serait
+// donc perdu à chaque fois.
+document.addEventListener('click', (event) => {
+  const btn = event.target.closest('.calendar-date-btn');
+  if (btn) { openCalendarDatePopup(btn); return; }
+  if (calendarDateOpenBtn && !event.target.closest('.calendar-date-popup')) closeCalendarDatePopup();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeCalendarDatePopup();
+});
+
 function calendarCell(value, extraClass) {
   const text = value === null || value === undefined || value === '' ? '—' : escapeHtml(value);
   return `<td class="calendar-value${extraClass ? ' ' + extraClass : ''}">${text}</td>`;
@@ -472,7 +624,10 @@ function renderCalendar(code, events, isDemo) {
   const rows = events.map((ev) => {
     const impact = ev.impact === 'high' ? 'high' : 'medium';
     return `<tr>
-      <td><span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(translateEventTitle(ev.title))}</span></td>
+      <td>
+        <button type="button" class="calendar-date-btn" data-event-time="${escapeHtml(ev.event_time)}" aria-label="Voir la date et l'heure">${CALENDAR_DATE_ICON}</button>
+        <span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(resolveEventTitle(ev.title))}</span>
+      </td>
       ${calendarCell(ev.actual, 'calendar-value--actual' + (actualDirection(ev) ? ' calendar-value--' + actualDirection(ev) : ''))}
       ${calendarCell(ev.forecast_mid)}
       ${calendarCell(ev.previous)}
@@ -536,32 +691,41 @@ function filterSinceLastCentralBankMeeting(code, events) {
   return events.filter((ev) => new Date(ev.event_time).getTime() >= cutoff);
 }
 
+const lastCalendarEventsByCurrency = {};
+
 async function loadCalendar(code) {
   const requestId = (calendarRequestId[code] || 0) + 1;
   calendarRequestId[code] = requestId;
 
+  let events, isDemo;
   if (CALENDAR_USE_DEMO) {
-    renderCalendar(code, demoCalendarEvents(code), false);
-    return;
+    events = demoCalendarEvents(code);
+    isDemo = false;
+  } else {
+    const result = await fetchCalendarEvents(code);
+    // Une réponse plus récente est déjà arrivée : on ignore celle-ci.
+    if (calendarRequestId[code] !== requestId) return;
+    isDemo = result.events === null;
+    events = isDemo ? demoCalendarEvents(code) : filterSinceLastCentralBankMeeting(code, result.events);
   }
 
-  const { events } = await fetchCalendarEvents(code);
-  // Une réponse plus récente est déjà arrivée : on ignore celle-ci.
-  if (calendarRequestId[code] !== requestId) return;
-
-  if (events === null) renderCalendar(code, demoCalendarEvents(code), true);
-  else renderCalendar(code, filterSinceLastCentralBankMeeting(code, events), false);
+  lastCalendarEventsByCurrency[code] = events;
+  renderCalendar(code, events, isDemo);
+  if (calendarAutoTranslate) autoTranslateMissingTitles(code, events);
 }
+
+// Devise actuellement affichée : au niveau du module, pour que la barre
+// d'outils partagée (filtre d'impact, traduction) sache quelle fenêtre
+// rafraîchir quand on la manipule.
+let currentCalendarCurrency = null;
 
 function initCurrencyTabs() {
   const buttons = Array.from(document.querySelectorAll('.currency-card[data-currency]'));
   const panels = Array.from(document.querySelectorAll('.currency-panel'));
   if (!buttons.length) return;
 
-  let activeCode = null;
-
   function selectCurrency(code) {
-    activeCode = code;
+    currentCalendarCurrency = code;
     for (const btn of buttons) {
       const isActive = btn.dataset.currency === code;
       btn.classList.toggle('is-active', isActive);
@@ -583,19 +747,62 @@ function initCurrencyTabs() {
   // Les valeurs "sortie" arrivent après la publication : on rafraîchit
   // la devise affichée toutes les minutes.
   window.setInterval(() => {
-    if (activeCode && !document.hidden) loadCalendar(activeCode);
+    if (currentCalendarCurrency && !document.hidden) loadCalendar(currentCalendarCurrency);
   }, CALENDAR_REFRESH_MS);
 
   // Au démarrage, la session peut ne pas être encore restaurée : on
   // recharge dès qu'elle l'est (sinon les règles d'accès renverraient 0 ligne).
   if (window.Auth && window.Auth.onAuthStateChange) {
     window.Auth.onAuthStateChange((session) => {
-      if (session && activeCode) loadCalendar(activeCode);
+      if (session && currentCalendarCurrency) loadCalendar(currentCalendarCurrency);
     });
   }
 
   // Devise affichée au démarrage : la première de la liste (USD).
   selectCurrency(buttons[0].dataset.currency);
+}
+
+// =========================================================
+// Barre d'outils partagée du calendrier (filtre d'impact, traduction).
+// Ne dépend d'aucune devise en particulier : son état est le même quel
+// que soit l'onglet affiché (voir currentCalendarCurrency ci-dessus).
+// =========================================================
+function initCalendarToolbar() {
+  const impactToggle = document.getElementById('calendarImpactToggle');
+  const translateBtn = document.getElementById('calendarTranslateBtn');
+
+  if (impactToggle) {
+    impactToggle.dataset.value = calendarImpactFilter;
+    for (const btn of impactToggle.querySelectorAll('.calendar-impact-toggle-btn')) {
+      btn.setAttribute('aria-checked', String(btn.dataset.value === calendarImpactFilter));
+      btn.addEventListener('click', () => {
+        const value = btn.dataset.value;
+        if (value === calendarImpactFilter) return;
+        calendarImpactFilter = value;
+        impactToggle.dataset.value = value;
+        for (const b of impactToggle.querySelectorAll('.calendar-impact-toggle-btn')) {
+          b.setAttribute('aria-checked', String(b.dataset.value === value));
+        }
+        try { localStorage.setItem(CALENDAR_IMPACT_STORAGE_KEY, value); } catch (e) { /* tant pis */ }
+        if (currentCalendarCurrency) loadCalendar(currentCalendarCurrency);
+      });
+    }
+  }
+
+  if (translateBtn) {
+    translateBtn.setAttribute('aria-pressed', String(calendarAutoTranslate));
+    translateBtn.addEventListener('click', () => {
+      calendarAutoTranslate = !calendarAutoTranslate;
+      translateBtn.setAttribute('aria-pressed', String(calendarAutoTranslate));
+      try { localStorage.setItem(CALENDAR_AUTO_TRANSLATE_STORAGE_KEY, calendarAutoTranslate ? '1' : '0'); } catch (e) { /* tant pis */ }
+
+      if (!currentCalendarCurrency) return;
+      const events = lastCalendarEventsByCurrency[currentCalendarCurrency];
+      if (!events) return;
+      renderCalendar(currentCalendarCurrency, events, false);
+      if (calendarAutoTranslate) autoTranslateMissingTitles(currentCalendarCurrency, events);
+    });
+  }
 }
 
 /* =========================================================
@@ -607,6 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const menu = initBurgerMenu();
   initTabs(() => menu && menu.closeMenu());
+  initCalendarToolbar();
   initCurrencyTabs();
 
   initAuth();

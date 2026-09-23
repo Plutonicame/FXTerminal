@@ -93,6 +93,37 @@
   --calendar-impact-high: var(--red);
   --calendar-impact-medium: #ff9800;
 
+  /* Bouton calendrier (date/heure), mêmes couleurs par défaut que dans TJP */
+  --calendar-date-btn-bg: #111827;
+  --calendar-date-btn-border: #1e2d45;
+  --calendar-date-btn-icon: #64748b;
+  --calendar-date-btn-hover-border: #00e5a0;
+  --calendar-date-btn-hover-icon: #00e5a0;
+  --calendar-date-btn-open-bg: #00e5a0;
+  --calendar-date-btn-open-border: #00e5a0;
+  --calendar-date-btn-open-icon: #0b0f1a;
+  --calendar-date-popup-bg: #111827;
+  --calendar-date-popup-border: #1e2d45;
+  --calendar-date-popup-text: #e2e8f0;
+
+  /* Barre "Calendrier" partagée (ne change pas selon la devise) */
+  --calendar-toolbar-bg: var(--bg-card);
+  --calendar-toolbar-border: var(--border-dim);
+  --calendar-toolbar-title: var(--text);
+
+  /* Curseur à 3 positions : orange seul / les deux / rouge seul */
+  --calendar-impact-toggle-track-bg: #1c1c1c;
+  --calendar-impact-toggle-track-border: var(--border-dim);
+  --calendar-impact-toggle-knob-bg: #404040;
+
+  /* Bouton traduction automatique */
+  --calendar-translate-btn-bg: #111827;
+  --calendar-translate-btn-border: #1e2d45;
+  --calendar-translate-btn-icon: #64748b;
+  --calendar-translate-btn-active-bg: #00e5a0;
+  --calendar-translate-btn-active-border: #00e5a0;
+  --calendar-translate-btn-active-icon: #0b0f1a;
+
   --theme-panel-bg: var(--bg-card);
   --theme-panel-border: var(--border-dim);
   --theme-accordion-bg: var(--bg);
@@ -484,6 +515,124 @@ button {
 }
 
 /* =========================================================
+   Onglet Analyse par devise — barre "Calendrier" + outils
+   Partagée entre toutes les devises : ne change jamais selon l'onglet
+   sélectionné (USD, EUR...), contrairement aux lignes du tableau.
+   ========================================================= */
+.calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 720px;
+  margin: 0 auto 10px;
+  padding: 10px 14px;
+  background: var(--calendar-toolbar-bg);
+  border: 1px solid var(--calendar-toolbar-border);
+  border-radius: var(--radius-card);
+}
+
+.calendar-toolbar-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--calendar-toolbar-title);
+}
+
+.calendar-toolbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Curseur à 3 positions : orange seul (gauche) / les deux (milieu) /
+   rouge seul (droite). Le rond coloré (le "knob") glisse derrière le
+   bouton choisi. */
+.calendar-impact-toggle {
+  position: relative;
+  display: flex;
+  width: 96px;
+  height: 30px;
+  padding: 3px;
+  box-sizing: border-box;
+  background: var(--calendar-impact-toggle-track-bg);
+  border: 1px solid var(--calendar-impact-toggle-track-border);
+  border-radius: 15px;
+}
+
+.calendar-impact-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 3);
+  height: calc(100% - 6px);
+  background: var(--calendar-impact-toggle-knob-bg);
+  border-radius: 12px;
+  transition: transform 0.18s ease;
+  pointer-events: none;
+}
+
+.calendar-impact-toggle[data-value="medium"] .calendar-impact-toggle-knob { transform: translateX(0%); }
+.calendar-impact-toggle[data-value="both"] .calendar-impact-toggle-knob { transform: translateX(100%); }
+.calendar-impact-toggle[data-value="high"] .calendar-impact-toggle-knob { transform: translateX(200%); }
+
+.calendar-impact-toggle-btn {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.calendar-impact-toggle-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-round);
+}
+
+.calendar-impact-toggle-dot--medium { background: var(--calendar-impact-medium); }
+.calendar-impact-toggle-dot--high { background: var(--calendar-impact-high); }
+
+/* Bouton traduction automatique (icône façon "traduire la page" de Chrome) */
+.calendar-translate-btn {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: 1px solid var(--calendar-translate-btn-border);
+  background: var(--calendar-translate-btn-bg);
+  color: var(--calendar-translate-btn-icon);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.calendar-translate-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.calendar-translate-btn[aria-pressed="true"] {
+  background: var(--calendar-translate-btn-active-bg);
+  border-color: var(--calendar-translate-btn-active-border);
+  color: var(--calendar-translate-btn-active-icon);
+}
+
+/* =========================================================
    Onglet Analyse par devise — barre des devises
    Une seule ligne collée sous la barre de navigation : le haut des
    boutons est carré et sans bordure, comme s'ils sortaient de la barre
@@ -636,6 +785,67 @@ button {
   font-weight: 400;
   letter-spacing: 1px;
   text-transform: uppercase;
+}
+
+/* Bouton "date/heure" : ouvre une bulle avec la date et l'heure prévue
+   ou de sortie de l'événement. Même design que dans TJP (bouton carré,
+   coins arrondis, icône calendrier) : voir period-calendar.js de ce
+   projet-là. */
+.calendar-date-btn {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin: 0 6px 0 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  border-radius: 3px;
+  border: 1px solid var(--calendar-date-btn-border);
+  background: var(--calendar-date-btn-bg);
+  color: var(--calendar-date-btn-icon);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.calendar-date-btn svg {
+  width: 74%;
+  height: 74%;
+  display: block;
+  pointer-events: none;
+}
+
+.calendar-date-btn:hover {
+  border-color: var(--calendar-date-btn-hover-border);
+  color: var(--calendar-date-btn-hover-icon);
+}
+
+.calendar-date-btn.is-open,
+.calendar-date-btn.is-open:hover {
+  background: var(--calendar-date-btn-open-bg);
+  border-color: var(--calendar-date-btn-open-border);
+  color: var(--calendar-date-btn-open-icon);
+}
+
+.calendar-date-popup {
+  position: fixed;
+  z-index: 60;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--calendar-date-popup-bg);
+  border: 1px solid var(--calendar-date-popup-border);
+  color: var(--calendar-date-popup-text);
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.calendar-date-popup[hidden] {
+  display: none;
 }
 
 .calendar-impact {

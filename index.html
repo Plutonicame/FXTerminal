@@ -105,6 +105,32 @@
       <button type="button" class="currency-card" role="tab" data-currency="CNY" aria-selected="false" aria-controls="currency-panel-CNY">CNY</button>
     </div>
 
+    <div class="calendar-toolbar">
+      <span class="calendar-toolbar-title">Calendrier</span>
+      <div class="calendar-toolbar-tools">
+        <div class="calendar-impact-toggle" id="calendarImpactToggle" role="radiogroup" aria-label="Filtrer par impact">
+          <button type="button" class="calendar-impact-toggle-btn" data-value="medium" role="radio" aria-label="Impact orange uniquement">
+            <span class="calendar-impact-toggle-dot calendar-impact-toggle-dot--medium"></span>
+          </button>
+          <button type="button" class="calendar-impact-toggle-btn" data-value="both" role="radio" aria-label="Impact orange et rouge">
+            <span class="calendar-impact-toggle-dot calendar-impact-toggle-dot--medium"></span><span class="calendar-impact-toggle-dot calendar-impact-toggle-dot--high"></span>
+          </button>
+          <button type="button" class="calendar-impact-toggle-btn" data-value="high" role="radio" aria-label="Impact rouge uniquement">
+            <span class="calendar-impact-toggle-dot calendar-impact-toggle-dot--high"></span>
+          </button>
+          <span class="calendar-impact-toggle-knob" aria-hidden="true"></span>
+        </div>
+        <button type="button" class="calendar-translate-btn" id="calendarTranslateBtn" aria-pressed="false" aria-label="Traduire automatiquement les annonces en anglais">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2.5" y="2.5" width="10" height="10" rx="2.5"/>
+            <text x="7.5" y="10.3" font-family="var(--sans)" font-size="6.5" font-weight="700" text-anchor="middle" stroke="none" fill="currentColor">文</text>
+            <circle cx="17" cy="17" r="5.5" fill="none"/>
+            <text x="17" y="19.7" font-family="var(--sans)" font-size="7" font-weight="700" text-anchor="middle" stroke="none" fill="currentColor">A</text>
+          </svg>
+        </button>
+      </div>
+    </div>
+
     <div class="currency-panels">
       <section class="currency-panel" id="currency-panel-USD" role="tabpanel" data-currency="USD" aria-label="Analyse USD" hidden>
         <div class="calendar" data-currency="USD" aria-live="polite"></div>
