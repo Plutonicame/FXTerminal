@@ -569,7 +569,7 @@ button {
 
 .calendar-table {
   width: 100%;
-  min-width: 560px;
+  min-width: 360px;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -597,9 +597,11 @@ button {
   position: sticky;
   left: 0;
   z-index: 1;
-  min-width: 160px;
+  min-width: 172px;
   max-width: 200px;
   padding-left: 12px;
+  /* Espace entre le nom et les colonnes de valeurs */
+  padding-right: 20px;
   text-align: left;
   white-space: normal;
 }
@@ -608,10 +610,22 @@ button {
   background: var(--calendar-bg);
 }
 
-/* Colonnes de valeurs : largeur minimale, titre sur deux lignes si besoin. */
+/* Colonnes de valeurs : resserrées entre elles, titre sur deux lignes si besoin. */
+.calendar-table th:not(:first-child),
+.calendar-table td:not(:first-child) {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
 .calendar-table th:not(:first-child) {
-  min-width: 76px;
+  min-width: 62px;
   white-space: normal;
+  letter-spacing: 0.5px;
+}
+
+.calendar-table td:last-child,
+.calendar-table th:last-child {
+  padding-right: 12px;
 }
 
 .calendar-table th {

@@ -305,12 +305,14 @@ function registerServiceWorker() {
 const CALENDAR_IMPACTS = ['high', 'medium'];
 const CALENDAR_REFRESH_MS = 60000;
 
-// MODE DÉMONSTRATION : tant que c'est à true, le calendrier affiche
-// uniquement les données FICTIVES ci-dessous (événements rouges et
-// orange dans le style de Forex Factory) et ne lit pas Supabase.
-// Passer à false quand les vraies données seront branchées dans la
-// table "calendar_events".
-const CALENDAR_USE_DEMO = true;
+// MODE DÉMONSTRATION : si mis à true, le calendrier affiche
+// uniquement les données FICTIVES ci-dessous et ne lit pas Supabase.
+// À false, l'appli lit la table "calendar_events" : elle affiche les
+// vraies données une fois le bot activé (voir supabase/INSTRUCTIONS.md),
+// et se rabat sur les données fictives (avec un bandeau "Données
+// d'exemple") seulement si la lecture échoue (table vide ou absente,
+// pas encore connecté...).
+const CALENDAR_USE_DEMO = false;
 
 // Ligne : [nom, impact, avant, prév. basse, prév. moyenne, prév. haute, sortie]
 const CALENDAR_DEMO = {
@@ -390,32 +392,32 @@ function actualDirection(ev) {
 // visible en maintenant le doigt (ou en survolant) le nom. Pour ajouter
 // une traduction, ajouter simplement une ligne à cette liste.
 const CALENDAR_TRANSLATIONS = {
-  "Non-Farm Employment Change": "Créations d'emplois non agricoles",
+  "Non-Farm Employment Change": "Créations d'emplois non agricoles (NFP)",
   "Unemployment Rate": "Taux de chômage",
   "Average Hourly Earnings m/m": "Salaire horaire moyen (mensuel)",
   "Unemployment Claims": "Demandes d'allocations chômage",
-  "CPI m/m": "Inflation (IPC) mensuelle",
-  "Core CPI m/m": "Inflation de base (IPC) mensuelle",
+  "CPI m/m": "Inflation (CPI) mensuelle",
+  "Core CPI m/m": "Inflation de base (CPI) mensuelle",
   "Core Retail Sales m/m": "Ventes au détail de base (mensuel)",
   "Federal Funds Rate": "Taux directeur de la Fed",
-  "FOMC Statement": "Communiqué de la Fed",
+  "FOMC Statement": "Communiqué de la Fed (FOMC)",
   "German Flash Manufacturing PMI": "PMI manufacturier allemand (flash)",
   "German ZEW Economic Sentiment": "Confiance des investisseurs allemands (ZEW)",
-  "Core CPI Flash Estimate y/y": "Inflation de base, estimation flash (annuelle)",
-  "CPI Flash Estimate y/y": "Inflation, estimation flash (annuelle)",
+  "Core CPI Flash Estimate y/y": "Inflation de base (CPI), estimation flash annuelle",
+  "CPI Flash Estimate y/y": "Inflation (CPI), estimation flash annuelle",
   "ECB Main Refinancing Rate": "Taux directeur de la BCE",
   "ECB Press Conference": "Conférence de presse de la BCE",
-  "Tokyo Core CPI y/y": "Inflation de base de Tokyo (annuelle)",
+  "Tokyo Core CPI y/y": "Inflation de base de Tokyo (CPI) annuelle",
   "Average Cash Earnings y/y": "Salaires moyens en espèces (annuel)",
-  "National Core CPI y/y": "Inflation de base nationale (annuelle)",
-  "Prelim GDP q/q": "PIB préliminaire (trimestriel)",
+  "National Core CPI y/y": "Inflation de base nationale (CPI) annuelle",
+  "Prelim GDP q/q": "PIB (GDP) préliminaire trimestriel",
   "Tankan Manufacturing Index": "Enquête Tankan, industrie manufacturière",
   "BOJ Policy Rate": "Taux directeur de la BoJ",
   "BOJ Press Conference": "Conférence de presse de la BoJ",
   "Average Earnings Index 3m/y": "Salaires moyens sur 3 mois (annuel)",
   "Claimant Count Change": "Variation du nombre de demandeurs d'emploi",
-  "CPI y/y": "Inflation (IPC) annuelle",
-  "GDP m/m": "PIB (mensuel)",
+  "CPI y/y": "Inflation (CPI) annuelle",
+  "GDP m/m": "PIB (GDP) mensuel",
   "Retail Sales m/m": "Ventes au détail (mensuel)",
   "MPC Official Bank Rate Votes": "Votes du comité de politique monétaire",
   "Official Bank Rate": "Taux directeur de la BoE",
@@ -433,14 +435,14 @@ const CALENDAR_TRANSLATIONS = {
   "Cash Rate": "Taux directeur de la Banque d'Australie",
   "RBA Rate Statement": "Communiqué de la Banque d'Australie",
   "GDT Price Index": "Prix des produits laitiers (GDT)",
-  "CPI q/q": "Inflation (IPC) trimestrielle",
-  "GDP q/q": "PIB (trimestriel)",
+  "CPI q/q": "Inflation (CPI) trimestrielle",
+  "GDP q/q": "PIB (GDP) trimestriel",
   "Official Cash Rate": "Taux directeur de la Banque de Nouvelle-Zélande",
   "RBNZ Rate Statement": "Communiqué de la Banque de Nouvelle-Zélande",
   "Manufacturing PMI": "PMI manufacturier",
   "Non-Manufacturing PMI": "PMI non manufacturier",
   "Caixin Manufacturing PMI": "PMI manufacturier Caixin",
-  "GDP q/y": "PIB (annuel)",
+  "GDP q/y": "PIB (GDP) annuel",
 };
 
 function translateEventTitle(title) {
@@ -472,9 +474,7 @@ function renderCalendar(code, events, isDemo) {
     return `<tr>
       <td><span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(translateEventTitle(ev.title))}</span></td>
       ${calendarCell(ev.actual, 'calendar-value--actual' + (actualDirection(ev) ? ' calendar-value--' + actualDirection(ev) : ''))}
-      ${calendarCell(ev.forecast_high)}
       ${calendarCell(ev.forecast_mid)}
-      ${calendarCell(ev.forecast_low)}
       ${calendarCell(ev.previous)}
     </tr>`;
   }).join('');
@@ -485,9 +485,7 @@ function renderCalendar(code, events, isDemo) {
         <tr>
           <th scope="col">Événement</th>
           <th scope="col">Sortie</th>
-          <th scope="col">Prévision haute</th>
-          <th scope="col">Prévision moyenne</th>
-          <th scope="col">Prévision basse</th>
+          <th scope="col">Prévision</th>
           <th scope="col">Avant</th>
         </tr>
       </thead>
