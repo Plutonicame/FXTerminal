@@ -321,28 +321,6 @@ function getCalendarImpacts() {
   return ['high', 'medium'];
 }
 
-// MODE DÉMONSTRATION : si mis à true, le calendrier affiche
-// uniquement les données FICTIVES ci-dessous et ne lit pas Supabase.
-// À false, l'appli lit la table "calendar_events" : elle affiche les
-// vraies données une fois le bot activé (voir supabase/INSTRUCTIONS.md),
-// et se rabat sur les données fictives (avec un bandeau "Données
-// d'exemple") seulement si la lecture échoue (table vide ou absente,
-// pas encore connecté...).
-const CALENDAR_USE_DEMO = false;
-
-// Ligne : [nom, impact, avant, prév. basse, prév. moyenne, prév. haute, sortie]
-const CALENDAR_DEMO = {
-  USD: [["Non-Farm Employment Change", "high", "73K", "45K", "75K", "110K", "82K"], ["Unemployment Rate", "high", "4.3%", "4.2%", "4.3%", "4.4%", "4.3%"], ["Average Hourly Earnings m/m", "high", "0.3%", "0.2%", "0.3%", "0.4%", "0.4%"], ["Unemployment Claims", "medium", "231K", "224K", "230K", "238K", "228K"], ["CPI m/m", "high", "0.2%", "0.1%", "0.3%", "0.4%", null], ["Core CPI m/m", "high", "0.3%", "0.2%", "0.3%", "0.4%", null], ["Core Retail Sales m/m", "medium", "0.4%", "0.1%", "0.3%", "0.6%", null], ["Federal Funds Rate", "high", "4.25%", "4.00%", "4.00%", "4.25%", null], ["FOMC Statement", "high", "", "", "", "", null]],
-  EUR: [["German Flash Manufacturing PMI", "medium", "49.8", "49.5", "50.2", "51.0", "50.4"], ["German ZEW Economic Sentiment", "medium", "34.7", "30.0", "36.0", "41.0", "37.3"], ["Core CPI Flash Estimate y/y", "high", "2.3%", "2.2%", "2.3%", "2.4%", "2.3%"], ["CPI Flash Estimate y/y", "high", "2.0%", "1.9%", "2.1%", "2.2%", null], ["Unemployment Rate", "medium", "6.2%", "6.2%", "6.3%", "6.4%", null], ["ECB Main Refinancing Rate", "high", "2.15%", "2.15%", "2.15%", "2.15%", null], ["ECB Press Conference", "high", "", "", "", "", null]],
-  JPY: [["Tokyo Core CPI y/y", "medium", "2.5%", "2.4%", "2.6%", "2.8%", "2.6%"], ["Average Cash Earnings y/y", "medium", "3.4%", "2.8%", "3.2%", "3.6%", "3.1%"], ["National Core CPI y/y", "medium", "3.1%", "2.9%", "3.0%", "3.2%", null], ["Prelim GDP q/q", "medium", "0.5%", "-0.3%", "0.1%", "0.4%", null], ["Tankan Manufacturing Index", "medium", "13", "11", "13", "15", null], ["BOJ Policy Rate", "high", "0.50%", "0.50%", "0.50%", "0.75%", null], ["BOJ Press Conference", "high", "", "", "", "", null]],
-  GBP: [["Average Earnings Index 3m/y", "high", "5.0%", "4.7%", "4.9%", "5.1%", "4.8%"], ["Claimant Count Change", "medium", "8.9K", "5.0K", "10.0K", "18.0K", "12.4K"], ["CPI y/y", "high", "3.8%", "3.7%", "3.8%", "3.9%", null], ["GDP m/m", "medium", "0.0%", "-0.1%", "0.1%", "0.2%", null], ["Retail Sales m/m", "medium", "0.6%", "-0.4%", "0.2%", "0.6%", null], ["MPC Official Bank Rate Votes", "high", "5-4-0", "6-3-0", "6-3-0", "6-3-0", null], ["Official Bank Rate", "high", "4.00%", "4.00%", "4.00%", "4.00%", null]],
-  CHF: [["Trade Balance", "medium", "3.85B", "3.50B", "3.90B", "4.30B", "3.72B"], ["CPI m/m", "medium", "0.0%", "-0.1%", "0.0%", "0.1%", "0.1%"], ["KOF Economic Barometer", "medium", "98.4", "97.0", "98.5", "100.0", null], ["Retail Sales y/y", "medium", "0.6%", "-0.2%", "0.5%", "1.1%", null], ["SNB Policy Rate", "high", "0.00%", "0.00%", "0.00%", "0.00%", null], ["SNB Monetary Policy Assessment", "high", "", "", "", "", null]],
-  CAD: [["Employment Change", "high", "-40.8K", "-8.0K", "5.0K", "18.0K", "12.3K"], ["Unemployment Rate", "high", "7.1%", "7.1%", "7.2%", "7.3%", "7.1%"], ["CPI m/m", "high", "0.3%", "0.1%", "0.2%", "0.3%", null], ["Core Retail Sales m/m", "medium", "0.2%", "0.0%", "0.3%", "0.6%", null], ["GDP m/m", "high", "0.1%", "-0.1%", "0.1%", "0.3%", null], ["Ivey PMI", "medium", "54.1", "51.0", "53.0", "56.0", null], ["Overnight Rate", "high", "2.50%", "2.50%", "2.50%", "2.50%", null], ["BOC Rate Statement", "high", "", "", "", "", null]],
-  AUD: [["Westpac Consumer Sentiment", "medium", "-3.5%", "-2.0%", "0.5%", "3.0%", "1.2%"], ["Wage Price Index q/q", "high", "0.9%", "0.8%", "0.9%", "1.0%", "0.9%"], ["Employment Change", "high", "24.5K", "15.0K", "22.0K", "30.0K", null], ["Unemployment Rate", "high", "4.2%", "4.2%", "4.3%", "4.4%", null], ["Retail Sales m/m", "medium", "0.5%", "0.1%", "0.4%", "0.7%", null], ["Cash Rate", "high", "3.60%", "3.60%", "3.60%", "3.60%", null], ["RBA Rate Statement", "high", "", "", "", "", null]],
-  NZD: [["GDT Price Index", "medium", "-1.2%", "-2.0%", "0.0%", "1.5%", "0.6%"], ["Trade Balance", "medium", "-390M", "-450M", "-300M", "-150M", "-262M"], ["CPI q/q", "high", "0.5%", "0.4%", "0.6%", "0.8%", null], ["Employment Change", "high", "0.1%", "-0.2%", "0.1%", "0.3%", null], ["GDP q/q", "high", "-0.9%", "0.1%", "0.3%", "0.5%", null], ["Official Cash Rate", "high", "3.00%", "2.75%", "3.00%", "3.00%", null], ["RBNZ Rate Statement", "high", "", "", "", "", null]],
-  CNY: [["Manufacturing PMI", "medium", "49.4", "49.3", "49.5", "49.8", "49.6"], ["Non-Manufacturing PMI", "medium", "50.1", "50.0", "50.2", "50.5", "50.3"], ["Caixin Manufacturing PMI", "medium", "50.3", "49.8", "50.2", "50.6", null], ["CPI y/y", "medium", "0.0%", "-0.1%", "0.1%", "0.2%", null], ["Trade Balance", "medium", "98.2B", "90.0B", "96.0B", "102.0B", null], ["Retail Sales y/y", "medium", "3.4%", "2.6%", "3.0%", "3.5%", null], ["GDP q/y", "high", "5.2%", "4.9%", "5.1%", "5.3%", null]],
-};
-
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -351,26 +329,11 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;');
 }
 
-function demoCalendarEvents(code) {
-  const impacts = getCalendarImpacts();
-  return (CALENDAR_DEMO[code] || [])
-    .filter((r) => impacts.includes(r[1]))
-    .map((r) => ({
-      title: r[0],
-      impact: r[1],
-      previous: r[2],
-      forecast_low: r[3],
-      forecast_mid: r[4],
-      forecast_high: r[5],
-      actual: r[6],
-    }));
-}
-
-// Renvoie { events } (tableau, éventuellement vide) ou { events: null }
-// si la lecture est impossible (client absent, table inexistante...).
+// Renvoie { events } (tableau, éventuellement vide) ou { events: null, error }
+// si la lecture est impossible (session expirée, réseau coupé...).
 async function fetchCalendarEvents(code) {
   const client = window.Auth && window.Auth.getClient ? window.Auth.getClient() : null;
-  if (!client) return { events: null };
+  if (!client) return { events: null, error: 'connexion indisponible' };
   const { data, error } = await client
     .from('calendar_events')
     .select('title, impact, previous, forecast_low, forecast_mid, forecast_high, actual, event_time')
@@ -379,7 +342,7 @@ async function fetchCalendarEvents(code) {
     .order('event_time', { ascending: true });
   if (error) {
     console.error('Calendrier économique : lecture impossible :', error);
-    return { events: null };
+    return { events: null, error: (error && error.message) || 'erreur inconnue' };
   }
   return { events: data || [] };
 }
@@ -532,7 +495,7 @@ async function autoTranslateMissingTitles(code, events) {
 
   saveCalendarTranslateCache();
   if (calendarAutoTranslate && lastCalendarEventsByCurrency[code] === events) {
-    renderCalendar(code, events, false);
+    renderCalendar(code, events);
   }
 }
 
@@ -606,13 +569,21 @@ function calendarCell(value, extraClass) {
   return `<td class="calendar-value${extraClass ? ' ' + extraClass : ''}">${text}</td>`;
 }
 
-function renderCalendar(code, events, isDemo) {
+// events : tableau, ou null s'il n'y a encore aucune donnée à montrer.
+// errorNote : message affiché en haut si la dernière lecture a échoué.
+function renderCalendar(code, events, errorNote) {
   const container = document.querySelector(`.calendar[data-currency="${code}"]`);
   if (!container) return;
 
   let html = '';
-  if (isDemo) {
-    html += '<p class="calendar-note">Données d\'exemple — calendrier réel pas encore branché</p>';
+  if (errorNote) {
+    html += `<p class="calendar-note">${escapeHtml(errorNote)}</p>`;
+  }
+
+  if (events === null) {
+    html += '<div class="calendar-scroll"><p class="calendar-empty">Données indisponibles pour le moment</p></div>';
+    container.innerHTML = html;
+    return;
   }
 
   if (!events.length) {
@@ -653,11 +624,13 @@ function renderCalendar(code, events, isDemo) {
 const calendarRequestId = {};
 
 // =========================================================
-// Point de réinitialisation par devise : la dernière réunion de la
-// banque centrale de cette devise. Tout ce qui précède cette réunion
-// n'est plus affiché ; tout ce qui suit reste affiché indéfiniment
-// (même sans valeur "Sortie", que Forex Factory ne donne jamais),
-// jusqu'à la réunion suivante.
+// Ce que le calendrier affiche, par devise :
+//   1. tout ce qui est déjà sorti depuis la dernière réunion de la banque
+//      centrale de cette devise (elle reste incluse), et qui reste
+//      affiché jusqu'à la réunion suivante ;
+//   2. tout ce qui doit sortir dans les 7 prochains jours.
+// Point de réinitialisation : la dernière réunion déjà passée. Tout ce
+// qui la précède n'est plus affiché.
 const CENTRAL_BANK_ANCHORS = {
   USD: 'FOMC Statement',
   EUR: 'ECB Press Conference',
@@ -697,11 +670,20 @@ function filterSinceLastCentralBankMeeting(code, events) {
 // restent en base, pour une future section dédiée aux discours).
 // Les conférences de presse ("ECB Press Conference"...) et les communiqués
 // ne sont PAS concernés : certains servent de repère de réunion ci-dessus.
-// Ce filtre s'applique après filterSinceLastCentralBankMeeting().
+// Ce filtre s'applique après filterSinceLastCentralBankMeeting() et limitUpcomingEvents().
 const SPEECH_TITLE_PATTERN = /\b(speaks|speech|testifies|testimony)\b/i;
 
 function hideSpeechEvents(events) {
   return events.filter((ev) => !SPEECH_TITLE_PATTERN.test(ev.title || ''));
+}
+
+// Événements à venir : uniquement ceux qui sortent dans les 7 prochains jours
+// (les plus lointains restent en base mais ne s'affichent pas encore).
+const CALENDAR_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000;
+
+function limitUpcomingEvents(events) {
+  const max = Date.now() + CALENDAR_LOOKAHEAD_MS;
+  return events.filter((ev) => new Date(ev.event_time).getTime() <= max);
 }
 
 const lastCalendarEventsByCurrency = {};
@@ -710,20 +692,23 @@ async function loadCalendar(code) {
   const requestId = (calendarRequestId[code] || 0) + 1;
   calendarRequestId[code] = requestId;
 
-  let events, isDemo;
-  if (CALENDAR_USE_DEMO) {
-    events = demoCalendarEvents(code);
-    isDemo = false;
-  } else {
-    const result = await fetchCalendarEvents(code);
-    // Une réponse plus récente est déjà arrivée : on ignore celle-ci.
-    if (calendarRequestId[code] !== requestId) return;
-    isDemo = result.events === null;
-    events = isDemo ? demoCalendarEvents(code) : hideSpeechEvents(filterSinceLastCentralBankMeeting(code, result.events));
+  const result = await fetchCalendarEvents(code);
+  // Une réponse plus récente est déjà arrivée : on ignore celle-ci.
+  if (calendarRequestId[code] !== requestId) return;
+
+  // Lecture impossible : on garde les dernières vraies données affichées
+  // (jamais de données fictives) et on signale le problème. La lecture
+  // est retentée automatiquement à chaque rafraîchissement.
+  if (result.events === null) {
+    const previous = lastCalendarEventsByCurrency[code] || null;
+    renderCalendar(code, previous, `⚠ Lecture impossible (${result.error}). Nouvelle tentative dans une minute.`);
+    return;
   }
 
+  const events = hideSpeechEvents(limitUpcomingEvents(filterSinceLastCentralBankMeeting(code, result.events)));
+
   lastCalendarEventsByCurrency[code] = events;
-  renderCalendar(code, events, isDemo);
+  renderCalendar(code, events);
   if (calendarAutoTranslate) autoTranslateMissingTitles(code, events);
 }
 
@@ -847,7 +832,7 @@ function initCalendarToolbar() {
       if (!currentCalendarCurrency) return;
       const events = lastCalendarEventsByCurrency[currentCalendarCurrency];
       if (!events) return;
-      renderCalendar(currentCalendarCurrency, events, false);
+      renderCalendar(currentCalendarCurrency, events);
       if (calendarAutoTranslate) autoTranslateMissingTitles(currentCalendarCurrency, events);
     });
   }
