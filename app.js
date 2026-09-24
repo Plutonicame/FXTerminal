@@ -691,6 +691,19 @@ function filterSinceLastCentralBankMeeting(code, events) {
   return events.filter((ev) => new Date(ev.event_time).getTime() >= cutoff);
 }
 
+// Les prises de parole (discours, auditions : "Fed Chair Powell Speaks",
+// "ECB President Lagarde Speaks", "BOE Gov Bailey Testifies"...) ne sont
+// pas des données économiques : elles sont masquées du calendrier (elles
+// restent en base, pour une future section dédiée aux discours).
+// Les conférences de presse ("ECB Press Conference"...) et les communiqués
+// ne sont PAS concernés : certains servent de repère de réunion ci-dessus.
+// Ce filtre s'applique après filterSinceLastCentralBankMeeting().
+const SPEECH_TITLE_PATTERN = /\b(speaks|speech|testifies|testimony)\b/i;
+
+function hideSpeechEvents(events) {
+  return events.filter((ev) => !SPEECH_TITLE_PATTERN.test(ev.title || ''));
+}
+
 const lastCalendarEventsByCurrency = {};
 
 async function loadCalendar(code) {
@@ -706,7 +719,7 @@ async function loadCalendar(code) {
     // Une réponse plus récente est déjà arrivée : on ignore celle-ci.
     if (calendarRequestId[code] !== requestId) return;
     isDemo = result.events === null;
-    events = isDemo ? demoCalendarEvents(code) : filterSinceLastCentralBankMeeting(code, result.events);
+    events = isDemo ? demoCalendarEvents(code) : hideSpeechEvents(filterSinceLastCentralBankMeeting(code, result.events));
   }
 
   lastCalendarEventsByCurrency[code] = events;
