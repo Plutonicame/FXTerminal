@@ -324,13 +324,13 @@ function getCalendarImpacts() {
 // Cases à cocher « vue » (barre Calendrier). Les cases cochées s'additionnent :
 // un événement est affiché s'il correspond à AU MOINS une case cochée.
 //   released : déjà sorti (valeur publiée, ou heure passée), quel que soit le jour
-//   forecast : pas encore sorti, quel que soit le jour
 //   nearby   : prévu aujourd'hui ou demain (sorti ou non)
-//   later    : prévu à partir d'après-demain
-// Tout coché = tous les événements (comme avant). Mémorisé sur l'appareil.
-const CALENDAR_VIEW_STORAGE_KEY = 'fx-calendar-view-filters';
-const CALENDAR_VIEW_KEYS = ['released', 'forecast', 'nearby', 'later'];
-const calendarViewFilters = { released: true, forecast: true, nearby: true, later: true };
+//   forecast : prévu à partir d'après-demain, jusqu'à la prochaine réunion
+//              de la banque centrale (voir limitUpcomingEvents)
+// Tout coché = tous les événements. Mémorisé sur l'appareil.
+const CALENDAR_VIEW_STORAGE_KEY = 'fx-calendar-view-filters-v2';
+const CALENDAR_VIEW_KEYS = ['released', 'nearby', 'forecast'];
+const calendarViewFilters = { released: true, nearby: true, forecast: true };
 try {
   const raw = localStorage.getItem(CALENDAR_VIEW_STORAGE_KEY);
   if (raw) {
@@ -355,9 +355,8 @@ function applyCalendarViewFilters(events) {
     const hasActual = ev.actual !== null && ev.actual !== undefined && String(ev.actual).trim() !== '';
     const released = hasActual || t <= now;
     if (calendarViewFilters.released && released) return true;
-    if (calendarViewFilters.forecast && !released) return true;
     if (calendarViewFilters.nearby && t >= todayStart && t < dayAfterTomorrowStart) return true;
-    if (calendarViewFilters.later && t >= dayAfterTomorrowStart) return true;
+    if (calendarViewFilters.forecast && t >= dayAfterTomorrowStart) return true;
     return false;
   });
 }
@@ -652,11 +651,11 @@ function renderCalendar(code, events, errorNote) {
   const rows = visibleEvents.map((ev) => {
     const impact = ev.impact === 'high' ? 'high' : 'medium';
     return `<tr>
-      <td>
+      <td class="calendar-col-date">${escapeHtml(formatCalendarDateInline(ev.event_time))}</td>
+      <td class="calendar-col-name">
         <button type="button" class="calendar-date-btn" data-event-time="${escapeHtml(ev.event_time)}" aria-label="Voir la date et l'heure">${CALENDAR_DATE_ICON}</button>
         <span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(resolveEventTitle(ev.title))}</span>
       </td>
-      <td class="calendar-col-date">${escapeHtml(formatCalendarDateInline(ev.event_time))}</td>
       ${calendarCell(ev.actual, 'calendar-value--actual' + (actualDirection(ev) ? ' calendar-value--' + actualDirection(ev) : ''))}
       ${calendarCell(ev.forecast_mid)}
       ${calendarCell(ev.previous)}
@@ -667,8 +666,8 @@ function renderCalendar(code, events, errorNote) {
     <table class="calendar-table">
       <thead>
         <tr>
-          <th scope="col">Événement</th>
           <th scope="col" class="calendar-col-date">Date</th>
+          <th scope="col" class="calendar-col-name">Événement</th>
           <th scope="col">Sortie</th>
           <th scope="col">Prévision</th>
           <th scope="col">Avant</th>
@@ -736,12 +735,29 @@ function hideSpeechEvents(events) {
   return events.filter((ev) => !SPEECH_TITLE_PATTERN.test(ev.title || ''));
 }
 
-// Événements à venir : uniquement ceux qui sortent dans les 7 prochains jours
-// (les plus lointains restent en base mais ne s'affichent pas encore).
+// Événements à venir : on garde tout jusqu'à la fin de la journée de la
+// PROCHAINE réunion de la banque centrale de la devise (FOMC pour l'USD,
+// etc., voir CENTRAL_BANK_ANCHORS). Si aucune prochaine réunion n'est
+// connue dans les données, repli sur les 7 prochains jours.
 const CALENDAR_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000;
 
-function limitUpcomingEvents(events) {
-  const max = Date.now() + CALENDAR_LOOKAHEAD_MS;
+function limitUpcomingEvents(code, events) {
+  const now = Date.now();
+  let max = now + CALENDAR_LOOKAHEAD_MS;
+
+  const anchorTitle = CENTRAL_BANK_ANCHORS[code];
+  if (anchorTitle) {
+    let nextMeeting = null;
+    for (const ev of events) {
+      if (!ev.title || !ev.title.toLowerCase().includes(anchorTitle.toLowerCase())) continue;
+      const t = new Date(ev.event_time).getTime();
+      if (t > now && (nextMeeting === null || t < nextMeeting)) nextMeeting = t;
+    }
+    if (nextMeeting !== null) {
+      const d = new Date(nextMeeting);
+      max = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime() - 1;
+    }
+  }
   return events.filter((ev) => new Date(ev.event_time).getTime() <= max);
 }
 
@@ -764,7 +780,7 @@ async function loadCalendar(code) {
     return;
   }
 
-  const events = hideSpeechEvents(limitUpcomingEvents(filterSinceLastCentralBankMeeting(code, result.events)));
+  const events = hideSpeechEvents(limitUpcomingEvents(code, filterSinceLastCentralBankMeeting(code, result.events)));
 
   lastCalendarEventsByCurrency[code] = events;
   renderCalendar(code, events);

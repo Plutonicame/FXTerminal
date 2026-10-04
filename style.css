@@ -827,9 +827,10 @@ button {
   background: var(--calendar-row-hover-bg);
 }
 
-/* Première colonne (nom) figée à gauche quand le tableau défile. */
-.calendar-table th:first-child,
-.calendar-table td:first-child {
+/* Colonne du nom figée à gauche quand le tableau défile (téléphone : c'est
+   la première colonne visible, la colonne date étant masquée). */
+.calendar-table th.calendar-col-name,
+.calendar-table td.calendar-col-name {
   position: sticky;
   left: 0;
   z-index: 1;
@@ -842,18 +843,18 @@ button {
   white-space: normal;
 }
 
-.calendar-table td:first-child {
+.calendar-table td.calendar-col-name {
   background: var(--calendar-bg);
 }
 
 /* Colonnes de valeurs : resserrées entre elles, titre sur deux lignes si besoin. */
-.calendar-table th:not(:first-child),
-.calendar-table td:not(:first-child) {
+.calendar-table th:not(.calendar-col-name):not(.calendar-col-date),
+.calendar-table td:not(.calendar-col-name):not(.calendar-col-date) {
   padding-left: 5px;
   padding-right: 5px;
 }
 
-.calendar-table th:not(:first-child) {
+.calendar-table th:not(.calendar-col-name):not(.calendar-col-date) {
   min-width: 62px;
   white-space: normal;
   letter-spacing: 0.5px;
@@ -944,12 +945,14 @@ button {
 }
 
 @media (min-width: 720px) {
+  /* Colonne date : tout à gauche. */
   .calendar-table th.calendar-col-date,
   .calendar-table td.calendar-col-date {
     display: table-cell;
+    width: 150px;
     min-width: 150px;
-    padding-left: 5px;
-    padding-right: 12px;
+    padding-left: 12px;
+    padding-right: 5px;
     white-space: nowrap;
     text-align: left;
   }
@@ -960,7 +963,18 @@ button {
     color: var(--calendar-value-text);
   }
 
-  .calendar-table td:first-child .calendar-date-btn {
+  /* Colonne événement : à droite de la date, avec une marge d'environ la
+     moitié de la largeur de la colonne date (75px sur 150px). Plus de
+     colonne figée sur grand écran (le tableau tient en entier). */
+  .calendar-table th.calendar-col-name,
+  .calendar-table td.calendar-col-name {
+    position: static;
+    min-width: 0;
+    max-width: 320px;
+    padding-left: 75px;
+  }
+
+  .calendar-table td.calendar-col-name .calendar-date-btn {
     display: none;
   }
 }
