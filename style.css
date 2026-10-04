@@ -792,6 +792,10 @@ button {
      barre de navigation et la faire aller d'un bord à l'autre. */
   margin: -20px calc(-1 * clamp(12px, 4vw, 32px)) 16px;
   padding: 0 clamp(12px, 4vw, 32px);
+  /* Hauteur fixe = hauteur d'un onglet « déplié » : quand les onglets se
+     replient/déplient, rien ne bouge en dessous. Ils restent collés en haut. */
+  min-height: 44px;
+  align-items: flex-start;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -806,7 +810,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+  /* Onglet « replié » : quelques pixels de moins que l'onglet déplié (44px) */
+  height: 39px;
   padding: 0 8px;
   background: var(--currency-card-bg);
   border: 1px solid var(--currency-card-border);
@@ -818,12 +823,31 @@ button {
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+  transition: height 0.16s ease, background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
 }
 
 .currency-card.is-active {
   background: var(--currency-card-active-bg);
   border-color: var(--currency-card-active-border);
   color: var(--currency-card-active-text);
+}
+
+/* Déplié à la hauteur normale : onglet sélectionné, ou survolé à la souris. */
+.currency-card.is-active,
+.currency-card[aria-selected="true"] {
+  height: 44px;
+}
+
+@media (hover: hover) {
+  .currency-card:hover {
+    height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .currency-card {
+    transition: none;
+  }
 }
 
 @media (min-width: 720px) {
