@@ -62,7 +62,13 @@ async function signInWithGoogle() {
   const redirectTo = window.location.origin + window.location.pathname;
   const { error } = await client.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo },
+    options: {
+      redirectTo,
+      // Force Google à afficher le sélecteur de comptes (avec « Utiliser un
+      // autre compte »), même s'il n'y a qu'un seul compte connecté dans
+      // le navigateur. Sans ça, Google reconnecte le compte automatiquement.
+      queryParams: { prompt: 'select_account' },
+    },
   });
   if (error) {
     console.error('Erreur lors de la connexion Google :', error);

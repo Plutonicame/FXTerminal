@@ -529,8 +529,8 @@ button {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  max-width: 720px;
-  margin: 0 auto 10px;
+  width: 100%;
+  margin: 0 0 10px;
   padding: 10px 14px;
   background: var(--calendar-toolbar-bg);
   border: 1px solid var(--calendar-toolbar-border);
@@ -637,8 +637,7 @@ button {
 }
 
 .calendar-status {
-  max-width: 720px;
-  margin: -4px auto 12px;
+  margin: -4px 0 12px;
   padding: 0 4px;
   font-family: var(--mono);
   font-size: 10px;
