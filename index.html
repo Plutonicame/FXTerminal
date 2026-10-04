@@ -120,6 +120,11 @@
           </button>
           <span class="calendar-impact-toggle-knob" aria-hidden="true"></span>
         </div>
+        <div class="calendar-view-filters" id="calendarViewFilters" role="group" aria-label="Filtrer par état de sortie et par date">
+          <label class="calendar-view-chip"><input type="checkbox" data-filter="released" checked><span>Sortie</span></label>
+          <label class="calendar-view-chip"><input type="checkbox" data-filter="nearby" checked><span>Aujourd'hui + demain</span></label>
+          <label class="calendar-view-chip"><input type="checkbox" data-filter="forecast" checked><span>Prévisions</span></label>
+        </div>
         <button type="button" class="calendar-translate-btn" id="calendarTranslateBtn" aria-pressed="false" aria-label="Traduire automatiquement les annonces en anglais">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="2.5" y="2.5" width="10" height="10" rx="2.5"/>
@@ -128,11 +133,6 @@
             <text x="17" y="19.7" font-family="var(--sans)" font-size="7" font-weight="700" text-anchor="middle" stroke="none" fill="currentColor">A</text>
           </svg>
         </button>
-        <div class="calendar-view-filters" id="calendarViewFilters" role="group" aria-label="Filtrer par état de sortie et par date">
-          <label class="calendar-view-chip"><input type="checkbox" data-filter="released" checked><span>Sortie</span></label>
-          <label class="calendar-view-chip"><input type="checkbox" data-filter="nearby" checked><span>Aujourd'hui + demain</span></label>
-          <label class="calendar-view-chip"><input type="checkbox" data-filter="forecast" checked><span>Prévisions</span></label>
-        </div>
       </div>
     </div>
     <div class="calendar-status" id="calendarStatus" hidden></div>
