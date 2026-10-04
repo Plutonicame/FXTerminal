@@ -929,6 +929,124 @@ function initCalendarToolbar() {
   }
 }
 
+// =========================================================
+// Barre de défilement « discrète » (PC uniquement).
+// La barre native est masquée (voir style.css) pour qu'elle ne décale plus
+// la page vers la gauche quand le contenu devient long. À la place, une
+// barre superposée apparaît quand la souris s'approche du bord droit de
+// l'écran, et disparaît dès qu'on s'en éloigne. Sur téléphone/tablette
+// tactile, on garde le comportement natif.
+// =========================================================
+function initEdgeScrollbar() {
+  if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+  const EDGE_ZONE_PX = 40;   // distance du bord droit qui fait apparaître la barre
+  const MIN_THUMB_PX = 40;
+  const HIDE_DELAY_MS = 500;
+
+  const track = document.createElement('div');
+  track.className = 'edge-scrollbar';
+  track.setAttribute('aria-hidden', 'true');
+  const thumb = document.createElement('div');
+  thumb.className = 'edge-scrollbar-thumb';
+  track.appendChild(thumb);
+  document.body.appendChild(track);
+
+  const scroller = () => document.scrollingElement || document.documentElement;
+  let hideTimer = null;
+  let dragging = false;
+  let overTrack = false;
+  let thumbHeight = 0;
+  let maxThumbTop = 0;
+  let maxScroll = 0;
+
+  function update() {
+    const el = scroller();
+    const viewport = window.innerHeight;
+    maxScroll = Math.max(0, el.scrollHeight - viewport);
+    const scrollable = maxScroll > 1;
+    track.classList.toggle('is-scrollable', scrollable);
+    if (!scrollable) return;
+    thumbHeight = Math.max(MIN_THUMB_PX, (viewport / el.scrollHeight) * viewport);
+    maxThumbTop = viewport - thumbHeight;
+    thumb.style.height = `${thumbHeight}px`;
+    thumb.style.transform = `translateY(${(el.scrollTop / maxScroll) * maxThumbTop}px)`;
+  }
+
+  function show() {
+    clearTimeout(hideTimer);
+    update();
+    track.classList.add('is-visible');
+  }
+
+  function scheduleHide() {
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      if (!dragging && !overTrack) track.classList.remove('is-visible');
+    }, HIDE_DELAY_MS);
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    if (dragging) return;
+    if (e.clientX >= window.innerWidth - EDGE_ZONE_PX) show();
+    else if (track.classList.contains('is-visible')) scheduleHide();
+  }, { passive: true });
+
+  document.documentElement.addEventListener('mouseleave', () => {
+    if (!dragging) scheduleHide();
+  });
+
+  window.addEventListener('scroll', () => {
+    if (track.classList.contains('is-visible')) update();
+  }, { passive: true });
+  window.addEventListener('resize', update);
+
+  track.addEventListener('mouseenter', () => { overTrack = true; clearTimeout(hideTimer); });
+  track.addEventListener('mouseleave', () => { overTrack = false; if (!dragging) scheduleHide(); });
+
+  // Glisser la poignée
+  let startY = 0;
+  let startScroll = 0;
+  thumb.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    dragging = true;
+    startY = e.clientY;
+    startScroll = scroller().scrollTop;
+    thumb.setPointerCapture(e.pointerId);
+    track.classList.add('is-dragging');
+  });
+  thumb.addEventListener('pointermove', (e) => {
+    if (!dragging || maxThumbTop <= 0) return;
+    const delta = e.clientY - startY;
+    scroller().scrollTop = startScroll + (delta / maxThumbTop) * maxScroll;
+  });
+  const endDrag = () => {
+    if (!dragging) return;
+    dragging = false;
+    track.classList.remove('is-dragging');
+    scheduleHide();
+  };
+  thumb.addEventListener('pointerup', endDrag);
+  thumb.addEventListener('pointercancel', endDrag);
+
+  // Clic dans la piste (hors poignée) : défile d'une page vers le haut/bas
+  track.addEventListener('pointerdown', (e) => {
+    if (e.target === thumb) return;
+    const thumbTop = thumb.getBoundingClientRect().top;
+    const direction = e.clientY < thumbTop ? -1 : 1;
+    scroller().scrollBy({ top: direction * window.innerHeight * 0.9, behavior: 'smooth' });
+  });
+
+  // Le contenu change de hauteur (filtres, changement de devise...) : on
+  // recalcule la poignée si elle est visible.
+  const main = document.querySelector('.app-main');
+  if (main && 'ResizeObserver' in window) {
+    new ResizeObserver(() => {
+      if (track.classList.contains('is-visible')) update();
+    }).observe(main);
+  }
+}
+
 /* =========================================================
    Init
    ========================================================= */
@@ -940,6 +1058,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs(() => menu && menu.closeMenu());
   initCalendarToolbar();
   initCurrencyTabs();
+  initEdgeScrollbar();
 
   initAuth();
   initThemePanel();
