@@ -282,6 +282,9 @@ function initThemePanel() {
       if (window.ThemeColors) window.ThemeColors.reset();
     });
   }
+
+  // Permet à la navigation entre onglets de tout refermer (voir DOMContentLoaded).
+  return { close: closePanel };
 }
 
 /* =========================================================
@@ -1055,12 +1058,20 @@ document.addEventListener('DOMContentLoaded', () => {
   window.setInterval(tick, 1000);
 
   const menu = initBurgerMenu();
-  initTabs(() => menu && menu.closeMenu());
+  let themePanel = null; // renseigné plus bas, par initThemePanel()
+  // Changer d'onglet referme tout ce qui était resté ouvert dans l'ancien :
+  // le menu latéral, le panneau Thème (avec ses menus dépliés et son sélecteur
+  // de couleur) et la bulle de date du calendrier.
+  initTabs(() => {
+    if (menu) menu.closeMenu();
+    if (themePanel) themePanel.close();
+    closeCalendarDatePopup();
+  });
   initCalendarToolbar();
   initCurrencyTabs();
   initEdgeScrollbar();
 
   initAuth();
-  initThemePanel();
+  themePanel = initThemePanel();
   registerServiceWorker();
 });
