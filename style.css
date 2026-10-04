@@ -549,7 +549,77 @@ button {
 .calendar-toolbar-tools {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 10px;
+}
+
+/* Cases à cocher « vue » : tout à droite de la barre. Sur petit écran
+   elles passent sur leur propre ligne, alignées à droite. */
+.calendar-view-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.calendar-view-chip {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.calendar-view-chip input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.calendar-view-chip span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border-radius: 7px;
+  border: 1px solid var(--calendar-translate-btn-border);
+  background: var(--calendar-translate-btn-bg);
+  color: var(--calendar-translate-btn-icon);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+/* Petite case à cocher dessinée à gauche du texte */
+.calendar-view-chip span::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+}
+
+.calendar-view-chip input:checked + span {
+  background: var(--calendar-translate-btn-active-bg);
+  border-color: var(--calendar-translate-btn-active-border);
+  color: var(--calendar-translate-btn-active-icon);
+}
+
+.calendar-view-chip input:checked + span::before {
+  background: currentColor;
+  box-shadow: inset 0 0 0 2px var(--calendar-translate-btn-active-bg);
+}
+
+.calendar-view-chip input:focus-visible + span {
+  outline: 2px solid var(--calendar-translate-btn-active-border);
+  outline-offset: 2px;
 }
 
 /* Curseur à 3 positions : orange seul (gauche) / les deux (milieu) /
@@ -863,6 +933,36 @@ button {
 
 .calendar-date-popup[hidden] {
   display: none;
+}
+
+/* Date + heure : colonne visible uniquement sur grand écran (PC), où elle
+   remplace le bouton calendrier. Sur téléphone, c'est l'inverse : le bouton
+   prend moins de place. Même seuil (720px) que la barre des devises. */
+.calendar-table th.calendar-col-date,
+.calendar-table td.calendar-col-date {
+  display: none;
+}
+
+@media (min-width: 720px) {
+  .calendar-table th.calendar-col-date,
+  .calendar-table td.calendar-col-date {
+    display: table-cell;
+    min-width: 150px;
+    padding-left: 5px;
+    padding-right: 12px;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .calendar-table td.calendar-col-date {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--calendar-value-text);
+  }
+
+  .calendar-table td:first-child .calendar-date-btn {
+    display: none;
+  }
 }
 
 .calendar-impact {

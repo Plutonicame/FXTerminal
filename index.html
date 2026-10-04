@@ -128,6 +128,12 @@
             <text x="17" y="19.7" font-family="var(--sans)" font-size="7" font-weight="700" text-anchor="middle" stroke="none" fill="currentColor">A</text>
           </svg>
         </button>
+        <div class="calendar-view-filters" id="calendarViewFilters" role="group" aria-label="Filtrer par état de sortie et par date">
+          <label class="calendar-view-chip"><input type="checkbox" data-filter="released" checked><span>Sortie</span></label>
+          <label class="calendar-view-chip"><input type="checkbox" data-filter="forecast" checked><span>Prévisions</span></label>
+          <label class="calendar-view-chip"><input type="checkbox" data-filter="nearby" checked><span>Aujourd'hui + demain</span></label>
+          <label class="calendar-view-chip"><input type="checkbox" data-filter="later" checked><span>Après-demain</span></label>
+        </div>
       </div>
     </div>
     <div class="calendar-status" id="calendarStatus" hidden></div>

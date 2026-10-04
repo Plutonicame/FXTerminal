@@ -321,6 +321,47 @@ function getCalendarImpacts() {
   return ['high', 'medium'];
 }
 
+// Cases à cocher « vue » (barre Calendrier). Les cases cochées s'additionnent :
+// un événement est affiché s'il correspond à AU MOINS une case cochée.
+//   released : déjà sorti (valeur publiée, ou heure passée), quel que soit le jour
+//   forecast : pas encore sorti, quel que soit le jour
+//   nearby   : prévu aujourd'hui ou demain (sorti ou non)
+//   later    : prévu à partir d'après-demain
+// Tout coché = tous les événements (comme avant). Mémorisé sur l'appareil.
+const CALENDAR_VIEW_STORAGE_KEY = 'fx-calendar-view-filters';
+const CALENDAR_VIEW_KEYS = ['released', 'forecast', 'nearby', 'later'];
+const calendarViewFilters = { released: true, forecast: true, nearby: true, later: true };
+try {
+  const raw = localStorage.getItem(CALENDAR_VIEW_STORAGE_KEY);
+  if (raw) {
+    const saved = JSON.parse(raw);
+    for (const key of CALENDAR_VIEW_KEYS) {
+      if (typeof saved[key] === 'boolean') calendarViewFilters[key] = saved[key];
+    }
+  }
+} catch (e) { /* stockage indisponible ou illisible : tout reste coché */ }
+
+function applyCalendarViewFilters(events) {
+  if (CALENDAR_VIEW_KEYS.every((key) => calendarViewFilters[key])) return events;
+
+  // Les limites « aujourd'hui / demain » suivent l'heure locale de l'appareil.
+  const now = Date.now();
+  const d = new Date();
+  const todayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const dayAfterTomorrowStart = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 2).getTime();
+
+  return events.filter((ev) => {
+    const t = new Date(ev.event_time).getTime();
+    const hasActual = ev.actual !== null && ev.actual !== undefined && String(ev.actual).trim() !== '';
+    const released = hasActual || t <= now;
+    if (calendarViewFilters.released && released) return true;
+    if (calendarViewFilters.forecast && !released) return true;
+    if (calendarViewFilters.nearby && t >= todayStart && t < dayAfterTomorrowStart) return true;
+    if (calendarViewFilters.later && t >= dayAfterTomorrowStart) return true;
+    return false;
+  });
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -516,6 +557,15 @@ function formatCalendarDateTime(iso) {
   return `${label} ${datePart} à ${timePart}`;
 }
 
+// Date + heure affichées directement dans le tableau sur grand écran
+// (sur téléphone, c'est le bouton calendrier + bulle qui est utilisé).
+function formatCalendarDateInline(iso) {
+  const d = new Date(iso);
+  const datePart = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+  const timePart = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return `${datePart} · ${timePart}`;
+}
+
 // Une seule bulle réutilisée pour tous les boutons calendrier du tableau.
 let calendarDatePopup = null;
 let calendarDateOpenBtn = null;
@@ -592,13 +642,21 @@ function renderCalendar(code, events, errorNote) {
     return;
   }
 
-  const rows = events.map((ev) => {
+  const visibleEvents = applyCalendarViewFilters(events);
+  if (!visibleEvents.length) {
+    html += '<div class="calendar-scroll"><p class="calendar-empty">Aucun événement pour ces filtres</p></div>';
+    container.innerHTML = html;
+    return;
+  }
+
+  const rows = visibleEvents.map((ev) => {
     const impact = ev.impact === 'high' ? 'high' : 'medium';
     return `<tr>
       <td>
         <button type="button" class="calendar-date-btn" data-event-time="${escapeHtml(ev.event_time)}" aria-label="Voir la date et l'heure">${CALENDAR_DATE_ICON}</button>
         <span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(resolveEventTitle(ev.title))}</span>
       </td>
+      <td class="calendar-col-date">${escapeHtml(formatCalendarDateInline(ev.event_time))}</td>
       ${calendarCell(ev.actual, 'calendar-value--actual' + (actualDirection(ev) ? ' calendar-value--' + actualDirection(ev) : ''))}
       ${calendarCell(ev.forecast_mid)}
       ${calendarCell(ev.previous)}
@@ -610,6 +668,7 @@ function renderCalendar(code, events, errorNote) {
       <thead>
         <tr>
           <th scope="col">Événement</th>
+          <th scope="col" class="calendar-col-date">Date</th>
           <th scope="col">Sortie</th>
           <th scope="col">Prévision</th>
           <th scope="col">Avant</th>
@@ -818,6 +877,22 @@ function initCalendarToolbar() {
         }
         try { localStorage.setItem(CALENDAR_IMPACT_STORAGE_KEY, value); } catch (e) { /* tant pis */ }
         if (currentCalendarCurrency) loadCalendar(currentCalendarCurrency);
+      });
+    }
+  }
+
+  const viewFilters = document.getElementById('calendarViewFilters');
+  if (viewFilters) {
+    for (const input of viewFilters.querySelectorAll('input[data-filter]')) {
+      input.checked = !!calendarViewFilters[input.dataset.filter];
+      input.addEventListener('change', () => {
+        calendarViewFilters[input.dataset.filter] = input.checked;
+        try { localStorage.setItem(CALENDAR_VIEW_STORAGE_KEY, JSON.stringify(calendarViewFilters)); } catch (e) { /* tant pis */ }
+        // Filtrage local : pas besoin de relire Supabase, on réaffiche
+        // simplement les dernières données de la devise affichée.
+        if (!currentCalendarCurrency) return;
+        const events = lastCalendarEventsByCurrency[currentCalendarCurrency];
+        if (events) renderCalendar(currentCalendarCurrency, events);
       });
     }
   }
