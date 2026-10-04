@@ -1651,18 +1651,34 @@ button {
 
 /* =========================================================
    Section « Discours » (sous le calendrier de chaque devise)
-   Cartes de taille fixe : fond bleu marine, buste détouré à droite,
-   nom à gauche, boutons Discours / Résumé façon onglets de devises.
+   Chaque case = une carte (fond bleu marine, nom à gauche, buste détouré
+   à droite) + deux boutons qui pendent sous la carte, façon onglets de
+   devises : Discours (du bord gauche au milieu) et Résumé (du milieu au
+   bord droit). Toutes les couleurs sont des variables communes à toutes
+   les cases, réglables dans Paramètres > Thème > Analyse.
    ========================================================= */
 :root {
+  /* Bandeau « Discours » */
   --speech-toolbar-bg: var(--bg-card);
   --speech-toolbar-border: var(--border-dim);
   --speech-toolbar-title: var(--text);
+  --speech-toolbar-info: var(--text-dim);
+
+  /* Cases (cartes) */
   --speech-card-bg: #1b2838;
   --speech-card-border: #2a475e;
-  --speech-card-text: var(--text);
-  --speech-card-role: #8ba3b8;
+  --speech-card-first-text: #8ba3b8;
+  --speech-card-last-text: var(--text);
+  --speech-card-role-text: #8ba3b8;
   --speech-silhouette: #2f4a63;
+
+  /* Boutons Discours / Résumé */
+  --speech-btn-bg: var(--currency-card-bg);
+  --speech-btn-border: var(--currency-card-border);
+  --speech-btn-text: var(--currency-card-text);
+  --speech-btn-hover-bg: var(--currency-card-active-bg);
+  --speech-btn-hover-border: var(--currency-card-active-border);
+  --speech-btn-hover-text: var(--currency-card-active-text);
 }
 
 .speeches {
@@ -1695,73 +1711,74 @@ button {
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.5px;
-  color: var(--text-dim);
+  color: var(--speech-toolbar-info);
 }
 
 .speeches-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 10px;
+  gap: 14px 10px;
+}
+
+/* Une case = carte + boutons dessous */
+.speech-item {
+  display: flex;
+  flex-direction: column;
 }
 
 .speech-card {
   position: relative;
-  display: flex;
   height: 172px;               /* même taille pour toutes les cartes */
   overflow: hidden;
   background: var(--speech-card-bg);
   border: 1px solid var(--speech-card-border);
-  border-radius: var(--radius-card);
-  color: var(--speech-card-text);
+  /* bas carré : les boutons s'y accrochent comme les onglets à leur barre */
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
 }
 
-.speech-card-info {
+.speech-card-name {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  width: 62%;
-  padding: 14px 0 0 14px;
-}
-
-.speech-card-name {
-  display: flex;
-  flex-direction: column;
   gap: 2px;
-  min-width: 0;
+  width: 58%;
+  padding: 16px 0 0 16px;
 }
 
 .speech-card-first {
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: var(--speech-card-role);
+  color: var(--speech-card-first-text);
 }
 
 .speech-card-last {
   font-family: var(--sans);
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   line-height: 1.1;
   overflow-wrap: anywhere;
+  color: var(--speech-card-last-text);
 }
 
 .speech-card-role {
-  margin-top: 4px;
+  margin-top: 6px;
   font-family: var(--mono);
   font-size: 10px;
   line-height: 1.3;
-  color: var(--speech-card-role);
+  color: var(--speech-card-role-text);
 }
 
-/* Les boutons « pendent » d'un trait, comme les onglets de devises
-   pendent de la barre : haut carré sans bordure, bas arrondi. */
+/* Boutons sous la carte : Discours de tout à gauche jusqu'au milieu,
+   Résumé du milieu jusqu'à tout à droite. Même forme que les onglets
+   de devises (haut carré sans bordure, bas arrondi). La hauteur de la
+   rangée est réservée pour que le survol ne décale rien. */
 .speech-card-actions {
   display: flex;
+  align-items: flex-start;
   gap: 4px;
-  padding-right: 6px;
-  border-top: 1px solid var(--speech-card-border);
+  height: 40px;
 }
 
 .speech-btn {
@@ -1770,14 +1787,14 @@ button {
   align-items: center;
   justify-content: center;
   height: 36px;
-  padding: 0 6px;
-  background: var(--currency-card-bg);
-  border: 1px solid var(--currency-card-border);
+  padding: 0 8px;
+  background: var(--speech-btn-bg);
+  border: 1px solid var(--speech-btn-border);
   border-top: none;
   border-radius: 0 0 var(--radius-card) var(--radius-card);
-  color: var(--currency-card-text);
+  color: var(--speech-btn-text);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -1787,14 +1804,15 @@ button {
 @media (hover: hover) {
   .speech-btn:hover {
     height: 40px;
-    background: var(--currency-card-active-bg);
-    border-color: var(--currency-card-active-border);
-    color: var(--currency-card-active-text);
+    background: var(--speech-btn-hover-bg);
+    border-color: var(--speech-btn-hover-border);
+    color: var(--speech-btn-hover-text);
   }
 }
 
 .speech-btn:focus-visible {
-  outline: 2px solid var(--blue-light);
+  height: 40px;
+  outline: 2px solid var(--speech-btn-hover-border);
   outline-offset: 2px;
 }
 
@@ -1809,6 +1827,10 @@ button {
   background:
     radial-gradient(circle at 50% 30%, var(--speech-silhouette) 0 21%, transparent 21.5%),
     radial-gradient(ellipse 62% 40% at 50% 100%, var(--speech-silhouette) 0 99%, transparent 100%);
+}
+
+.speech-card-photo.has-photo {
+  background: none;
 }
 
 .speech-card-photo img {

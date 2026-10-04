@@ -56,22 +56,22 @@ function speechEscape(value) {
 function buildSpeechCard(member, folder) {
   const src = `./photos/${folder}/${encodeURIComponent(member.photo)}`;
   return `
-    <article class="speech-card">
-      <div class="speech-card-info">
+    <div class="speech-item">
+      <article class="speech-card">
         <div class="speech-card-name">
           <span class="speech-card-first">${speechEscape(member.first)}</span>
           <span class="speech-card-last">${speechEscape(member.last)}</span>
           <span class="speech-card-role">${speechEscape(member.role)}</span>
         </div>
-        <div class="speech-card-actions">
-          <button type="button" class="speech-btn">Discours</button>
-          <button type="button" class="speech-btn">Résumé</button>
+        <div class="speech-card-photo">
+          <img src="${src}" alt="${speechEscape(member.first + ' ' + member.last)}" loading="lazy" decoding="async">
         </div>
+      </article>
+      <div class="speech-card-actions">
+        <button type="button" class="speech-btn">Discours</button>
+        <button type="button" class="speech-btn">Résumé</button>
       </div>
-      <div class="speech-card-photo">
-        <img src="${src}" alt="${speechEscape(member.first + ' ' + member.last)}" loading="lazy" decoding="async">
-      </div>
-    </article>`;
+    </div>`;
 }
 
 function renderSpeeches() {
@@ -94,6 +94,9 @@ function renderSpeeches() {
     // Pas de photo déposée : on retire l'image, la silhouette du fond reste.
     section.querySelectorAll('.speech-card-photo img').forEach((img) => {
       img.addEventListener('error', () => img.remove());
+      // Photo chargée : on masque la silhouette de fond.
+      img.addEventListener('load', () => img.parentElement.classList.add('has-photo'));
+      if (img.complete && img.naturalWidth) img.parentElement.classList.add('has-photo');
     });
   });
 }
