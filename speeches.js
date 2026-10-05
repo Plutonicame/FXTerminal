@@ -4,13 +4,14 @@
  * speeches.js
  * Section « Discours » sous le calendrier de chaque devise : une case par
  * membre de la banque centrale qui peut prendre la parole (votant ou non).
- * Chaque case = un bandeau (Votant / Non votant) + une carte avec silhouette
- * + les boutons Discours / Résumé (pour le moment ils ne font rien).
+ * Chaque case = un bandeau (identique pour tous) + une carte (prénom, nom,
+ * fonction à gauche, silhouette à droite) + les boutons Discours / Résumé
+ * (pour le moment ils ne font rien).
  *
  * POUR MODIFIER LA LISTE : édite SPEECH_MEMBERS ci-dessous.
- *  - first / last / role : non affichés pour l'instant (gardés en réserve,
- *                          utilisés seulement comme étiquette d'accessibilité)
- *  - voting              : true = Votant, false = Non votant
+ *  - first / last / role : prénom, nom et fonction affichés sur la carte
+ *  - voting              : true = votant, false = non votant (pas affiché
+ *                          pour l'instant : réservé pour la suite)
  * Pour ajouter une autre devise, ajoute une clé (EUR, JPY...) avec sa banque
  * et sa liste de membres : la section apparaît toute seule dans l'onglet.
  */
@@ -45,6 +46,10 @@ const SPEECH_MEMBERS = {
   },
 };
 
+// Texte du bandeau : le même pour toutes les cases pour le moment.
+// Plus tard, il affichera le statut réel (votant / non votant) du discours.
+const SPEECH_BADGE_PLACEHOLDER = 'Votant / Non votant';
+
 function speechEscape(value) {
   return String(value).replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -52,12 +57,15 @@ function speechEscape(value) {
 }
 
 function buildSpeechCard(member) {
-  const label = `${member.first} ${member.last}, ${member.role}`;
-  const voting = member.voting ? 'voting' : 'nonvoting';
   return `
     <div class="speech-item">
-      <div class="speech-badge speech-badge--${voting}">${member.voting ? 'Votant' : 'Non votant'}</div>
-      <article class="speech-card" aria-label="${speechEscape(label)}">
+      <div class="speech-badge">${speechEscape(SPEECH_BADGE_PLACEHOLDER)}</div>
+      <article class="speech-card">
+        <div class="speech-card-name">
+          <span class="speech-card-first">${speechEscape(member.first)}</span>
+          <span class="speech-card-last">${speechEscape(member.last)}</span>
+          <span class="speech-card-role">${speechEscape(member.role)}</span>
+        </div>
         <div class="speech-card-photo" aria-hidden="true"></div>
       </article>
       <div class="speech-card-actions">
@@ -72,15 +80,12 @@ function renderSpeeches() {
     const panel = document.querySelector(`.currency-panel[data-currency="${code}"]`);
     if (!panel || panel.querySelector('.speeches')) return;
 
-    const nbVoting = cfg.members.filter((m) => m.voting).length;
-    const nbNon = cfg.members.length - nbVoting;
-
     const section = document.createElement('div');
     section.className = 'speeches';
     section.innerHTML = `
       <div class="speeches-toolbar">
         <span class="speeches-toolbar-title">Discours</span>
-        <span class="speeches-toolbar-info">${speechEscape(cfg.bank)} · ${nbVoting} votants · ${nbNon} non votants</span>
+        <span class="speeches-toolbar-info">${speechEscape(cfg.bank)} · ${cfg.members.length} intervenants</span>
       </div>
       <div class="speeches-grid">
         ${cfg.members.map(buildSpeechCard).join('')}
