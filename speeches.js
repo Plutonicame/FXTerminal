@@ -39,7 +39,8 @@
  *
  * Pour brancher l'IA plus tard : récupérer TOUTES les fiches (table Supabase)
  * puis appeler  window.Speeches.setEntries(fiches).
- * Pour l'instant : quelques fiches D'EXEMPLE (faux texte, fausses personnes).
+ * Tant qu'aucune fiche n'est fournie, chaque onglet affiche « Aucun discours
+ * pour le moment » : les cases n'apparaissent que pour de vrais discours.
  */
 
 // Banque centrale par devise : `code` = ce que doit contenir le champ `bank`
@@ -58,109 +59,6 @@ const SPEECH_BANKS = {
 
 // Texte du bandeau selon le statut.
 const SPEECH_STATUS = { true: 'Votant', false: 'Non votant' };
-
-// ---------------------------------------------------------------------------
-// Fiches d'exemple (FAUX contenu, pour juger le design)
-// ---------------------------------------------------------------------------
-const SPEECH_EXAMPLES = [
-    {
-      id: 'exemple-1',
-      currency: 'USD',
-      bank: 'FED',
-      first: 'Prénom',
-      last: 'Nom',
-      role: 'Poste · Banque centrale (exemple)',
-      voting: true,
-      stars: 4,
-      date: '2026-10-06T14:30:00',
-      speech: [
-        "[Texte d'exemple pour juger le design : ce n'est pas un vrai discours.]",
-        "Mesdames et Messieurs, je vous remercie de votre accueil. Je voudrais ce soir faire le point sur la situation économique et sur la façon dont nous abordons les prochains mois. Les données récentes montrent une économie qui continue de croître à un rythme modéré, avec un marché du travail qui se normalise progressivement et une inflation qui poursuit sa décrue, sans que ce mouvement soit pour autant linéaire.",
-        "Sur le front des prix, nous avons observé plusieurs mois de progrès, mais les composantes les plus persistantes, notamment les services et le logement, restent plus rigides que nous ne l'espérions. Il serait prématuré de déclarer la victoire. Notre objectif est clair : ramener durablement l'inflation vers la cible que nous nous sommes fixée, tout en préservant autant que possible la solidité du marché du travail.",
-        "En ce qui concerne la politique monétaire, nos décisions continueront de dépendre des données. Chaque réunion sera abordée sans engagement préalable sur la trajectoire des taux. Si l'inflation devait se montrer plus tenace que prévu, nous n'hésiterions pas à maintenir une orientation restrictive plus longtemps. À l'inverse, si le marché du travail se dégradait plus vite qu'attendu, nous disposons de la marge nécessaire pour ajuster notre position.",
-        "Je souhaite également dire un mot sur notre bilan. La réduction de nos avoirs se poursuit de manière ordonnée et prévisible, et nous suivons de près le fonctionnement des marchés de financement afin de nous assurer que ce processus n'entraîne aucune tension indésirable.",
-        "Enfin, les incertitudes demeurent nombreuses : évolution du commerce mondial, conditions financières, comportement des ménages et des entreprises. Notre rôle est de rester humbles face à ces incertitudes, d'expliquer clairement notre raisonnement et de garder la flexibilité nécessaire pour réagir. Je vous remercie de votre attention et je me tiens à votre disposition pour vos questions.",
-      ],
-      summary: [
-        {
-          heading: 'Axes principaux',
-          items: [
-            "Croissance modérée et marché du travail qui se normalise progressivement.",
-            "Inflation en baisse, mais services et logement restent rigides : pas de victoire déclarée.",
-            "Décisions dépendantes des données, sans engagement sur la trajectoire des taux.",
-            "Réduction du bilan poursuivie de façon ordonnée, avec surveillance des marchés de financement.",
-          ],
-        },
-        { heading: 'Ton', text: 'Prudent, plutôt ferme sur l’inflation, avec une porte ouverte à un assouplissement si l’emploi se dégrade.' },
-        { heading: 'Impact possible sur la devise', text: 'Légèrement favorable : le refus de s’engager sur une baisse des taux soutient la devise à court terme.' },
-        {
-          heading: 'À surveiller',
-          items: ['Prochaine publication d’inflation', 'Rapport sur l’emploi', 'Compte rendu de la prochaine réunion'],
-        },
-        { heading: 'Pourquoi cette note', text: 'Membre votant, propos nuancés sur la trajectoire des taux : importance élevée mais pas décisive.' },
-      ],
-    },
-    {
-      id: 'exemple-2',
-      currency: 'USD',
-      bank: 'FED',
-      first: 'Prénom',
-      last: 'Nom',
-      role: 'Poste · Banque régionale (exemple)',
-      voting: false,
-      stars: 2,
-      date: '2026-10-05T09:10:00',
-      speech: [
-        "[Texte d'exemple court, pour tester une pop-up avec peu de contenu.]",
-        "Merci de m'avoir invité. Dans notre région, l'activité reste solide, mais les entreprises que nous interrogeons font état d'une prudence croissante sur leurs investissements. Les pressions sur les prix s'atténuent sans disparaître. Je reste attentif aux prochaines données avant de former un jugement sur la suite.",
-      ],
-      summary: [
-        { heading: 'Axes principaux', items: ['Activité régionale solide mais prudence sur les investissements.', 'Pressions sur les prix en recul.'] },
-        { heading: 'Ton', text: 'Neutre, sans signal nouveau.' },
-        { heading: 'Pourquoi cette note', text: 'Membre non votant, propos généraux : importance faible.' },
-      ],
-    },
-    {
-      id: 'exemple-eur-1',
-      currency: 'EUR',
-      bank: 'BCE',
-      first: 'Prénom',
-      last: 'Nom',
-      role: 'Poste · BCE (exemple)',
-      voting: true,
-      stars: 3,
-      date: '2026-10-06T10:00:00',
-      speech: [
-        "[Texte d'exemple, fausse personne : sert uniquement à vérifier que la fiche arrive dans l'onglet EUR.]",
-        "Les perspectives de croissance dans la zone euro restent modestes, tandis que l'inflation se rapproche de notre objectif. Nous continuerons de décider réunion par réunion, en fonction des données.",
-      ],
-      summary: [
-        { heading: 'Axes principaux', items: ['Croissance modeste.', 'Inflation proche de la cible.', 'Décisions réunion par réunion.'] },
-        { heading: 'Ton', text: 'Neutre.' },
-        { heading: 'Pourquoi cette note', text: 'Exemple : importance moyenne.' },
-      ],
-    },
-    {
-      id: 'exemple-jpy-1',
-      currency: 'JPY',
-      bank: 'BOJ',
-      first: 'Prénom',
-      last: 'Nom',
-      role: 'Poste · BoJ (exemple)',
-      voting: true,
-      stars: 5,
-      date: '2026-10-06T07:30:00',
-      speech: [
-        "[Texte d'exemple, fausse personne : sert uniquement à vérifier que la fiche arrive dans l'onglet JPY.]",
-        "Nous continuerons d'ajuster le degré d'assouplissement monétaire si les perspectives d'inflation et de salaires se réalisent comme prévu, en tenant compte de l'évolution des marchés financiers.",
-      ],
-      summary: [
-        { heading: 'Axes principaux', items: ['Ajustement graduel de la politique monétaire.', 'Salaires et inflation au centre de la décision.'] },
-        { heading: 'Ton', text: 'Légèrement ferme.' },
-        { heading: 'Pourquoi cette note', text: 'Exemple : importance maximale.' },
-      ],
-    },
-];
 
 // ---------------------------------------------------------------------------
 // Référence : membres de la Fed pouvant s'exprimer (non affichée pour l'instant,
@@ -192,7 +90,7 @@ const SPEECH_ROSTER = {
 // ---------------------------------------------------------------------------
 // Utilitaires
 // ---------------------------------------------------------------------------
-const speechStore = new Map(); // "USD:exemple-1" -> fiche
+const speechStore = new Map(); // "USD:<id>" -> fiche
 
 function speechEscape(value) {
   return String(value ?? '').replace(/[&<>"']/g, (c) => (
@@ -405,4 +303,6 @@ window.Speeches = {
   roster: SPEECH_ROSTER,
 };
 
-document.addEventListener('DOMContentLoaded', () => setSpeechEntries(SPEECH_EXAMPLES));
+// Au chargement : aucune fiche (sections vides). Les vraies fiches seront
+// chargées plus tard depuis Supabase, puis passées à setSpeechEntries(...).
+document.addEventListener('DOMContentLoaded', () => setSpeechEntries([]));
