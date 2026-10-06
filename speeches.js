@@ -12,6 +12,8 @@
  * Forme d'une fiche (c'est ce que l'IA devra produire plus tard) :
  *   {
  *     id:      'identifiant-unique',
+ *     currency:'USD',                      // OBLIGATOIRE : onglet de destination
+ *     bank:    'FED',                      // OBLIGATOIRE : banque de l'orateur
  *     first:   'Prénom',
  *     last:    'Nom',
  *     role:    'Poste dans la banque centrale',
@@ -25,13 +27,34 @@
  *     ],
  *   }
  *
- * Pour brancher l'IA plus tard : récupérer les fiches (table Supabase) puis
- * appeler  window.Speeches.render('USD', fiches).
- * Pour l'instant : deux fiches D'EXEMPLE (faux texte, fausse personne).
+ * ROUTAGE : chaque fiche va UNIQUEMENT dans l'onglet de sa devise.
+ *   - `currency` et `bank` doivent être renseignés par le bot (qui sait de quelle
+ *     banque vient le discours), jamais devinés par l'IA.
+ *   - Si `bank` ne correspond pas à la banque de la devise (ex. BOJ avec USD),
+ *     ou si la devise est inconnue, la fiche est REFUSÉE : elle n'apparaît dans
+ *     aucun onglet, et elle est listée dans  window.Speeches.rejected  avec la
+ *     raison, pour que tu puisses la vérifier.
+ *   Codes de banque : FED (USD), BCE (EUR), BOJ (JPY), BOE (GBP), BNS (CHF),
+ *   BOC (CAD), RBA (AUD), RBNZ (NZD), PBOC (CNY).
+ *
+ * Pour brancher l'IA plus tard : récupérer TOUTES les fiches (table Supabase)
+ * puis appeler  window.Speeches.setEntries(fiches).
+ * Pour l'instant : quelques fiches D'EXEMPLE (faux texte, fausses personnes).
  */
 
-// Banque centrale par devise (une section n'apparaît que pour les devises listées ici).
-const SPEECH_BANKS = { USD: 'Fed' };
+// Banque centrale par devise : `code` = ce que doit contenir le champ `bank`
+// des fiches, `label` = ce qui est affiché dans le bandeau « Discours ».
+const SPEECH_BANKS = {
+  USD: { code: 'FED',  label: 'Fed' },
+  EUR: { code: 'BCE',  label: 'BCE' },
+  JPY: { code: 'BOJ',  label: 'BoJ' },
+  GBP: { code: 'BOE',  label: 'BoE' },
+  CHF: { code: 'BNS',  label: 'BNS' },
+  CAD: { code: 'BOC',  label: 'Banque du Canada' },
+  AUD: { code: 'RBA',  label: 'RBA' },
+  NZD: { code: 'RBNZ', label: 'RBNZ' },
+  CNY: { code: 'PBOC', label: 'PBoC' },
+};
 
 // Texte du bandeau selon le statut.
 const SPEECH_STATUS = { true: 'Votant', false: 'Non votant' };
@@ -39,10 +62,11 @@ const SPEECH_STATUS = { true: 'Votant', false: 'Non votant' };
 // ---------------------------------------------------------------------------
 // Fiches d'exemple (FAUX contenu, pour juger le design)
 // ---------------------------------------------------------------------------
-const SPEECH_ENTRIES = {
-  USD: [
+const SPEECH_EXAMPLES = [
     {
       id: 'exemple-1',
+      currency: 'USD',
+      bank: 'FED',
       first: 'Prénom',
       last: 'Nom',
       role: 'Poste · Banque centrale (exemple)',
@@ -78,6 +102,8 @@ const SPEECH_ENTRIES = {
     },
     {
       id: 'exemple-2',
+      currency: 'USD',
+      bank: 'FED',
       first: 'Prénom',
       last: 'Nom',
       role: 'Poste · Banque régionale (exemple)',
@@ -94,8 +120,47 @@ const SPEECH_ENTRIES = {
         { heading: 'Pourquoi cette note', text: 'Membre non votant, propos généraux : importance faible.' },
       ],
     },
-  ],
-};
+    {
+      id: 'exemple-eur-1',
+      currency: 'EUR',
+      bank: 'BCE',
+      first: 'Prénom',
+      last: 'Nom',
+      role: 'Poste · BCE (exemple)',
+      voting: true,
+      stars: 3,
+      date: '2026-10-06T10:00:00',
+      speech: [
+        "[Texte d'exemple, fausse personne : sert uniquement à vérifier que la fiche arrive dans l'onglet EUR.]",
+        "Les perspectives de croissance dans la zone euro restent modestes, tandis que l'inflation se rapproche de notre objectif. Nous continuerons de décider réunion par réunion, en fonction des données.",
+      ],
+      summary: [
+        { heading: 'Axes principaux', items: ['Croissance modeste.', 'Inflation proche de la cible.', 'Décisions réunion par réunion.'] },
+        { heading: 'Ton', text: 'Neutre.' },
+        { heading: 'Pourquoi cette note', text: 'Exemple : importance moyenne.' },
+      ],
+    },
+    {
+      id: 'exemple-jpy-1',
+      currency: 'JPY',
+      bank: 'BOJ',
+      first: 'Prénom',
+      last: 'Nom',
+      role: 'Poste · BoJ (exemple)',
+      voting: true,
+      stars: 5,
+      date: '2026-10-06T07:30:00',
+      speech: [
+        "[Texte d'exemple, fausse personne : sert uniquement à vérifier que la fiche arrive dans l'onglet JPY.]",
+        "Nous continuerons d'ajuster le degré d'assouplissement monétaire si les perspectives d'inflation et de salaires se réalisent comme prévu, en tenant compte de l'évolution des marchés financiers.",
+      ],
+      summary: [
+        { heading: 'Axes principaux', items: ['Ajustement graduel de la politique monétaire.', 'Salaires et inflation au centre de la décision.'] },
+        { heading: 'Ton', text: 'Légèrement ferme.' },
+        { heading: 'Pourquoi cette note', text: 'Exemple : importance maximale.' },
+      ],
+    },
+];
 
 // ---------------------------------------------------------------------------
 // Référence : membres de la Fed pouvant s'exprimer (non affichée pour l'instant,
@@ -181,7 +246,7 @@ function buildSpeechCard(code, entry) {
 }
 
 function renderSpeechSection(code, entries) {
-  const bank = SPEECH_BANKS[code];
+  const bank = SPEECH_BANKS[code] && SPEECH_BANKS[code].label;
   const panel = document.querySelector(`.currency-panel[data-currency="${code}"]`);
   if (!bank || !panel) return;
 
@@ -287,8 +352,57 @@ function closeSpeechPopup() {
   if (speechLastTrigger) speechLastTrigger.focus();
 }
 
-window.Speeches = { render: renderSpeechSection, open: openSpeechPopup, close: closeSpeechPopup, roster: SPEECH_ROSTER };
+// ---------------------------------------------------------------------------
+// Routage : chaque fiche dans l'onglet de SA devise, ou refusée
+// ---------------------------------------------------------------------------
+const speechRejected = []; // { entry, reason } : fiches refusées, à vérifier
 
-document.addEventListener('DOMContentLoaded', () => {
-  Object.keys(SPEECH_BANKS).forEach((code) => renderSpeechSection(code, SPEECH_ENTRIES[code] || []));
-});
+function speechCheckEntry(entry) {
+  if (!entry || typeof entry !== 'object') return 'fiche invalide';
+  if (!entry.id) return 'identifiant manquant';
+  const code = String(entry.currency || '').trim().toUpperCase();
+  if (!SPEECH_BANKS[code]) return `devise inconnue ou manquante (« ${entry.currency ?? ''} »)`;
+  const bank = String(entry.bank || '').trim().toUpperCase();
+  if (bank !== SPEECH_BANKS[code].code) {
+    return `banque « ${entry.bank ?? ''} » incompatible avec la devise ${code} (attendu : ${SPEECH_BANKS[code].code})`;
+  }
+  return '';
+}
+
+function routeSpeechEntries(entries) {
+  const byCurrency = {};
+  Object.keys(SPEECH_BANKS).forEach((c) => { byCurrency[c] = []; });
+  speechRejected.length = 0;
+
+  (Array.isArray(entries) ? entries : []).forEach((entry) => {
+    const reason = speechCheckEntry(entry);
+    if (reason) { speechRejected.push({ entry, reason }); return; }
+    const code = String(entry.currency).trim().toUpperCase();
+    if (byCurrency[code].some((e) => e.id === entry.id)) return; // doublon
+    byCurrency[code].push(entry);
+  });
+
+  Object.values(byCurrency).forEach((list) => {
+    list.sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0)); // récent d'abord
+  });
+  if (speechRejected.length) {
+    console.warn(`${speechRejected.length} fiche(s) de discours refusée(s) :`, speechRejected);
+  }
+  return byCurrency;
+}
+
+function setSpeechEntries(entries) {
+  speechStore.clear();
+  const byCurrency = routeSpeechEntries(entries);
+  Object.keys(SPEECH_BANKS).forEach((code) => renderSpeechSection(code, byCurrency[code]));
+}
+
+window.Speeches = {
+  setEntries: setSpeechEntries,
+  open: openSpeechPopup,
+  close: closeSpeechPopup,
+  rejected: speechRejected,
+  roster: SPEECH_ROSTER,
+};
+
+document.addEventListener('DOMContentLoaded', () => setSpeechEntries(SPEECH_EXAMPLES));
