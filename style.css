@@ -2072,3 +2072,12 @@ button {
     line-height: 1.7;
   }
 }
+
+.speech-popup-source {
+  width: fit-content;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--speech-popup-heading);
+  text-decoration: underline;
+}

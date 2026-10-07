@@ -21,6 +21,7 @@
  *     stars:   4,                          // importance de 0 à 5
  *     date:    '2026-10-06T14:30:00',      // date/heure du discours
  *     speech:  ['paragraphe 1', '...'],    // discours traduit en français
+ *     source:  'https://…',                // lien du discours officiel (facultatif)
  *     summary: [                           // résumé, en blocs
  *       { heading: 'Axes principaux', items: ['...', '...'] },
  *       { heading: 'Ton', text: '...' },
@@ -37,8 +38,9 @@
  *   Codes de banque : FED (USD), BCE (EUR), BOJ (JPY), BOE (GBP), BNS (CHF),
  *   BOC (CAD), RBA (AUD), RBNZ (NZD), PBOC (CNY).
  *
- * Pour brancher l'IA plus tard : récupérer TOUTES les fiches (table Supabase)
- * puis appeler  window.Speeches.setEntries(fiches).
+ * Les fiches sont lues automatiquement dans la table Supabase "speeches" (remplie
+ * par le bot) dès que tu es connecté, puis toutes les 5 minutes. Pour afficher
+ * une liste de fiches à la main :  window.Speeches.setEntries(fiches).
  * Tant qu'aucune fiche n'est fournie, chaque onglet affiche « Aucun discours
  * pour le moment » : les cases n'apparaissent que pour de vrais discours.
  */
@@ -143,7 +145,7 @@ function buildSpeechCard(code, entry) {
     </div>`;
 }
 
-function renderSpeechSection(code, entries) {
+function renderSpeechSection(code, entries, failed = false) {
   const bank = SPEECH_BANKS[code] && SPEECH_BANKS[code].label;
   const panel = document.querySelector(`.currency-panel[data-currency="${code}"]`);
   if (!bank || !panel) return;
@@ -169,7 +171,7 @@ function renderSpeechSection(code, entries) {
     </div>
     ${count
       ? `<div class="speeches-grid">${list.map((e) => buildSpeechCard(code, e)).join('')}</div>`
-      : '<p class="speeches-empty">Aucun discours pour le moment.</p>'}`;
+      : `<p class="speeches-empty">${failed ? 'Impossible de charger les discours pour le moment.' : 'Aucun discours pour le moment.'}</p>`}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -190,6 +192,7 @@ function ensureSpeechPopup() {
           <span class="speech-popup-kind" id="speechPopupKind"></span>
           <h2 class="speech-popup-title" id="speechPopupTitle"></h2>
           <span class="speech-popup-meta" id="speechPopupMeta"></span>
+          <a class="speech-popup-source" id="speechPopupSource" target="_blank" rel="noopener noreferrer" hidden>Voir le discours original (site officiel)</a>
         </div>
         <button type="button" class="speech-popup-close" id="speechPopupClose" aria-label="Fermer">✕</button>
       </header>
@@ -232,6 +235,9 @@ function openSpeechPopup(key, kind, trigger) {
   el.querySelector('#speechPopupTitle').textContent = `${entry.first} ${entry.last}`;
   el.querySelector('#speechPopupMeta').textContent =
     [entry.role, speechFormatDate(entry.date)].filter(Boolean).join(' · ');
+  const link = el.querySelector('#speechPopupSource');
+  if (/^https:\/\//i.test(entry.source || '')) { link.href = entry.source; link.hidden = false; }
+  else { link.removeAttribute('href'); link.hidden = true; }
   el.querySelector('#speechPopupBody').innerHTML = isSummary
     ? speechSummaryHtml(entry.summary)
     : (entry.speech || []).map((p) => `<p>${speechEscape(p)}</p>`).join('');
@@ -289,10 +295,10 @@ function routeSpeechEntries(entries) {
   return byCurrency;
 }
 
-function setSpeechEntries(entries) {
+function setSpeechEntries(entries, options = {}) {
   speechStore.clear();
   const byCurrency = routeSpeechEntries(entries);
-  Object.keys(SPEECH_BANKS).forEach((code) => renderSpeechSection(code, byCurrency[code]));
+  Object.keys(SPEECH_BANKS).forEach((code) => renderSpeechSection(code, byCurrency[code], Boolean(options.failed)));
 }
 
 window.Speeches = {
@@ -303,6 +309,60 @@ window.Speeches = {
   roster: SPEECH_ROSTER,
 };
 
-// Au chargement : aucune fiche (sections vides). Les vraies fiches seront
-// chargées plus tard depuis Supabase, puis passées à setSpeechEntries(...).
-document.addEventListener('DOMContentLoaded', () => setSpeechEntries([]));
+// ---------------------------------------------------------------------------
+// Lecture dans Supabase (table "speeches", remplie par le bot)
+// ---------------------------------------------------------------------------
+const SPEECH_COLUMNS = 'id, currency, bank, first_name, last_name, role, voting, stars, spoken_at, speech, summary, source_url';
+let speechLoading = false;
+let speechSignature = null;
+
+function speechRowToEntry(row) {
+  return {
+    id: row.id,
+    currency: row.currency,
+    bank: row.bank,
+    first: row.first_name,
+    last: row.last_name,
+    role: row.role,
+    voting: row.voting,
+    stars: row.stars,
+    date: row.spoken_at,
+    speech: Array.isArray(row.speech) ? row.speech : [],
+    summary: Array.isArray(row.summary) ? row.summary : [],
+    source: row.source_url,
+  };
+}
+
+async function loadSpeechesFromSupabase() {
+  if (speechLoading || !window.Auth || !window.Auth.isConfigured()) return;
+  const client = window.Auth.getClient();
+  if (!client) return;
+  speechLoading = true;
+  try {
+    if (!(await window.Auth.getSession())) return; // pas connecté : la table n'est lisible qu'une fois connecté
+    const { data, error } = await client
+      .from('speeches')
+      .select(SPEECH_COLUMNS)
+      .order('spoken_at', { ascending: false })
+      .limit(300);
+    if (error) throw error;
+    const entries = (data || []).map(speechRowToEntry);
+    const signature = entries.map((e) => e.id).join('|');
+    if (signature !== speechSignature) { // on ne redessine que s'il y a du nouveau
+      speechSignature = signature;
+      setSpeechEntries(entries);
+    }
+  } catch (err) {
+    console.error('Chargement des discours impossible :', err);
+    if (speechSignature === null) setSpeechEntries([], { failed: true });
+  } finally {
+    speechLoading = false;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setSpeechEntries([]); // sections vides en attendant la lecture
+  if (window.Auth) window.Auth.onAuthStateChange((session) => { if (session) loadSpeechesFromSupabase(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) loadSpeechesFromSupabase(); });
+  setInterval(() => { if (!document.hidden) loadSpeechesFromSupabase(); }, 5 * 60 * 1000);
+});
