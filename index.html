@@ -66,10 +66,32 @@
   </div>
 </header>
 
+<!-- ===== Barre de filtres (visible uniquement dans l'onglet Nouveau) ===== -->
+<div class="filterbar" id="newsFilterbar">
+  <div class="filter-dd" id="newsCurrencyDd">
+    <button type="button" class="filter-dd-btn" id="newsCurrencyBtn" aria-haspopup="true" aria-expanded="false" aria-controls="newsCurrencyMenu">
+      <span class="filter-dd-label" id="newsCurrencyLabel">Devise</span>
+      <span class="filter-dd-arrow" aria-hidden="true"></span>
+    </button>
+    <div class="filter-dd-menu" id="newsCurrencyMenu" role="group" aria-label="Devises" hidden></div>
+  </div>
+
+  <div class="news-period">
+    <button type="button" class="news-date-btn" id="newsDateBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="newsCal" aria-label="Choisir la période"></button>
+    <span class="news-period-label" id="newsPeriodLabel"></span>
+  </div>
+
+  <div class="news-cal" id="newsCal" role="dialog" aria-label="Choisir la période" hidden></div>
+</div>
+
 <nav class="side-menu" id="sideMenu" aria-hidden="true">
   <button type="button" class="menu-close" id="menuCloseBtn">Fermer ✕</button>
 
-  <button type="button" class="menu-tab menu-tab--analyse is-active" data-tab="tab-1" aria-current="true">
+  <button type="button" class="menu-tab menu-tab--nouveau is-active" data-tab="tab-4" aria-current="true">
+    Nouveau
+  </button>
+
+  <button type="button" class="menu-tab menu-tab--analyse" data-tab="tab-1">
     Analyse par devise
   </button>
 
@@ -92,7 +114,7 @@
 
 <main class="app-main">
 
-  <section class="tab-panel is-active" id="tab-1" role="tabpanel" aria-label="Analyse par devise">
+  <section class="tab-panel" id="tab-1" role="tabpanel" aria-label="Analyse par devise" hidden>
     <div class="currency-bar" role="tablist" aria-label="Devises">
       <button type="button" class="currency-card" role="tab" data-currency="USD" aria-selected="false" aria-controls="currency-panel-USD">USD</button>
       <button type="button" class="currency-card" role="tab" data-currency="EUR" aria-selected="false" aria-controls="currency-panel-EUR">EUR</button>
@@ -102,7 +124,6 @@
       <button type="button" class="currency-card" role="tab" data-currency="CAD" aria-selected="false" aria-controls="currency-panel-CAD">CAD</button>
       <button type="button" class="currency-card" role="tab" data-currency="AUD" aria-selected="false" aria-controls="currency-panel-AUD">AUD</button>
       <button type="button" class="currency-card" role="tab" data-currency="NZD" aria-selected="false" aria-controls="currency-panel-NZD">NZD</button>
-      <button type="button" class="currency-card" role="tab" data-currency="CNY" aria-selected="false" aria-controls="currency-panel-CNY">CNY</button>
     </div>
 
     <div class="calendar-toolbar">
@@ -162,14 +183,42 @@
       <section class="currency-panel" id="currency-panel-NZD" role="tabpanel" data-currency="NZD" aria-label="Analyse NZD" hidden>
         <div class="calendar" data-currency="NZD" aria-live="polite"></div>
       </section>
-      <section class="currency-panel" id="currency-panel-CNY" role="tabpanel" data-currency="CNY" aria-label="Analyse CNY" hidden>
-        <div class="calendar" data-currency="CNY" aria-live="polite"></div>
-      </section>
     </div>
   </section>
 
   <section class="tab-panel" id="tab-2" role="tabpanel" aria-label="Événements secondaires" hidden>
     <!-- Onglet 2 : volontairement vide pour le moment -->
+  </section>
+
+  <section class="tab-panel is-active" id="tab-4" role="tabpanel" aria-label="Nouveau">
+    <div class="calendar-toolbar">
+      <span class="calendar-toolbar-title">Nouveau</span>
+      <div class="calendar-toolbar-tools">
+        <div class="calendar-impact-toggle" role="radiogroup" aria-label="Filtrer par impact">
+          <button type="button" class="calendar-impact-toggle-btn" data-value="medium" role="radio" aria-label="Impact orange uniquement">
+            <span class="calendar-impact-toggle-dot calendar-impact-toggle-dot--medium"></span>
+          </button>
+          <button type="button" class="calendar-impact-toggle-btn" data-value="both" role="radio" aria-label="Impact orange et rouge">
+            <span class="calendar-impact-toggle-dot calendar-impact-toggle-dot--medium"></span><span class="calendar-impact-toggle-dot calendar-impact-toggle-dot--high"></span>
+          </button>
+          <button type="button" class="calendar-impact-toggle-btn" data-value="high" role="radio" aria-label="Impact rouge uniquement">
+            <span class="calendar-impact-toggle-dot calendar-impact-toggle-dot--high"></span>
+          </button>
+          <span class="calendar-impact-toggle-knob" aria-hidden="true"></span>
+        </div>
+        <button type="button" class="calendar-translate-btn" aria-pressed="false" aria-label="Traduire automatiquement les annonces en anglais">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2.5" y="2.5" width="10" height="10" rx="2.5"/>
+            <text x="7.5" y="10.3" font-family="var(--sans)" font-size="6.5" font-weight="700" text-anchor="middle" stroke="none" fill="currentColor">文</text>
+            <circle cx="17" cy="17" r="5.5" fill="none"/>
+            <text x="17" y="19.7" font-family="var(--sans)" font-size="7" font-weight="700" text-anchor="middle" stroke="none" fill="currentColor">A</text>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="news-toolbar-info" id="newsInfo"></div>
+    <div id="newsCalendar" aria-live="polite"></div>
+    <div id="newsSpeeches"></div>
   </section>
 
   <section class="tab-panel" id="tab-3" role="tabpanel" aria-label="Paramètres" hidden>

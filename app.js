@@ -139,7 +139,7 @@ function initTabs(onNavigate) {
   for (const btn of tabButtons) {
     btn.addEventListener('click', () => {
       activateTab(btn.dataset.tab);
-      if (typeof onNavigate === 'function') onNavigate();
+      if (typeof onNavigate === 'function') onNavigate(btn.dataset.tab);
     });
   }
 }
@@ -701,7 +701,6 @@ const CENTRAL_BANK_ANCHORS = {
   CAD: 'BOC Rate Statement',
   AUD: 'RBA Rate Statement',
   NZD: 'RBNZ Rate Statement',
-  CNY: 'Loan Prime Rate', // PBoC, annoncé chaque mois (pas de réunion à date fixe comme les autres).
 };
 
 // Ne garde que les événements arrivés depuis la dernière réunion déjà
@@ -884,25 +883,32 @@ async function refreshCalendarStatus() {
 // que soit l'onglet affiché (voir currentCalendarCurrency ci-dessus).
 // =========================================================
 function initCalendarToolbar() {
-  const impactToggle = document.getElementById('calendarImpactToggle');
-  const translateBtn = document.getElementById('calendarTranslateBtn');
+  // Le filtre d'impact et le bouton de traduction existent en deux exemplaires
+  // (onglet Nouveau et onglet Analyse) : ils partagent le même état et restent
+  // synchronisés, quel que soit celui sur lequel on clique.
+  const impactToggles = Array.from(document.querySelectorAll('.calendar-impact-toggle'));
+  const translateBtns = Array.from(document.querySelectorAll('.calendar-translate-btn'));
 
-  if (impactToggle) {
-    impactToggle.dataset.value = calendarImpactFilter;
-    for (const btn of impactToggle.querySelectorAll('.calendar-impact-toggle-btn')) {
-      btn.setAttribute('aria-checked', String(btn.dataset.value === calendarImpactFilter));
-      btn.addEventListener('click', () => {
-        const value = btn.dataset.value;
-        if (value === calendarImpactFilter) return;
-        calendarImpactFilter = value;
-        impactToggle.dataset.value = value;
-        for (const b of impactToggle.querySelectorAll('.calendar-impact-toggle-btn')) {
-          b.setAttribute('aria-checked', String(b.dataset.value === value));
-        }
-        try { localStorage.setItem(CALENDAR_IMPACT_STORAGE_KEY, value); } catch (e) { /* tant pis */ }
-        if (currentCalendarCurrency) loadCalendar(currentCalendarCurrency);
-      });
+  function syncImpactToggles() {
+    for (const toggle of impactToggles) {
+      toggle.dataset.value = calendarImpactFilter;
+      for (const b of toggle.querySelectorAll('.calendar-impact-toggle-btn')) {
+        b.setAttribute('aria-checked', String(b.dataset.value === calendarImpactFilter));
+      }
     }
+  }
+  syncImpactToggles();
+
+  for (const btn of document.querySelectorAll('.calendar-impact-toggle-btn')) {
+    btn.addEventListener('click', () => {
+      const value = btn.dataset.value;
+      if (value === calendarImpactFilter) return;
+      calendarImpactFilter = value;
+      syncImpactToggles();
+      try { localStorage.setItem(CALENDAR_IMPACT_STORAGE_KEY, value); } catch (e) { /* tant pis */ }
+      if (currentCalendarCurrency) loadCalendar(currentCalendarCurrency);
+      if (isNewsTabActive()) loadNews();
+    });
   }
 
   const viewFilters = document.getElementById('calendarViewFilters');
@@ -921,18 +927,24 @@ function initCalendarToolbar() {
     }
   }
 
-  if (translateBtn) {
+  for (const translateBtn of translateBtns) {
     translateBtn.setAttribute('aria-pressed', String(calendarAutoTranslate));
     translateBtn.addEventListener('click', () => {
       calendarAutoTranslate = !calendarAutoTranslate;
-      translateBtn.setAttribute('aria-pressed', String(calendarAutoTranslate));
+      for (const b of translateBtns) b.setAttribute('aria-pressed', String(calendarAutoTranslate));
       try { localStorage.setItem(CALENDAR_AUTO_TRANSLATE_STORAGE_KEY, calendarAutoTranslate ? '1' : '0'); } catch (e) { /* tant pis */ }
 
-      if (!currentCalendarCurrency) return;
-      const events = lastCalendarEventsByCurrency[currentCalendarCurrency];
-      if (!events) return;
-      renderCalendar(currentCalendarCurrency, events);
-      if (calendarAutoTranslate) autoTranslateMissingTitles(currentCalendarCurrency, events);
+      if (currentCalendarCurrency) {
+        const events = lastCalendarEventsByCurrency[currentCalendarCurrency];
+        if (events) {
+          renderCalendar(currentCalendarCurrency, events);
+          if (calendarAutoTranslate) autoTranslateMissingTitles(currentCalendarCurrency, events);
+        }
+      }
+      if (newsLastEvents) {
+        renderNewsCalendar(newsLastEvents);
+        if (calendarAutoTranslate) newsTranslateMissing(newsLastEvents);
+      }
     });
   }
 }
@@ -1056,6 +1068,461 @@ function initEdgeScrollbar() {
 }
 
 /* =========================================================
+   Onglet « Nouveau » : tout ce qui est SORTI sur la période choisie (par
+   défaut : aujourd'hui), pour les devises cochées. Un seul tableau pour les
+   événements économiques (rouge et orange, selon le même filtre d'impact que
+   l'onglet Analyse, triés par heure), puis les discours (voir speeches.js).
+   Seul ce qui est DÉJÀ SORTI est affiché : un événement prévu plus tard
+   n'apparaît qu'à partir de son heure de sortie.
+   Les jours suivent l'heure locale de l'appareil.
+   ========================================================= */
+const NEWS_CURRENCIES = ['USD', 'EUR', 'JPY', 'GBP', 'CHF', 'CAD', 'AUD', 'NZD'];
+const NEWS_REFRESH_MS = 60000;
+const NEWS_CURRENCY_STORAGE_KEY = 'fx-news-currencies';
+let newsRequestId = 0;
+let newsLastEvents = null;
+
+function newsStartOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function newsAddDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+function newsSameDay(a, b) { return a.getTime() === b.getTime(); }
+function newsDayKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function newsParseDayKey(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+// État des filtres de l'onglet Nouveau.
+//  - currencies : devises cochées (mémorisées sur l'appareil) ;
+//  - from / to  : première et dernière journée de la période (incluses) ;
+//  - auto       : tant que la période est « aujourd'hui », elle suit le jour
+//                 qui change (appli laissée ouverte après minuit).
+const newsFilter = {
+  currencies: new Set(NEWS_CURRENCIES),
+  from: newsStartOfDay(new Date()),
+  to: newsStartOfDay(new Date()),
+  auto: true,
+};
+try {
+  const saved = JSON.parse(localStorage.getItem(NEWS_CURRENCY_STORAGE_KEY));
+  if (Array.isArray(saved)) newsFilter.currencies = new Set(saved.filter((c) => NEWS_CURRENCIES.includes(c)));
+} catch (e) { /* stockage indisponible ou illisible : toutes les devises */ }
+
+function newsCurrentRange() {
+  if (newsFilter.auto) {
+    const today = newsStartOfDay(new Date());
+    newsFilter.from = today;
+    newsFilter.to = today;
+  }
+  return { from: newsFilter.from, to: newsFilter.to };
+}
+
+function newsRangeBounds() {
+  const { from, to } = newsCurrentRange();
+  return { startMs: from.getTime(), endMs: newsAddDays(to, 1).getTime() };
+}
+
+function newsRangeIsToday() {
+  const { from, to } = newsCurrentRange();
+  const today = newsStartOfDay(new Date());
+  return newsSameDay(from, today) && newsSameDay(to, today);
+}
+
+function newsShortDate(d) {
+  const opts = { day: 'numeric', month: 'short' };
+  if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
+  return d.toLocaleDateString('fr-FR', opts);
+}
+
+// Texte court de la période (à côté du bouton calendrier).
+function newsPeriodText() {
+  const { from, to } = newsCurrentRange();
+  if (newsRangeIsToday()) return 'Aujourd\'hui';
+  if (newsSameDay(from, to)) return newsShortDate(from);
+  return `${newsShortDate(from)} → ${newsShortDate(to)}`;
+}
+
+function newsSelectedCurrencies() {
+  return NEWS_CURRENCIES.filter((c) => newsFilter.currencies.has(c));
+}
+
+function isNewsTabActive() {
+  const panel = document.getElementById('tab-4');
+  return !!panel && panel.classList.contains('is-active');
+}
+
+async function fetchNewsCalendarEvents() {
+  const selected = newsSelectedCurrencies();
+  if (!selected.length) return { events: [] };
+
+  const client = window.Auth && window.Auth.getClient ? window.Auth.getClient() : null;
+  if (!client) return { events: null, error: 'connexion indisponible' };
+
+  const { startMs, endMs } = newsRangeBounds();
+  const { data, error } = await client
+    .from('calendar_events')
+    .select('currency, title, impact, previous, forecast_mid, actual, event_time')
+    .in('currency', selected)
+    .in('impact', getCalendarImpacts()) // même filtre rouge / orange que l'onglet Analyse
+    .gte('event_time', new Date(startMs).toISOString())
+    .lt('event_time', new Date(endMs).toISOString())
+    .order('event_time', { ascending: true });
+  if (error) {
+    console.error('Nouveau : lecture du calendrier impossible :', error);
+    return { events: null, error: (error && error.message) || 'erreur inconnue' };
+  }
+  return { events: data || [] };
+}
+
+function newsIsReleased(ev) {
+  const hasActual = ev.actual !== null && ev.actual !== undefined && String(ev.actual).trim() !== '';
+  return hasActual || new Date(ev.event_time).getTime() <= Date.now();
+}
+
+function renderNewsCalendar(events, errorNote) {
+  const container = document.getElementById('newsCalendar');
+  const info = document.getElementById('newsInfo');
+  if (!container) return;
+
+  const { from, to } = newsCurrentRange();
+  const multi = !newsSameDay(from, to);
+  const periodLabel = multi
+    ? `${newsShortDate(from)} → ${newsShortDate(to)}`
+    : from.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  let html = '';
+  if (errorNote) html += `<p class="calendar-note">${escapeHtml(errorNote)}</p>`;
+
+  if (events === null) {
+    if (info) info.textContent = periodLabel;
+    html += '<div class="calendar-scroll"><p class="calendar-empty">Données indisponibles pour le moment</p></div>';
+    container.innerHTML = html;
+    return;
+  }
+
+  if (info) info.textContent = `${periodLabel} · ${events.length} événement${events.length > 1 ? 's' : ''} sorti${events.length > 1 ? 's' : ''}`;
+
+  if (!newsFilter.currencies.size) {
+    html += '<div class="calendar-scroll"><p class="calendar-empty">Aucune devise sélectionnée</p></div>';
+    container.innerHTML = html;
+    return;
+  }
+
+  if (!events.length) {
+    const msg = newsRangeIsToday() ? 'Rien de sorti pour le moment aujourd\'hui' : 'Aucun événement important sur cette période';
+    html += `<div class="calendar-scroll"><p class="calendar-empty">${msg}</p></div>`;
+    container.innerHTML = html;
+    return;
+  }
+
+  // Un seul tableau continu, du plus ancien au plus récent, sans séparation
+  // entre les jours. Sur plusieurs jours, la colonne affiche « date + heure ».
+  const rows = events.map((ev) => {
+    const d = new Date(ev.event_time);
+    const impact = ev.impact === 'high' ? 'high' : 'medium';
+    const clock = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const time = multi ? `${newsShortDate(d)} ${clock}` : clock;
+
+    return `<tr>
+      <td class="calendar-col-date news-col-time">${escapeHtml(time)}</td>
+      <td class="calendar-col-name">
+        <button type="button" class="calendar-date-btn" data-event-time="${escapeHtml(ev.event_time)}" aria-label="Voir la date et l'heure">${CALENDAR_DATE_ICON}</button>
+        <span class="calendar-impact calendar-impact--${impact}"></span><span class="news-cur">${escapeHtml(ev.currency)}</span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(resolveEventTitle(ev.title))}</span>
+      </td>
+      ${calendarCell(ev.actual, 'calendar-value--actual' + (actualDirection(ev) ? ' calendar-value--' + actualDirection(ev) : ''))}
+      ${calendarCell(ev.forecast_mid)}
+      ${calendarCell(ev.previous)}
+    </tr>`;
+  }).join('');
+
+  html += `<div class="calendar-scroll">
+    <table class="calendar-table">
+      <thead>
+        <tr>
+          <th scope="col" class="calendar-col-date">${multi ? 'Date' : 'Heure'}</th>
+          <th scope="col" class="calendar-col-name">Événement</th>
+          <th scope="col">Sortie</th>
+          <th scope="col">Prévision</th>
+          <th scope="col">Avant</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+  container.innerHTML = html;
+}
+
+// Traduction automatique (si activée dans la barre d'outils) des titres
+// absents du dictionnaire, comme pour le calendrier des devises.
+async function newsTranslateMissing(events) {
+  if (!calendarAutoTranslate) return;
+  const missing = [...new Set(
+    events.map((ev) => ev.title)
+      .filter((title) => !CALENDAR_TRANSLATIONS[title] && !calendarTranslateCache.has(title)),
+  )];
+  if (!missing.length) return;
+  await Promise.all(missing.map(async (title) => {
+    try { calendarTranslateCache.set(title, await translateToFrench(title)); }
+    catch (e) { console.error('Traduction automatique impossible pour « ' + title + ' » :', e); }
+  }));
+  saveCalendarTranslateCache();
+  if (newsLastEvents === events && isNewsTabActive()) renderNewsCalendar(events);
+}
+
+async function loadNews() {
+  const requestId = ++newsRequestId;
+
+  // Discours : même période et mêmes devises que le tableau.
+  const { startMs, endMs } = newsRangeBounds();
+  if (window.Speeches && window.Speeches.renderNews) {
+    window.Speeches.renderNews({
+      currencies: new Set(newsSelectedCurrencies()),
+      startMs,
+      endMs,
+      label: newsPeriodText(),
+      isToday: newsRangeIsToday(),
+    });
+  }
+
+  const result = await fetchNewsCalendarEvents();
+  if (requestId !== newsRequestId) return; // une réponse plus récente est déjà arrivée
+
+  if (result.events === null) {
+    renderNewsCalendar(newsLastEvents, `⚠ Lecture impossible (${result.error}). Nouvelle tentative dans une minute.`);
+    return;
+  }
+  // Les discours ont leur propre section ; et on ne garde que ce qui est déjà sorti.
+  const events = hideSpeechEvents(result.events).filter(newsIsReleased)
+    .sort((a, b) => new Date(a.event_time) - new Date(b.event_time)); // du plus ancien au plus récent
+  newsLastEvents = events;
+  renderNewsCalendar(events);
+  newsTranslateMissing(events);
+}
+
+/* ---------- Barre de filtres (menu des devises + période) ---------- */
+let newsCalMonth = null;   // premier jour du mois affiché dans le calendrier
+let newsCalAnchor = null;  // premier jour cliqué, en attente d'un 2e clic
+
+function closeNewsCurrencyMenu() {
+  const menu = document.getElementById('newsCurrencyMenu');
+  const btn = document.getElementById('newsCurrencyBtn');
+  if (menu) menu.hidden = true;
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+function closeNewsCalendar() {
+  const cal = document.getElementById('newsCal');
+  const btn = document.getElementById('newsDateBtn');
+  if (cal) cal.hidden = true;
+  if (btn) { btn.setAttribute('aria-expanded', 'false'); btn.classList.remove('is-open'); }
+  newsCalAnchor = null;
+}
+
+function closeNewsPopups() {
+  closeNewsCurrencyMenu();
+  closeNewsCalendar();
+}
+
+function updateNewsFilterUI() {
+  const label = document.getElementById('newsCurrencyLabel');
+  const count = newsFilter.currencies.size;
+  if (label) {
+    // Tout coché : « All » ; une seule : son code ; plusieurs : la première
+    // (de haut en bas dans le menu) suivie de « ... ».
+    if (count === NEWS_CURRENCIES.length) label.textContent = 'All';
+    else if (count === 0) label.textContent = 'Aucune';
+    else if (count === 1) label.textContent = newsSelectedCurrencies()[0];
+    else label.textContent = `${newsSelectedCurrencies()[0]}...`;
+  }
+  for (const input of document.querySelectorAll('#newsCurrencyMenu input[type="checkbox"]')) {
+    input.checked = newsFilter.currencies.has(input.value);
+  }
+  const period = document.getElementById('newsPeriodLabel');
+  if (period) period.textContent = newsPeriodText();
+}
+
+function saveNewsCurrencies() {
+  try { localStorage.setItem(NEWS_CURRENCY_STORAGE_KEY, JSON.stringify(newsSelectedCurrencies())); } catch (e) { /* tant pis */ }
+}
+
+function setNewsRange(from, to) {
+  const today = newsStartOfDay(new Date());
+  newsFilter.from = from;
+  newsFilter.to = to;
+  newsFilter.auto = newsSameDay(from, today) && newsSameDay(to, today);
+  updateNewsFilterUI();
+  loadNews();
+}
+
+// Calendrier de sélection de période : 1 clic = 1 jour, 2 clics = période.
+function renderNewsCalendarPicker() {
+  const el = document.getElementById('newsCal');
+  if (!el || !newsCalMonth) return;
+
+  const today = newsStartOfDay(new Date());
+  const { from, to } = newsCurrentRange();
+  const y = newsCalMonth.getFullYear();
+  const m = newsCalMonth.getMonth();
+  const monthLabel = newsCalMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  const lead = (new Date(y, m, 1).getDay() + 6) % 7; // semaine commençant le lundi
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const nextDisabled = new Date(y, m + 1, 1).getTime() > today.getTime();
+
+  let cells = '';
+  for (let i = 0; i < lead; i += 1) cells += '<span class="news-cal-blank"></span>';
+  for (let d = 1; d <= daysInMonth; d += 1) {
+    const day = new Date(y, m, d);
+    const t = day.getTime();
+    const cls = ['news-cal-day'];
+    if (t === today.getTime()) cls.push('is-today');
+    if (t >= from.getTime() && t <= to.getTime()) cls.push('is-in-range');
+    if (t === from.getTime() || t === to.getTime()) cls.push('is-edge');
+    cells += `<button type="button" class="${cls.join(' ')}" data-day="${newsDayKey(day)}"${t > today.getTime() ? ' disabled' : ''}>${d}</button>`;
+  }
+
+  el.innerHTML = `
+    <div class="news-cal-head">
+      <button type="button" class="news-cal-nav" data-nav="-1" aria-label="Mois précédent">‹</button>
+      <span class="news-cal-month">${escapeHtml(monthLabel)}</span>
+      <button type="button" class="news-cal-nav" data-nav="1" aria-label="Mois suivant"${nextDisabled ? ' disabled' : ''}>›</button>
+    </div>
+    <div class="news-cal-grid">
+      ${['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((w) => `<span class="news-cal-wd">${w}</span>`).join('')}
+      ${cells}
+    </div>
+    <div class="news-cal-foot">
+      <span class="news-cal-hint">${newsCalAnchor ? 'Choisis le dernier jour de la période' : '1 clic = 1 jour · 2 clics = période'}</span>
+      <button type="button" class="news-cal-today">Aujourd'hui</button>
+    </div>`;
+}
+
+function openNewsCalendar() {
+  const cal = document.getElementById('newsCal');
+  const btn = document.getElementById('newsDateBtn');
+  if (!cal || !btn) return;
+  closeNewsCurrencyMenu();
+  const { from } = newsCurrentRange();
+  newsCalMonth = new Date(from.getFullYear(), from.getMonth(), 1);
+  newsCalAnchor = null;
+  renderNewsCalendarPicker();
+  cal.hidden = false;
+  btn.setAttribute('aria-expanded', 'true');
+  btn.classList.add('is-open');
+}
+
+function initNewsFilters() {
+  const bar = document.getElementById('newsFilterbar');
+  const ddBtn = document.getElementById('newsCurrencyBtn');
+  const menu = document.getElementById('newsCurrencyMenu');
+  const dateBtn = document.getElementById('newsDateBtn');
+  const cal = document.getElementById('newsCal');
+  if (!bar || !ddBtn || !menu || !dateBtn || !cal) return;
+
+  dateBtn.innerHTML = CALENDAR_DATE_ICON;
+
+  // Menu des devises : une case par devise + un bouton « All » tout en bas.
+  menu.innerHTML =
+    NEWS_CURRENCIES.map((c) => `<label class="filter-dd-item"><input type="checkbox" value="${c}"><span>${c}</span></label>`).join('') +
+    '<button type="button" class="filter-dd-all" id="newsCurrencyAll">All</button>';
+
+  menu.addEventListener('change', (event) => {
+    const input = event.target.closest('input[type="checkbox"]');
+    if (!input) return;
+    if (input.checked) newsFilter.currencies.add(input.value);
+    else newsFilter.currencies.delete(input.value);
+    saveNewsCurrencies();
+    updateNewsFilterUI();
+    loadNews();
+  });
+  menu.querySelector('#newsCurrencyAll').addEventListener('click', () => {
+    newsFilter.currencies = new Set(NEWS_CURRENCIES);
+    saveNewsCurrencies();
+    updateNewsFilterUI();
+    loadNews();
+  });
+
+  ddBtn.addEventListener('click', () => {
+    if (menu.hidden) {
+      closeNewsCalendar();
+      menu.hidden = false;
+      ddBtn.setAttribute('aria-expanded', 'true');
+    } else {
+      closeNewsCurrencyMenu();
+    }
+  });
+
+  dateBtn.addEventListener('click', () => {
+    if (cal.hidden) openNewsCalendar();
+    else closeNewsCalendar();
+  });
+
+  // Clics dans le calendrier. stopPropagation : le calendrier se redessine à
+  // chaque clic, et le gestionnaire « clic à l'extérieur » ci-dessous croirait
+  // sinon que le clic vient de l'extérieur (le bouton cliqué n'existe plus).
+  cal.addEventListener('click', (event) => {
+    event.stopPropagation();
+
+    const nav = event.target.closest('.news-cal-nav');
+    if (nav && !nav.disabled) {
+      newsCalMonth = new Date(newsCalMonth.getFullYear(), newsCalMonth.getMonth() + Number(nav.dataset.nav), 1);
+      renderNewsCalendarPicker();
+      return;
+    }
+
+    if (event.target.closest('.news-cal-today')) {
+      const today = newsStartOfDay(new Date());
+      setNewsRange(today, today);
+      closeNewsCalendar();
+      return;
+    }
+
+    const dayBtn = event.target.closest('.news-cal-day');
+    if (!dayBtn || dayBtn.disabled) return;
+    const day = newsParseDayKey(dayBtn.dataset.day);
+    if (newsCalAnchor === null) {
+      // 1er clic : un seul jour (appliqué tout de suite), en attente d'un 2e.
+      newsCalAnchor = day;
+      setNewsRange(day, day);
+      renderNewsCalendarPicker();
+    } else {
+      // 2e clic : période entre les deux jours (dans n'importe quel ordre).
+      const a = newsCalAnchor;
+      newsCalAnchor = null;
+      const [start, end] = a.getTime() <= day.getTime() ? [a, day] : [day, a];
+      setNewsRange(start, end);
+      closeNewsCalendar();
+    }
+  });
+
+  // Clic à l'extérieur : referme le menu ou le calendrier ouvert.
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('#newsCurrencyDd')) closeNewsCurrencyMenu();
+    if (!event.target.closest('#newsCal') && !event.target.closest('#newsDateBtn')) closeNewsCalendar();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeNewsPopups();
+  });
+
+  updateNewsFilterUI();
+}
+
+function initNewsTab() {
+  loadNews(); // onglet d'accueil : affiché dès l'ouverture de l'appli
+  window.setInterval(() => {
+    if (isNewsTabActive() && !document.hidden) loadNews();
+  }, NEWS_REFRESH_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && isNewsTabActive()) loadNews();
+  });
+  if (window.Auth && window.Auth.onAuthStateChange) {
+    window.Auth.onAuthStateChange((session) => {
+      if (session && isNewsTabActive()) loadNews();
+    });
+  }
+}
+
+/* =========================================================
    Init
    ========================================================= */
 document.addEventListener('DOMContentLoaded', () => {
@@ -1067,11 +1534,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Changer d'onglet referme tout ce qui était resté ouvert dans l'ancien :
   // le menu latéral, le panneau Thème (avec ses menus dépliés et son sélecteur
   // de couleur) et la bulle de date du calendrier.
-  initTabs(() => {
+  initTabs((tabId) => {
     if (menu) menu.closeMenu();
     if (themePanel) themePanel.close();
     closeCalendarDatePopup();
+    // La barre de filtres n'existe que dans l'onglet Nouveau.
+    const filterbar = document.getElementById('newsFilterbar');
+    if (filterbar) filterbar.hidden = tabId !== 'tab-4';
+    closeNewsPopups();
+    if (tabId === 'tab-4') loadNews(); // onglet Nouveau : données fraîches à chaque ouverture
   });
+  initNewsFilters();
+  initNewsTab();
   initCalendarToolbar();
   initCurrencyTabs();
   initEdgeScrollbar();

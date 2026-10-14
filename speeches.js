@@ -37,7 +37,7 @@
  *     aucun onglet, et elle est listée dans  window.Speeches.rejected  avec la
  *     raison, pour que tu puisses la vérifier.
  *   Codes de banque : FED (USD), BCE (EUR), BOJ (JPY), BOE (GBP), BNS (CHF),
- *   BOC (CAD), RBA (AUD), RBNZ (NZD), PBOC (CNY).
+ *   BOC (CAD), RBA (AUD), RBNZ (NZD).
  *
  * Les fiches sont lues automatiquement dans la table Supabase "speeches" (remplie
  * par le bot) dès que tu es connecté, puis toutes les 5 minutes. Pour afficher
@@ -57,7 +57,6 @@ const SPEECH_BANKS = {
   CAD: { code: 'BOC',  label: 'Banque du Canada' },
   AUD: { code: 'RBA',  label: 'RBA' },
   NZD: { code: 'RBNZ', label: 'RBNZ' },
-  CNY: { code: 'PBOC', label: 'PBoC' },
 };
 
 // Texte du bandeau selon le statut.
@@ -300,10 +299,79 @@ function routeSpeechEntries(entries) {
   return byCurrency;
 }
 
+// ---------------------------------------------------------------------------
+// Onglet « Nouveau » : tous les discours du jour, toutes devises confondues
+// ---------------------------------------------------------------------------
+let speechAllEntries = [];   // toutes les fiches valides, toutes devises
+let speechLoadFailed = false;
+// Filtre de l'onglet Nouveau, fourni par app.js : { currencies: Set|null,
+// startMs, endMs, label, isToday }. null = aujourd'hui, toutes devises.
+let speechNewsFilter = null;
+
+function speechIsToday(iso) {
+  const t = new Date(iso);
+  if (Number.isNaN(t.getTime())) return false;
+  const n = new Date();
+  return t.getFullYear() === n.getFullYear() && t.getMonth() === n.getMonth() && t.getDate() === n.getDate();
+}
+
+function renderNewsSpeeches() {
+  const container = document.getElementById('newsSpeeches');
+  if (!container) return;
+
+  let section = container.querySelector('.speeches');
+  if (!section) {
+    section = document.createElement('div');
+    section.className = 'speeches';
+    container.appendChild(section);
+    section.addEventListener('click', (event) => {
+      const btn = event.target.closest('.speech-btn[data-open]');
+      if (!btn) return;
+      openSpeechPopup(btn.dataset.key, btn.dataset.open, btn);
+    });
+  }
+
+  const now = Date.now();
+  const f = speechNewsFilter;
+  const today = speechAllEntries
+    .filter((e) => {
+      const t = Date.parse(e.date);
+      if (Number.isNaN(t) || t > now) return false; // seulement les discours déjà prononcés
+      if (!f) return speechIsToday(e.date);
+      if (t < f.startMs || t >= f.endMs) return false;
+      return !f.currencies || f.currencies.has(String(e.currency).trim().toUpperCase());
+    })
+    .sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0)); // récent d'abord
+  const count = today.length;
+  const label = f && f.label ? f.label : 'Aujourd\'hui';
+  const isToday = !f || f.isToday;
+
+  const cards = today.map((e) => {
+    const code = String(e.currency).trim().toUpperCase();
+    const bank = SPEECH_BANKS[code] ? SPEECH_BANKS[code].label : '';
+    return `<div class="news-speech">
+      <span class="news-speech-cur">${speechEscape(code)} · ${speechEscape(bank)}</span>
+      ${buildSpeechCard(code, e)}
+    </div>`;
+  }).join('');
+
+  section.innerHTML = `
+    <div class="speeches-toolbar">
+      <span class="speeches-toolbar-title">Discours</span>
+      <span class="speeches-toolbar-info">${speechEscape(label)} · ${count} discours</span>
+    </div>
+    ${count
+      ? `<div class="speeches-grid">${cards}</div>`
+      : `<p class="speeches-empty">${speechLoadFailed ? 'Impossible de charger les discours pour le moment.' : (isToday ? 'Aucun discours aujourd\'hui.' : 'Aucun discours sur cette période.')}</p>`}`;
+}
+
 function setSpeechEntries(entries, options = {}) {
   speechStore.clear();
   const byCurrency = routeSpeechEntries(entries);
   Object.keys(SPEECH_BANKS).forEach((code) => renderSpeechSection(code, byCurrency[code], Boolean(options.failed)));
+  speechAllEntries = Object.values(byCurrency).flat();
+  speechLoadFailed = Boolean(options.failed);
+  renderNewsSpeeches();
 }
 
 window.Speeches = {
@@ -312,6 +380,8 @@ window.Speeches = {
   close: closeSpeechPopup,
   rejected: speechRejected,
   roster: SPEECH_ROSTER,
+  // Redessine les discours de l'onglet Nouveau ; avec un filtre, le mémorise.
+  renderNews: (filter) => { if (filter !== undefined) speechNewsFilter = filter; renderNewsSpeeches(); },
 };
 
 // ---------------------------------------------------------------------------

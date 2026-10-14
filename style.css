@@ -2089,3 +2089,358 @@ button {
   line-height: 1.35;
   color: var(--speech-popup-text);
 }
+
+/* =========================================================
+   Onglet « Nouveau » (tout ce qui est sorti aujourd'hui)
+   ========================================================= */
+.menu-tab--nouveau {
+  --tab-border: var(--menu-tab-border);
+  --tab-text: var(--menu-tab-text);
+  --tab-hover-text: var(--menu-tab-hover-text);
+}
+
+.news-toolbar-info {
+  margin: 0 0 10px 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+}
+
+/* Pastille de devise devant le nom de l'événement */
+.news-cur {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-dim);
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  color: var(--text);
+}
+
+.news-speech {
+  display: flex;
+  flex-direction: column;
+}
+
+.news-speech-cur {
+  margin: 0 0 4px 2px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* =========================================================
+   Barre de filtres de l'onglet Nouveau (sous la barre de navigation)
+   Mêmes couleurs que la barre de navigation (variables --nav-*),
+   séparée d'elle par sa bordure.
+   ========================================================= */
+.filterbar {
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 99; /* juste sous la barre de navigation (100) */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 8px 16px;
+  background: var(--nav-bg);
+  border-bottom: 3px solid var(--nav-border);
+}
+
+.filterbar[hidden] {
+  display: none;
+}
+
+/* ---------- Menu déroulant « Devise » ---------- */
+.filter-dd {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.filter-dd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--session-bg);
+  color: var(--session-text-color);
+  border: 1px solid var(--session-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.filter-dd-arrow {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  transition: transform 0.15s;
+}
+
+.filter-dd-btn[aria-expanded="true"] .filter-dd-arrow {
+  transform: rotate(180deg);
+}
+
+.filter-dd-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.filter-dd-menu[hidden] {
+  display: none;
+}
+
+.filter-dd-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.filter-dd-item input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--blue-light);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .filter-dd-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.filter-dd-all {
+  margin-top: 6px;
+  padding: 10px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--nav-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* ---------- Période (bouton calendrier + texte) ---------- */
+.news-period {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Même design que le bouton calendrier du tableau (.calendar-date-btn), à la
+   taille de la barre. */
+.news-date-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  border: 1px solid var(--calendar-date-btn-border);
+  background: var(--calendar-date-btn-bg);
+  color: var(--calendar-date-btn-icon);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.news-date-btn svg {
+  width: 62%;
+  height: 62%;
+  display: block;
+  pointer-events: none;
+}
+
+.news-date-btn:hover {
+  border-color: var(--calendar-date-btn-hover-border);
+  color: var(--calendar-date-btn-hover-icon);
+}
+
+.news-date-btn.is-open,
+.news-date-btn.is-open:hover {
+  background: var(--calendar-date-btn-open-bg);
+  border-color: var(--calendar-date-btn-open-border);
+  color: var(--calendar-date-btn-open-icon);
+}
+
+.news-period-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--text);
+}
+
+/* ---------- Calendrier de sélection de période ---------- */
+.news-cal {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 16px;
+  width: min(320px, calc(100vw - 32px));
+  padding: 12px;
+  background: var(--calendar-date-popup-bg);
+  border: 1px solid var(--calendar-date-popup-border);
+  border-radius: var(--radius-card);
+  color: var(--calendar-date-popup-text);
+  font-family: var(--sans);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.news-cal[hidden] {
+  display: none;
+}
+
+.news-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.news-cal-month {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.news-cal-nav {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--calendar-date-popup-border);
+  border-radius: 6px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.news-cal-nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.news-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.news-cal-wd {
+  padding: 4px 0;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--calendar-date-btn-icon);
+}
+
+.news-cal-day {
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.news-cal-day:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.news-cal-day.is-today {
+  border-color: var(--calendar-date-btn-icon);
+}
+
+.news-cal-day.is-in-range {
+  background: rgba(0, 229, 160, 0.18);
+}
+
+.news-cal-day.is-edge {
+  background: var(--calendar-date-btn-open-bg);
+  border-color: var(--calendar-date-btn-open-border);
+  color: var(--calendar-date-btn-open-icon);
+  font-weight: 700;
+}
+
+@media (hover: hover) {
+  .news-cal-day:not(:disabled):not(.is-edge):hover {
+    border-color: var(--calendar-date-btn-hover-border);
+  }
+}
+
+.news-cal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.news-cal-hint {
+  font-size: 11px;
+  color: var(--calendar-date-btn-icon);
+}
+
+.news-cal-today {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--calendar-date-popup-border);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* Colonne « date + heure » (période de plusieurs jours) : sur une seule ligne */
+.news-col-time {
+  white-space: nowrap;
+}
