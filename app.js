@@ -856,7 +856,7 @@ async function refreshCalendarStatus() {
 
   const { data, error } = await client
     .from('bot_status')
-    .select('last_run, ok, events_written')
+    .select('last_run, ok, events_written, errors')
     .eq('id', 'fetch-calendar')
     .maybeSingle();
 
@@ -865,12 +865,17 @@ async function refreshCalendarStatus() {
   const elapsedMs = Date.now() - new Date(data.last_run).getTime();
   const elapsedMin = Math.max(0, Math.round(elapsedMs / 60000));
   const isStale = elapsedMs > CALENDAR_STATUS_STALE_MS || !data.ok;
+  // Le bot marque d'un "[INVESTING]" en tête de "errors" une panne d'Investing.com
+  // (source des « Sortie » et des prévisions au-delà de la semaine).
+  const investingDown = [].concat(data.errors || []).some((e) => String(e).startsWith('[INVESTING]'));
 
   el.hidden = false;
-  el.classList.toggle('is-stale', isStale);
+  el.classList.toggle('is-stale', isStale || investingDown);
   el.textContent = isStale
     ? `⚠ Calendrier peut-être en retard — dernière mise à jour il y a ${elapsedMin} min`
-    : `Calendrier à jour — dernière mise à jour il y a ${elapsedMin} min`;
+    : investingDown
+      ? `⚠ Investing.com en défaut : « Sortie » et prévisions au-delà de la semaine possiblement manquantes — dernière mise à jour il y a ${elapsedMin} min`
+      : `Calendrier à jour — dernière mise à jour il y a ${elapsedMin} min`;
 }
 
 // =========================================================

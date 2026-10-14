@@ -21,6 +21,7 @@
  *     stars:   4,                          // importance de 0 à 5
  *     date:    '2026-10-06T14:30:00',      // date/heure du discours
  *     speech:  ['paragraphe 1', '...'],    // discours traduit en français
+ *     title:   'Titre en français',        // facultatif (« Entretien : … », « Conférence de presse : … »)
  *     source:  'https://…',                // lien du discours officiel (facultatif)
  *     summary: [                           // résumé, en blocs
  *       { heading: 'Axes principaux', items: ['...', '...'] },
@@ -191,6 +192,7 @@ function ensureSpeechPopup() {
         <div class="speech-popup-heading">
           <span class="speech-popup-kind" id="speechPopupKind"></span>
           <h2 class="speech-popup-title" id="speechPopupTitle"></h2>
+          <span class="speech-popup-subtitle" id="speechPopupSubtitle"></span>
           <span class="speech-popup-meta" id="speechPopupMeta"></span>
           <a class="speech-popup-source" id="speechPopupSource" target="_blank" rel="noopener noreferrer" hidden>Voir le discours original (site officiel)</a>
         </div>
@@ -233,6 +235,9 @@ function openSpeechPopup(key, kind, trigger) {
 
   el.querySelector('#speechPopupKind').textContent = isSummary ? 'Résumé' : 'Discours (traduit en français)';
   el.querySelector('#speechPopupTitle').textContent = `${entry.first} ${entry.last}`;
+  const sub = el.querySelector('#speechPopupSubtitle');
+  sub.textContent = entry.title || '';
+  sub.hidden = !entry.title;
   el.querySelector('#speechPopupMeta').textContent =
     [entry.role, speechFormatDate(entry.date)].filter(Boolean).join(' · ');
   const link = el.querySelector('#speechPopupSource');
@@ -312,7 +317,7 @@ window.Speeches = {
 // ---------------------------------------------------------------------------
 // Lecture dans Supabase (table "speeches", remplie par le bot)
 // ---------------------------------------------------------------------------
-const SPEECH_COLUMNS = 'id, currency, bank, first_name, last_name, role, voting, stars, spoken_at, speech, summary, source_url';
+const SPEECH_COLUMNS = 'id, currency, bank, first_name, last_name, role, voting, stars, spoken_at, title, speech, summary, source_url';
 let speechLoading = false;
 let speechSignature = null;
 
@@ -327,6 +332,7 @@ function speechRowToEntry(row) {
     voting: row.voting,
     stars: row.stars,
     date: row.spoken_at,
+    title: row.title || '',
     speech: Array.isArray(row.speech) ? row.speech : [],
     summary: Array.isArray(row.summary) ? row.summary : [],
     source: row.source_url,

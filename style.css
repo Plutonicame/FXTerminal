@@ -2081,3 +2081,11 @@ button {
   color: var(--speech-popup-heading);
   text-decoration: underline;
 }
+
+.speech-popup-subtitle {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--speech-popup-text);
+}
