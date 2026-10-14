@@ -2094,9 +2094,9 @@ button {
    Onglet « Nouveau » (tout ce qui est sorti aujourd'hui)
    ========================================================= */
 .menu-tab--nouveau {
-  --tab-border: var(--menu-tab-border);
-  --tab-text: var(--menu-tab-text);
-  --tab-hover-text: var(--menu-tab-hover-text);
+  --tab-border: var(--menu-tab-nouveau-border);
+  --tab-text: var(--menu-tab-nouveau-text);
+  --tab-hover-text: var(--menu-tab-nouveau-hover-text);
 }
 
 .news-toolbar-info {
@@ -2104,7 +2104,7 @@ button {
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.5px;
-  color: var(--text-dim);
+  color: var(--news-info-text);
 }
 
 /* Pastille de devise devant le nom de l'événement */
@@ -2112,14 +2112,14 @@ button {
   display: inline-block;
   margin-right: 8px;
   padding: 1px 5px;
-  border: 1px solid var(--border-dim);
+  border: 1px solid var(--news-cur-border);
   border-radius: 3px;
   font-family: var(--mono);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
   vertical-align: middle;
-  color: var(--text);
+  color: var(--news-cur-text);
 }
 
 .news-speech {
@@ -2133,7 +2133,7 @@ button {
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--news-speech-tag-text);
 }
 
 /* =========================================================
@@ -2150,8 +2150,8 @@ button {
   gap: 12px;
   min-height: 54px;
   padding: 8px 16px;
-  background: var(--nav-bg);
-  border-bottom: 3px solid var(--nav-border);
+  background: var(--filterbar-bg);
+  border-bottom: 3px solid var(--filterbar-border);
 }
 
 .filterbar[hidden] {
@@ -2170,9 +2170,9 @@ button {
   gap: 10px;
   height: 36px;
   padding: 0 12px;
-  background: var(--session-bg);
-  color: var(--session-text-color);
-  border: 1px solid var(--session-border);
+  background: var(--filter-dd-btn-bg);
+  color: var(--filter-dd-btn-text);
+  border: 1px solid var(--filter-dd-btn-border);
   border-radius: var(--radius-sm);
   font-family: var(--mono);
   font-size: 11px;
@@ -2203,8 +2203,8 @@ button {
   display: flex;
   flex-direction: column;
   padding: 6px;
-  background: var(--nav-bg);
-  border: 1px solid var(--nav-border);
+  background: var(--filter-dd-menu-bg);
+  border: 1px solid var(--filter-dd-menu-border);
   border-radius: var(--radius-card);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
 }
@@ -2222,7 +2222,7 @@ button {
   font-family: var(--mono);
   font-size: 12px;
   letter-spacing: 1px;
-  color: var(--text);
+  color: var(--filter-dd-item-text);
   cursor: pointer;
 }
 
@@ -2231,22 +2231,22 @@ button {
   width: 16px;
   height: 16px;
   margin: 0;
-  accent-color: var(--blue-light);
+  accent-color: var(--filter-check-color);
   cursor: pointer;
 }
 
 @media (hover: hover) {
   .filter-dd-item:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--filter-dd-item-hover-bg);
   }
 }
 
 .filter-dd-all {
   margin-top: 6px;
   padding: 10px;
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--nav-border);
+  background: var(--filter-all-bg);
+  color: var(--filter-all-text);
+  border: 1px solid var(--filter-all-border);
   border-radius: var(--radius-sm);
   font-family: var(--mono);
   font-size: 12px;
@@ -2254,6 +2254,12 @@ button {
   text-transform: uppercase;
   text-align: center;
   cursor: pointer;
+}
+
+@media (hover: hover) {
+  .filter-dd-all:hover {
+    background: var(--filter-all-hover-bg);
+  }
 }
 
 /* ---------- Période (bouton calendrier + texte) ---------- */
@@ -2275,9 +2281,9 @@ button {
   align-items: center;
   justify-content: center;
   border-radius: 5px;
-  border: 1px solid var(--calendar-date-btn-border);
-  background: var(--calendar-date-btn-bg);
-  color: var(--calendar-date-btn-icon);
+  border: 1px solid var(--news-date-btn-border);
+  background: var(--news-date-btn-bg);
+  color: var(--news-date-btn-icon);
   cursor: pointer;
   transition: border-color 0.12s, color 0.12s, background 0.12s;
 }
@@ -2290,15 +2296,15 @@ button {
 }
 
 .news-date-btn:hover {
-  border-color: var(--calendar-date-btn-hover-border);
-  color: var(--calendar-date-btn-hover-icon);
+  border-color: var(--news-date-btn-hover-border);
+  color: var(--news-date-btn-hover-icon);
 }
 
 .news-date-btn.is-open,
 .news-date-btn.is-open:hover {
-  background: var(--calendar-date-btn-open-bg);
-  border-color: var(--calendar-date-btn-open-border);
-  color: var(--calendar-date-btn-open-icon);
+  background: var(--news-date-btn-open-bg);
+  border-color: var(--news-date-btn-open-border);
+  color: var(--news-date-btn-open-icon);
 }
 
 .news-period-label {
@@ -2309,7 +2315,7 @@ button {
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.5px;
-  color: var(--text);
+  color: var(--news-period-text);
 }
 
 /* ---------- Calendrier de sélection de période ---------- */
@@ -2319,10 +2325,10 @@ button {
   left: 16px;
   width: min(320px, calc(100vw - 32px));
   padding: 12px;
-  background: var(--calendar-date-popup-bg);
-  border: 1px solid var(--calendar-date-popup-border);
+  background: var(--news-cal-bg);
+  border: 1px solid var(--news-cal-border);
   border-radius: var(--radius-card);
-  color: var(--calendar-date-popup-text);
+  color: var(--news-cal-text);
   font-family: var(--sans);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
 }
@@ -2351,7 +2357,7 @@ button {
   padding: 0;
   background: transparent;
   color: inherit;
-  border: 1px solid var(--calendar-date-popup-border);
+  border: 1px solid var(--news-cal-border);
   border-radius: 6px;
   font-size: 18px;
   line-height: 1;
@@ -2374,7 +2380,7 @@ button {
   text-align: center;
   font-family: var(--mono);
   font-size: 10px;
-  color: var(--calendar-date-btn-icon);
+  color: var(--news-cal-weekday);
 }
 
 .news-cal-day {
@@ -2395,23 +2401,23 @@ button {
 }
 
 .news-cal-day.is-today {
-  border-color: var(--calendar-date-btn-icon);
+  border-color: var(--news-cal-today-border);
 }
 
 .news-cal-day.is-in-range {
-  background: rgba(0, 229, 160, 0.18);
+  background: var(--news-cal-range-bg);
 }
 
 .news-cal-day.is-edge {
-  background: var(--calendar-date-btn-open-bg);
-  border-color: var(--calendar-date-btn-open-border);
-  color: var(--calendar-date-btn-open-icon);
+  background: var(--news-cal-edge-bg);
+  border-color: var(--news-cal-edge-bg);
+  color: var(--news-cal-edge-text);
   font-weight: 700;
 }
 
 @media (hover: hover) {
   .news-cal-day:not(:disabled):not(.is-edge):hover {
-    border-color: var(--calendar-date-btn-hover-border);
+    border-color: var(--news-date-btn-hover-border);
   }
 }
 
@@ -2425,7 +2431,7 @@ button {
 
 .news-cal-hint {
   font-size: 11px;
-  color: var(--calendar-date-btn-icon);
+  color: var(--news-cal-weekday);
 }
 
 .news-cal-today {
@@ -2433,7 +2439,7 @@ button {
   padding: 6px 10px;
   background: transparent;
   color: inherit;
-  border: 1px solid var(--calendar-date-popup-border);
+  border: 1px solid var(--news-cal-border);
   border-radius: 6px;
   font-family: var(--mono);
   font-size: 11px;
@@ -2443,4 +2449,82 @@ button {
 /* Colonne « date + heure » (période de plusieurs jours) : sur une seule ligne */
 .news-col-time {
   white-space: nowrap;
+}
+
+/* =========================================================
+   Couleurs personnalisables de la section « Nouveau » du thème.
+   Par défaut, chaque variable reprend la couleur d'origine de l'appli
+   (barre de navigation, bouton calendrier...) ; une fois modifiée dans
+   Paramètres > Thème > Nouveau, elle devient indépendante.
+   ========================================================= */
+:root {
+  /* Barre de filtres */
+  --filterbar-bg: var(--nav-bg);
+  --filterbar-border: var(--nav-border);
+
+  /* Menu Devise : bouton */
+  --filter-dd-btn-bg: var(--filterbar-bg);
+  --filter-dd-btn-border: var(--session-border);
+  --filter-dd-btn-text: var(--session-text-color);
+
+  /* Menu Devise : liste déroulante */
+  --filter-dd-menu-bg: var(--filterbar-bg);
+  --filter-dd-menu-border: var(--filterbar-border);
+  --filter-dd-item-text: var(--text);
+  --filter-dd-item-hover-bg: #4f4f4f;
+
+  /* Cases à cocher */
+  --filter-check-color: var(--blue-light);
+
+  /* Bouton All */
+  --filter-all-bg: var(--filter-dd-menu-bg);
+  --filter-all-border: var(--filterbar-border);
+  --filter-all-text: var(--text);
+  --filter-all-hover-bg: var(--filter-dd-item-hover-bg);
+
+  /* Période : bouton calendrier et texte */
+  --news-date-btn-bg: var(--calendar-date-btn-bg);
+  --news-date-btn-border: var(--calendar-date-btn-border);
+  --news-date-btn-icon: var(--calendar-date-btn-icon);
+  --news-date-btn-hover-border: var(--calendar-date-btn-hover-border);
+  --news-date-btn-hover-icon: var(--calendar-date-btn-hover-icon);
+  --news-date-btn-open-bg: var(--calendar-date-btn-open-bg);
+  --news-date-btn-open-border: var(--calendar-date-btn-open-border);
+  --news-date-btn-open-icon: var(--calendar-date-btn-open-icon);
+  --news-period-text: var(--text);
+
+  /* Période : fenêtre de sélection des jours */
+  --news-cal-bg: var(--calendar-date-popup-bg);
+  --news-cal-border: var(--calendar-date-popup-border);
+  --news-cal-text: var(--calendar-date-popup-text);
+  --news-cal-weekday: var(--calendar-date-btn-icon);
+  --news-cal-today-border: var(--calendar-date-btn-icon);
+  --news-cal-range-bg: #0e3d3d;
+  --news-cal-edge-bg: var(--calendar-date-btn-open-bg);
+  --news-cal-edge-text: var(--calendar-date-btn-open-icon);
+
+  /* Bandeau « Nouveau », résumé, pastilles de devise */
+  --news-toolbar-bg: var(--calendar-toolbar-bg);
+  --news-toolbar-border: var(--calendar-toolbar-border);
+  --news-toolbar-title: var(--calendar-toolbar-title);
+  --news-info-text: var(--text-dim);
+  --news-cur-border: var(--border-dim);
+  --news-cur-text: var(--text);
+  --news-speech-tag-text: var(--text-dim);
+
+  /* Menu burger : onglet Nouveau */
+  --menu-tab-nouveau-border: var(--menu-tab-border);
+  --menu-tab-nouveau-text: var(--menu-tab-text);
+  --menu-tab-nouveau-hover-text: var(--menu-tab-hover-text);
+}
+
+/* Le bandeau « Nouveau » réutilise la mise en forme du bandeau « Calendrier »,
+   mais avec ses propres couleurs. */
+#tab-4 .calendar-toolbar {
+  background: var(--news-toolbar-bg);
+  border-color: var(--news-toolbar-border);
+}
+
+#tab-4 .calendar-toolbar-title {
+  color: var(--news-toolbar-title);
 }
