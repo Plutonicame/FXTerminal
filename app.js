@@ -1543,6 +1543,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filterbar) filterbar.hidden = tabId !== 'tab-4';
     closeNewsPopups();
     if (tabId === 'tab-4') loadNews(); // onglet Nouveau : données fraîches à chaque ouverture
+    if (tabId === 'tab-5' && window.Fundamental) window.Fundamental.refresh(); // Analyse fondamentale
   });
   initNewsFilters();
   initNewsTab();

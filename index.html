@@ -99,6 +99,10 @@
     Événements secondaires
   </button>
 
+  <button type="button" class="menu-tab menu-tab--fondamentale" data-tab="tab-5">
+    Analyse fondamentale
+  </button>
+
   <button type="button" class="menu-tab menu-tab--parametres" data-tab="tab-3">
     Paramètres
   </button>
@@ -190,6 +194,15 @@
     <!-- Onglet 2 : volontairement vide pour le moment -->
   </section>
 
+  <section class="tab-panel" id="tab-5" role="tabpanel" aria-label="Analyse fondamentale" hidden>
+    <div class="fund-toolbar">
+      <span class="fund-toolbar-title">Analyse fondamentale</span>
+      <button type="button" class="fund-primary-btn" id="fundAddGroupBtn">+ Groupe</button>
+    </div>
+    <p class="fund-status" id="fundStatus" role="status" hidden></p>
+    <div class="fund-tree" id="fundTree" aria-live="polite"></div>
+  </section>
+
   <section class="tab-panel is-active" id="tab-4" role="tabpanel" aria-label="Nouveau">
     <div class="calendar-toolbar">
       <span class="calendar-toolbar-title">Nouveau</span>
@@ -269,6 +282,13 @@
         <div class="theme-accordion-content" id="themeFields-evenements"></div>
       </div>
 
+      <div class="theme-accordion" data-section="fondamentale">
+        <button type="button" class="theme-accordion-row" data-section="fondamentale">
+          <span class="chevron">›</span> Analyse fondamentale
+        </button>
+        <div class="theme-accordion-content" id="themeFields-fondamentale"></div>
+      </div>
+
       <div class="theme-accordion" data-section="parametres">
         <button type="button" class="theme-accordion-row" data-section="parametres">
           <span class="chevron">›</span> Paramètres
@@ -318,10 +338,25 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <div class="save-spinner" id="saveSpinner" aria-hidden="true"></div>
 
+<!-- ===== Boîte de dialogue de « Analyse fondamentale » (nom / confirmation) ===== -->
+<div class="fund-dialog" id="fundDialog" hidden>
+  <div class="fund-dialog-card" role="dialog" aria-modal="true" aria-labelledby="fundDialogTitle">
+    <div class="fund-dialog-title" id="fundDialogTitle"></div>
+    <p class="fund-dialog-message" id="fundDialogMessage" hidden></p>
+    <input class="fund-dialog-input" id="fundDialogInput" type="text" maxlength="80" autocomplete="off" aria-label="Nom" hidden>
+    <p class="fund-dialog-error" id="fundDialogError" hidden></p>
+    <div class="fund-dialog-btns">
+      <button type="button" class="fund-dialog-btn fund-dialog-btn--cancel" id="fundDialogCancel">Annuler</button>
+      <button type="button" class="fund-dialog-btn fund-dialog-btn--ok" id="fundDialogOk">Valider</button>
+    </div>
+  </div>
+</div>
+
 <script src="./supabase-config.js" defer></script>
 <script src="./auth.js" defer></script>
 <script src="./theme-colors.js" defer></script>
 <script src="./speeches.js" defer></script>
+<script src="./fundamental.js" defer></script>
 <script src="./app.js" defer></script>
 </body>
 </html>

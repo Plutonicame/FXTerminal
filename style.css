@@ -2528,3 +2528,458 @@ button {
 #tab-4 .calendar-toolbar-title {
   color: var(--news-toolbar-title);
 }
+
+/* =========================================================
+   Onglet « Analyse fondamentale »
+   Zone partagée (contenu public pour tous les utilisateurs) mais
+   couleurs PERSONNELLES : toutes les couleurs ci-dessous sont des
+   variables réglables dans Paramètres > Thème > Analyse fondamentale
+   (stockées dans le thème de chaque compte, jamais dans le contenu).
+   Par défaut, elles reprennent les couleurs existantes de l'appli.
+   ========================================================= */
+:root {
+  /* Menu burger : onglet Analyse fondamentale */
+  --menu-tab-fondamentale-border: var(--menu-tab-border);
+  --menu-tab-fondamentale-text: var(--menu-tab-text);
+  --menu-tab-fondamentale-hover-text: var(--menu-tab-hover-text);
+
+  /* Bandeau + bouton « + Groupe » */
+  --fund-toolbar-bg: var(--calendar-toolbar-bg);
+  --fund-toolbar-border: var(--calendar-toolbar-border);
+  --fund-toolbar-title: var(--calendar-toolbar-title);
+  --fund-primary-bg: var(--settings-btn-bg);
+  --fund-primary-border: var(--settings-btn-border);
+  --fund-primary-text: var(--settings-btn-text);
+  --fund-primary-hover-bg: #4f4f4f;
+
+  /* Textes */
+  --fund-empty-text: var(--text-dim);
+  --fund-error-text: var(--red-light);
+
+  /* Groupes */
+  --fund-group-bg: var(--settings-row-bg);
+  --fund-group-border: var(--settings-row-border);
+  --fund-group-text: var(--settings-row-text);
+  --fund-group-hover-bg: #4f4f4f;
+
+  /* Onglets */
+  --fund-tab-bg: var(--bg-card);
+  --fund-tab-border: var(--border-dim);
+  --fund-tab-text: var(--text);
+  --fund-tab-hover-bg: #202020;
+  --fund-chevron: var(--text);
+  --fund-line: #4a4a4a;
+
+  /* Zone de texte */
+  --fund-text-bg: var(--bg);
+  --fund-text-border: var(--border-dim);
+  --fund-text-color: var(--text);
+  --fund-text-placeholder: var(--text-dim);
+  --fund-text-focus-border: var(--blue-light);
+
+  /* Boutons ✎ ✕ */
+  --fund-icon-btn-bg: transparent;
+  --fund-icon-btn-border: var(--border-dim);
+  --fund-icon-btn-text: var(--text-dim);
+  --fund-icon-btn-hover-border: var(--border);
+  --fund-icon-btn-hover-text: var(--text);
+  --fund-delete-hover: var(--red-light);
+
+  /* Bouton « + Ajouter un onglet » */
+  --fund-add-bg: transparent;
+  --fund-add-border: var(--border-dim);
+  --fund-add-text: var(--text-dim);
+  --fund-add-hover-border: var(--border);
+  --fund-add-hover-text: var(--text);
+
+  /* Fenêtre de saisie */
+  --fund-dialog-overlay: #000000;
+  --fund-dialog-bg: var(--bg-card);
+  --fund-dialog-border: var(--border);
+  --fund-dialog-title: var(--text);
+  --fund-dialog-text: var(--text-dim);
+  --fund-input-bg: var(--bg);
+  --fund-input-border: var(--border-dim);
+  --fund-input-text: var(--text);
+  --fund-ok-bg: var(--blue);
+  --fund-ok-border: var(--blue);
+  --fund-ok-text: #ffffff;
+  --fund-cancel-border: var(--border);
+  --fund-cancel-text: var(--text);
+  --fund-danger-bg: var(--red);
+  --fund-danger-border: var(--red);
+  --fund-danger-text: #ffffff;
+}
+
+.menu-tab--fondamentale {
+  --tab-border: var(--menu-tab-fondamentale-border);
+  --tab-text: var(--menu-tab-fondamentale-text);
+  --tab-hover-text: var(--menu-tab-fondamentale-hover-text);
+}
+
+/* ---------- Bandeau ---------- */
+.fund-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  background: var(--fund-toolbar-bg);
+  border: 1px solid var(--fund-toolbar-border);
+  border-radius: var(--radius-card);
+}
+
+.fund-toolbar-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--fund-toolbar-title);
+}
+
+.fund-primary-btn {
+  padding: 8px 18px;
+  background: var(--fund-primary-bg);
+  border: 1px solid var(--fund-primary-border);
+  color: var(--fund-primary-text);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.fund-status {
+  margin: 0 0 10px 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+  color: var(--fund-error-text);
+}
+
+.fund-status[hidden] {
+  display: none;
+}
+
+.fund-empty {
+  margin: 0;
+  padding: 2px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: var(--fund-empty-text);
+}
+
+/* ---------- Arbre ---------- */
+.fund-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fund-row {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid transparent;
+}
+
+.fund-node--group > .fund-row {
+  background: var(--fund-group-bg);
+  border-color: var(--fund-group-border);
+  color: var(--fund-group-text);
+  border-radius: 14px;
+}
+
+.fund-node--tab > .fund-row {
+  background: var(--fund-tab-bg);
+  border-color: var(--fund-tab-border);
+  color: var(--fund-tab-text);
+  border-radius: 8px;
+}
+
+.fund-toggle {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
+  color: inherit;
+  font-family: var(--mono);
+  text-align: left;
+  cursor: pointer;
+}
+
+.fund-node--group > .fund-row .fund-toggle {
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.fund-node--tab > .fund-row .fund-toggle {
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.fund-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fund-chevron {
+  flex: 0 0 auto;
+  display: inline-block;
+  width: 12px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--fund-chevron);
+  transition: transform 0.15s ease;
+}
+
+.fund-node.is-open > .fund-row > .fund-toggle > .fund-chevron {
+  transform: rotate(90deg);
+}
+
+.fund-toggle:focus-visible,
+.fund-icon-btn:focus-visible,
+.fund-add-btn:focus-visible,
+.fund-primary-btn:focus-visible,
+.fund-dialog-btn:focus-visible {
+  outline: 2px solid var(--fund-text-focus-border);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .fund-node--group > .fund-row:hover {
+    background: var(--fund-group-hover-bg);
+  }
+  .fund-node--tab > .fund-row:hover {
+    background: var(--fund-tab-hover-bg);
+  }
+  .fund-primary-btn:hover {
+    background: var(--fund-primary-hover-bg);
+  }
+}
+
+/* Boutons renommer / supprimer */
+.fund-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px 0 0;
+}
+
+.fund-icon-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fund-icon-btn-bg);
+  border: 1px solid var(--fund-icon-btn-border);
+  border-radius: var(--radius-sm);
+  color: var(--fund-icon-btn-text);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .fund-icon-btn:hover {
+    border-color: var(--fund-icon-btn-hover-border);
+    color: var(--fund-icon-btn-hover-text);
+  }
+  .fund-icon-btn--delete:hover {
+    color: var(--fund-delete-hover);
+  }
+}
+
+/* Contenu d'un groupe / onglet ouvert */
+.fund-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0 4px 12px;
+  padding-left: 12px;
+  border-left: 2px solid var(--fund-line);
+}
+
+.fund-children {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fund-text {
+  width: 100%;
+  min-height: 110px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  background: var(--fund-text-bg);
+  border: 1px solid var(--fund-text-border);
+  border-radius: 8px;
+  color: var(--fund-text-color);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.fund-text::placeholder {
+  color: var(--fund-text-placeholder);
+}
+
+.fund-text:focus {
+  outline: none;
+  border-color: var(--fund-text-focus-border);
+}
+
+.fund-add-btn {
+  align-self: flex-start;
+  padding: 9px 14px;
+  background: var(--fund-add-bg);
+  border: 1px dashed var(--fund-add-border);
+  border-radius: var(--radius-sm);
+  color: var(--fund-add-text);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .fund-add-btn:hover {
+    border-color: var(--fund-add-hover-border);
+    color: var(--fund-add-hover-text);
+  }
+}
+
+@media (max-width: 640px) {
+  .fund-body {
+    margin-left: 6px;
+    padding-left: 8px;
+  }
+  .fund-toggle {
+    padding: 12px 10px;
+  }
+}
+
+/* ---------- Fenêtre de saisie (nom / confirmation) ---------- */
+.fund-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--fund-dialog-overlay) 72%, transparent);
+}
+
+.fund-dialog[hidden] {
+  display: none;
+}
+
+.fund-dialog-card {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: var(--fund-dialog-bg);
+  border: 1px solid var(--fund-dialog-border);
+  border-radius: 12px;
+}
+
+.fund-dialog-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--fund-dialog-title);
+}
+
+.fund-dialog-message {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fund-dialog-text);
+}
+
+.fund-dialog-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  background: var(--fund-input-bg);
+  border: 1px solid var(--fund-input-border);
+  border-radius: 8px;
+  color: var(--fund-input-text);
+  font-family: var(--sans);
+  font-size: 16px; /* 16px : évite le zoom automatique sur iPhone */
+}
+
+.fund-dialog-input:focus {
+  outline: none;
+  border-color: var(--fund-text-focus-border);
+}
+
+.fund-dialog-input[hidden],
+.fund-dialog-message[hidden],
+.fund-dialog-error[hidden] {
+  display: none;
+}
+
+.fund-dialog-error {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--fund-error-text);
+}
+
+.fund-dialog-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.fund-dialog-btn {
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.fund-dialog-btn--cancel {
+  background: transparent;
+  border: 1px solid var(--fund-cancel-border);
+  color: var(--fund-cancel-text);
+}
+
+.fund-dialog-btn--ok {
+  background: var(--fund-ok-bg);
+  border: 1px solid var(--fund-ok-border);
+  color: var(--fund-ok-text);
+}
+
+.fund-dialog-btn--ok.is-danger {
+  background: var(--fund-danger-bg);
+  border-color: var(--fund-danger-border);
+  color: var(--fund-danger-text);
+}
