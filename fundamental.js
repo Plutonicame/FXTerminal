@@ -184,6 +184,117 @@
   }
 
   /* =========================================================
+     Dictée vocale (même moteur que le micro du chat IA :
+     reconnaissance vocale du navigateur, en français).
+     Contrairement au chat, le texte s'écrit EN DIRECT dans la note,
+     à la position du curseur, pendant que tu parles.
+     Un clic sur le micro démarre, un second clic arrête.
+     ========================================================= */
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const ICON_MIC =
+    '<svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 0 0-7 0v5A3.5 3.5 0 0 0 12 15z"/><path d="M18 11.5a1 1 0 0 0-2 0 4 4 0 0 1-8 0 1 1 0 0 0-2 0 6 6 0 0 0 5 5.92V19h-1.5a1 1 0 0 0 0 2h5a1 1 0 0 0 0-2H13v-1.58a6 6 0 0 0 5-5.92z"/></svg>';
+  let dict = null; // { id, ta, btn, rec, before, after, applying }
+
+  function micButtonFor(id) {
+    return els.tree ? els.tree.querySelector('.fund-mic[data-id="' + id + '"]') : null;
+  }
+
+  function setMicState(btn, on) {
+    if (!btn) return;
+    btn.classList.toggle('is-listening', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.title = on ? 'Arrêter la dictée' : 'Dicter (écrit en parlant)';
+  }
+
+  // Écrit « avant + dictée + après » dans la note et déclenche la sauvegarde habituelle.
+  function applyDictation(text) {
+    if (!dict || !dict.ta) return;
+    const ta = dict.ta;
+    const needSpace = dict.before && !/\s$/.test(dict.before) && text;
+    const mid = (needSpace ? ' ' : '') + text;
+    const tail = dict.after && text && !/^\s/.test(dict.after) ? ' ' + dict.after : dict.after;
+    dict.applying = true;
+    ta.value = dict.before + mid + tail;
+    const caret = (dict.before + mid).length;
+    try { ta.setSelectionRange(caret, caret); } catch (e) { /* ignoré */ }
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    dict.applying = false;
+  }
+
+  function startDictation(ta, btn) {
+    if (!SpeechRec) {
+      setStatus('Reconnaissance vocale non supportée par ce navigateur');
+      return;
+    }
+    stopDictation();
+    const start = typeof ta.selectionStart === 'number' ? ta.selectionStart : ta.value.length;
+    const end = typeof ta.selectionEnd === 'number' ? ta.selectionEnd : start;
+    const rec = new SpeechRec();
+    rec.lang = 'fr-FR';
+    rec.continuous = true;
+    rec.interimResults = true;
+    dict = {
+      id: ta.dataset.id, ta, btn, rec,
+      before: ta.value.slice(0, start),
+      after: ta.value.slice(end),
+      applying: false,
+    };
+    const me = dict;
+
+    rec.onresult = (e) => {
+      // On reconstruit tout depuis le début de la session de reconnaissance :
+      // évite les doublons que certains navigateurs mobiles produisent.
+      let finalText = '';
+      let interim = '';
+      for (let i = 0; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t; else interim += t;
+      }
+      if (dict === me) applyDictation((finalText + interim).replace(/\s+/g, ' ').trim());
+    };
+    rec.onerror = (e) => {
+      console.warn('[FX-FUND] dictée :', e.error);
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        setStatus('Autorise le micro dans les réglages du site');
+        if (dict === me) stopDictation();
+      }
+    };
+    // Le navigateur coupe la reconnaissance après un silence : on fige ce qui
+    // a été écrit et on relance tant que l'utilisateur n'a pas arrêté.
+    rec.onend = () => {
+      if (dict !== me) return;
+      me.before = me.ta.value.slice(0, me.ta.selectionStart);
+      me.after = me.ta.value.slice(me.ta.selectionStart);
+      try { rec.start(); } catch (e) { stopDictation(); }
+    };
+
+    setMicState(btn, true);
+    setStatus('');
+    try { rec.start(); } catch (e) { stopDictation(); }
+  }
+
+  function stopDictation() {
+    if (!dict) return;
+    const d = dict;
+    dict = null;
+    setMicState(d.btn, false);
+    d.rec.onend = null;
+    try { d.rec.stop(); } catch (e) { /* ignoré */ }
+    if (d.ta) flushSave(d.id);
+  }
+
+  // Après un re-rendu de l'arbre, rattache la dictée en cours à la nouvelle zone de texte.
+  function rebindDictation() {
+    if (!dict) return;
+    const ta = textareaFor(dict.id);
+    const btn = micButtonFor(dict.id);
+    if (!ta || !btn) { stopDictation(); return; }
+    dict.ta = ta;
+    dict.btn = btn;
+    setMicState(btn, true);
+  }
+
+  /* =========================================================
      Rendu
      ========================================================= */
   function autosize(ta) {
@@ -239,6 +350,7 @@
       ta.placeholder = 'Écrire du texte...';
       ta.setAttribute('aria-label', 'Texte de ' + node.name);
       ta.addEventListener('input', () => {
+        if (dict && dict.ta === ta && !dict.applying) stopDictation(); // l'utilisateur tape : la dictée s'arrête
         autosize(ta);
         const n = nodes.get(node.id);
         if (!n) return;
@@ -246,8 +358,31 @@
         addBtn.hidden = !canAddChild(n);
         scheduleSave(node.id);
       });
-      ta.addEventListener('blur', () => flushSave(node.id));
-      body.appendChild(ta);
+      ta.addEventListener('blur', (ev) => {
+        const next = ev.relatedTarget;
+        if (dict && dict.ta === ta && !(next && next.classList && next.classList.contains('fund-mic'))) stopDictation();
+        flushSave(node.id);
+      });
+
+      const wrap = el('div', 'fund-text-wrap');
+      wrap.appendChild(ta);
+      if (SpeechRec) {
+        const mic = el('button', 'fund-mic');
+        mic.type = 'button';
+        mic.dataset.id = node.id;
+        mic.innerHTML = ICON_MIC;
+        mic.setAttribute('aria-label', 'Dicter dans ' + node.name);
+        setMicState(mic, !!(dict && dict.id === node.id));
+        // Garde le focus (et le curseur) dans la note quand on touche le micro.
+        mic.addEventListener('pointerdown', (ev) => ev.preventDefault());
+        mic.addEventListener('mousedown', (ev) => ev.preventDefault());
+        mic.addEventListener('click', () => {
+          if (dict && dict.ta === ta) stopDictation();
+          else { ta.focus({ preventScroll: true }); startDictation(ta, mic); }
+        });
+        wrap.appendChild(mic);
+      }
+      body.appendChild(wrap);
     }
 
     if (hasKids) {
@@ -332,6 +467,7 @@
     els.tree.replaceChildren(frag);
     els.tree.querySelectorAll('.fund-text').forEach(autosize);
     restoreFocus(focus);
+    rebindDictation();
   }
 
   function toggleNode(id) {
@@ -685,7 +821,7 @@
 
     // Le texte n'est mis à jour que si je ne suis pas en train de l'écrire.
     // (Supabase peut omettre "content" quand il n'a pas changé : on ignore alors.)
-    const protect = dirty.has(row.id) || isEditing(row.id);
+    const protect = dirty.has(row.id) || isEditing(row.id) || !!(dict && dict.id === row.id);
     if (!protect && row.content !== undefined && existing.content !== row.content) {
       existing.content = row.content;
       const ta = textareaFor(row.id);

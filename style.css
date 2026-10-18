@@ -2831,6 +2831,52 @@ button {
   resize: vertical;
 }
 
+.fund-text-wrap {
+  position: relative;
+}
+
+.fund-text-wrap .fund-text {
+  padding-right: 48px;
+  display: block;
+}
+
+.fund-mic {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: none;
+  border: none;
+  color: var(--fund-icon-btn-text);
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fund-mic svg {
+  width: 19px;
+  height: 19px;
+}
+
+.fund-mic:hover {
+  color: var(--fund-text-focus-border);
+}
+
+.fund-mic.is-listening {
+  color: var(--red);
+  animation: fund-mic-pulse 1s infinite;
+}
+
+@keyframes fund-mic-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 .fund-text::placeholder {
   color: var(--fund-text-placeholder);
 }
