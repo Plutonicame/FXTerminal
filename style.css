@@ -2568,7 +2568,6 @@ button {
   --fund-tab-text: var(--text);
   --fund-tab-hover-bg: #202020;
   --fund-chevron: var(--text);
-  --fund-line: #4a4a4a;
 
   /* Zone de texte */
   --fund-text-bg: var(--bg);
@@ -2811,7 +2810,6 @@ button {
   gap: 10px;
   margin: 8px 0 4px 12px;
   padding-left: 12px;
-  border-left: 2px solid var(--fund-line);
 }
 
 .fund-children {

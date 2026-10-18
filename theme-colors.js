@@ -172,8 +172,7 @@ const THEME_FIELDS = {
     { v: '--fund-tab-text', l: 'Nom', category: 'Onglets', section: "Ligne de l'onglet" },
     { v: '--fund-tab-hover-bg', l: 'Fond au survol', category: 'Onglets', section: "Ligne de l'onglet" },
 
-    { v: '--fund-chevron', l: 'Flèche à gauche', category: 'Onglets', section: 'Structure' },
-    { v: '--fund-line', l: 'Trait qui relie les onglets imbriqués', category: 'Onglets', section: 'Structure' },
+    { v: '--fund-chevron', l: 'Flèche à gauche', category: 'Onglets', section: 'Flèche' },
 
     { v: '--fund-text-bg', l: 'Fond', category: 'Onglets', section: 'Zone de texte' },
     { v: '--fund-text-border', l: 'Bordure', category: 'Onglets', section: 'Zone de texte' },

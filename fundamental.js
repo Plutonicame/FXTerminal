@@ -287,8 +287,14 @@
   }
 
   function toggleNode(id) {
-    if (openIds.has(id)) openIds.delete(id);
-    else openIds.add(id);
+    if (openIds.has(id)) {
+      // En refermant un onglet, tout ce qui était ouvert à l'intérieur se referme
+      // aussi : à la réouverture, il apparaît avec ses sous-onglets repliés.
+      openIds.delete(id);
+      descendantIds(id).forEach((d) => openIds.delete(d));
+    } else {
+      openIds.add(id);
+    }
     saveOpen();
     render();
   }
