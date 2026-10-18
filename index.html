@@ -345,6 +345,14 @@
     <p class="fund-dialog-message" id="fundDialogMessage" hidden></p>
     <input class="fund-dialog-input" id="fundDialogInput" type="text" maxlength="80" autocomplete="off" aria-label="Nom" hidden>
     <p class="fund-dialog-error" id="fundDialogError" hidden></p>
+    <button type="button" class="fund-dialog-custom-toggle" id="fundDialogCustomToggle" aria-expanded="false" aria-controls="fundDialogCustom" hidden>Personnaliser</button>
+    <div class="fund-dialog-custom" id="fundDialogCustom" hidden>
+      <div class="fund-dialog-preview" id="fundDialogPreview">Aperçu</div>
+      <div class="fund-dialog-color-row"><span>Fond</span><button type="button" class="fund-dialog-swatch" data-key="bg" aria-label="Couleur de fond"></button></div>
+      <div class="fund-dialog-color-row"><span>Bordure</span><button type="button" class="fund-dialog-swatch" data-key="border" aria-label="Couleur de la bordure"></button></div>
+      <div class="fund-dialog-color-row"><span>Texte</span><button type="button" class="fund-dialog-swatch" data-key="text" aria-label="Couleur du texte"></button></div>
+      <button type="button" class="fund-dialog-color-reset" id="fundDialogColorReset">Remettre les couleurs par défaut</button>
+    </div>
     <div class="fund-dialog-btns">
       <button type="button" class="fund-dialog-btn fund-dialog-btn--cancel" id="fundDialogCancel">Annuler</button>
       <button type="button" class="fund-dialog-btn fund-dialog-btn--ok" id="fundDialogOk">Valider</button>

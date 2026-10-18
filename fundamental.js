@@ -104,6 +104,48 @@
   }
 
   /* =========================================================
+     Couleurs propres à chaque groupe (fond, bordure, texte)
+     Stockées dans le THÈME du compte (ThemeColors), donc personnelles :
+     seul le contenu est partagé, jamais les couleurs.
+     ========================================================= */
+  const GC_KEYS = ['bg', 'border', 'text'];
+  const GC_DEFAULT_VAR = { bg: '--fund-group-bg', border: '--fund-group-border', text: '--fund-group-text' };
+
+  function gcVar(id, key) {
+    return '--fgc-' + id + '-' + key;
+  }
+
+  function getGroupColors(id) {
+    const T = window.ThemeColors;
+    const out = {};
+    GC_KEYS.forEach((k) => { out[k] = T && T.getVar ? T.getVar(gcVar(id, k)) : null; });
+    return out;
+  }
+
+  function sameColors(a, b) {
+    return GC_KEYS.every((k) => (a[k] || null) === (b[k] || null));
+  }
+
+  function saveGroupColors(id, colors) {
+    const T = window.ThemeColors;
+    if (!T || !T.setVars) return;
+    if (sameColors(getGroupColors(id), colors)) return;
+    const map = {};
+    GC_KEYS.forEach((k) => { map[gcVar(id, k)] = colors[k] || null; });
+    T.setVars(map);
+  }
+
+  function applyGroupColors(wrap, id) {
+    const c = getGroupColors(id);
+    if (c.bg) {
+      wrap.style.setProperty('--fund-g-bg', c.bg);
+      wrap.style.setProperty('--fund-g-hover-bg', c.bg);
+    }
+    if (c.border) wrap.style.setProperty('--fund-g-border', c.border);
+    if (c.text) wrap.style.setProperty('--fund-g-text', c.text);
+  }
+
+  /* =========================================================
      Arbre en mémoire
      ========================================================= */
   function childrenOf(parentId) {
@@ -176,33 +218,32 @@
   }
 
   // Règle : un onglet contient SOIT du texte, SOIT des sous-onglets.
-  //  - vide                -> les deux choix sont proposés (zone de texte + « Ajouter un onglet »)
-  //  - dès qu'il y a du texte      -> « Ajouter un onglet » disparaît
-  //  - dès qu'il y a un sous-onglet -> la zone de texte disparaît
-  // Un groupe, lui, ne contient que des onglets.
-  function buildBody(node, isGroup, depth) {
+  //  - vide                          -> zone de texte ET bouton « + » disponibles
+  //  - dès qu'il y a du texte        -> le bouton « + » de la ligne disparaît
+  //  - dès qu'il y a un sous-onglet  -> la zone de texte disparaît
+  // Un groupe, lui, ne contient que des onglets (« + » toujours visible).
+  function canAddChild(node) {
+    if (node.parent_id === null) return true;
+    return childrenOf(node.id).length > 0 || node.content.trim() === '';
+  }
+
+  function buildBody(node, isGroup, depth, addBtn) {
     const body = el('div', 'fund-body');
     const kids = childrenOf(node.id);
     const hasKids = kids.length > 0;
-    const showText = !isGroup && !hasKids;
 
-    const addBtn = el('button', 'fund-add-btn', '+ Ajouter un onglet');
-    addBtn.type = 'button';
-    addBtn.addEventListener('click', () => addNode(node.id));
-
-    if (showText) {
+    if (!isGroup && !hasKids) {
       const ta = el('textarea', 'fund-text');
       ta.dataset.id = node.id;
       ta.value = node.content;
       ta.placeholder = 'Écrire du texte...';
       ta.setAttribute('aria-label', 'Texte de ' + node.name);
-      addBtn.hidden = node.content.trim() !== '';
       ta.addEventListener('input', () => {
         autosize(ta);
         const n = nodes.get(node.id);
         if (!n) return;
         n.content = ta.value;
-        addBtn.hidden = ta.value.trim() !== '';
+        addBtn.hidden = !canAddChild(n);
         scheduleSave(node.id);
       });
       ta.addEventListener('blur', () => flushSave(node.id));
@@ -217,15 +258,14 @@
       body.appendChild(el('p', 'fund-empty', 'Aucun onglet pour le moment.'));
     }
 
-    body.appendChild(addBtn);
     return body;
   }
 
-  // Met à jour la visibilité de « Ajouter un onglet » quand le texte change à distance.
+  // Met à jour le bouton « + » de la ligne quand le texte change à distance.
   function syncAddButton(id) {
     const n = nodes.get(id);
-    const btn = els.tree && els.tree.querySelector('.fund-node[data-id="' + id + '"] > .fund-body > .fund-add-btn');
-    if (n && btn && textareaFor(id)) btn.hidden = n.content.trim() !== '';
+    const btn = els.tree && els.tree.querySelector('.fund-node[data-id="' + id + '"] > .fund-row .fund-icon-btn--add');
+    if (n && btn) btn.hidden = !canAddChild(n);
   }
 
   function buildNode(node, depth) {
@@ -250,20 +290,28 @@
     const actions = el('div', 'fund-actions');
     const renameBtn = el('button', 'fund-icon-btn fund-icon-btn--rename', '✎\uFE0E');
     renameBtn.type = 'button';
-    renameBtn.title = 'Renommer';
-    renameBtn.setAttribute('aria-label', 'Renommer ' + node.name);
+    renameBtn.title = isGroup ? 'Renommer / personnaliser' : 'Renommer';
+    renameBtn.setAttribute('aria-label', (isGroup ? 'Renommer ou personnaliser ' : 'Renommer ') + node.name);
     renameBtn.addEventListener('click', () => renameNode(node.id));
+    const addBtn = el('button', 'fund-icon-btn fund-icon-btn--add', '+');
+    addBtn.type = 'button';
+    addBtn.title = 'Ajouter un onglet';
+    addBtn.setAttribute('aria-label', 'Ajouter un onglet dans ' + node.name);
+    addBtn.hidden = !canAddChild(node);
+    addBtn.addEventListener('click', () => addNode(node.id));
     const deleteBtn = el('button', 'fund-icon-btn fund-icon-btn--delete', '✕');
     deleteBtn.type = 'button';
     deleteBtn.title = 'Supprimer';
     deleteBtn.setAttribute('aria-label', 'Supprimer ' + node.name);
     deleteBtn.addEventListener('click', () => deleteNode(node.id));
     actions.appendChild(renameBtn);
+    actions.appendChild(addBtn);
     actions.appendChild(deleteBtn);
     row.appendChild(actions);
 
     wrap.appendChild(row);
-    if (isOpen) wrap.appendChild(buildBody(node, isGroup, depth));
+    if (isGroup) applyGroupColors(wrap, node.id);
+    if (isOpen) wrap.appendChild(buildBody(node, isGroup, depth, addBtn));
     return wrap;
   }
 
@@ -305,7 +353,12 @@
   function openDialog(opts) {
     return new Promise((resolve) => {
       if (dialogState) finishDialog(null);
-      dialogState = { resolve, withInput: !!opts.withInput };
+      dialogState = {
+        resolve,
+        withInput: !!opts.withInput,
+        withColors: !!opts.withColors,
+        colors: opts.withColors ? Object.assign({ bg: null, border: null, text: null }, opts.colors) : null,
+      };
 
       els.dialogTitle.textContent = opts.title || '';
       els.dialogMessage.textContent = opts.message || '';
@@ -315,6 +368,14 @@
       els.dialogError.hidden = true;
       els.dialogOk.textContent = opts.okLabel || 'Valider';
       els.dialogOk.classList.toggle('is-danger', !!opts.danger);
+      els.customToggle.hidden = !opts.withColors;
+      els.custom.hidden = true;
+      els.customToggle.setAttribute('aria-expanded', 'false');
+      if (opts.withColors) {
+        refreshColorUI();
+        // Déjà personnalisé : on montre directement les couleurs actuelles.
+        if (GC_KEYS.some((k) => dialogState.colors[k])) setCustomOpen(true);
+      }
       els.dialog.hidden = false;
 
       window.setTimeout(() => {
@@ -346,14 +407,55 @@
         els.dialogInput.focus();
         return;
       }
-      finishDialog(value);
+      finishDialog(dialogState.withColors ? { name: value, colors: Object.assign({}, dialogState.colors) } : value);
     } else {
       finishDialog(true);
     }
   }
 
+  function setCustomOpen(open) {
+    els.custom.hidden = !open;
+    els.customToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) refreshColorUI();
+  }
+
+  function effectiveColor(key) {
+    if (dialogState && dialogState.colors && dialogState.colors[key]) return dialogState.colors[key];
+    const T = window.ThemeColors;
+    return T && T.getColor ? T.getColor(GC_DEFAULT_VAR[key]) : '#444444';
+  }
+
+  // Met à jour les carrés de couleur et l'aperçu du groupe.
+  function refreshColorUI() {
+    if (!dialogState || !dialogState.withColors) return;
+    els.swatches.forEach((btn) => { btn.style.background = effectiveColor(btn.dataset.key); });
+    els.preview.style.background = effectiveColor('bg');
+    els.preview.style.borderColor = effectiveColor('border');
+    els.preview.style.color = effectiveColor('text');
+    els.preview.textContent = els.dialogInput.value.trim() || 'Nom du groupe';
+  }
+
+  function pickGroupColor(key) {
+    const T = window.ThemeColors;
+    if (!dialogState || !T || !T.pickColor) return;
+    const labels = { bg: 'Fond du groupe', border: 'Bordure du groupe', text: 'Texte du groupe' };
+    T.pickColor(labels[key], effectiveColor(key), (hex) => {
+      if (!dialogState || !dialogState.colors) return;
+      dialogState.colors[key] = hex;
+      refreshColorUI();
+    });
+  }
+
   function askName(opts) {
     return openDialog({ title: opts.title, initial: opts.initial, okLabel: opts.okLabel, withInput: true });
+  }
+
+  // Fenêtre « groupe » : nom + couleurs (Personnaliser). Renvoie { name, colors } ou null.
+  function askGroup(opts) {
+    return openDialog({
+      title: opts.title, initial: opts.initial, okLabel: opts.okLabel,
+      withInput: true, withColors: true, colors: opts.colors,
+    });
   }
 
   function askConfirm(opts) {
@@ -365,11 +467,17 @@
      ========================================================= */
   async function addNode(parentId) {
     const isGroup = parentId === null;
-    const name = await askName({
-      title: isGroup ? 'Nouveau groupe' : 'Nouvel onglet',
-      okLabel: 'Créer',
-    });
-    if (!name) return;
+    let name;
+    let colors = null;
+    if (isGroup) {
+      const res = await askGroup({ title: 'Nouveau groupe', okLabel: 'Créer' });
+      if (!res) return;
+      name = res.name;
+      colors = res.colors;
+    } else {
+      name = await askName({ title: 'Nouvel onglet', okLabel: 'Créer' });
+      if (!name) return;
+    }
 
     const client = getClient();
     if (!client) return;
@@ -389,6 +497,7 @@
     }
 
     nodes.set(data.id, normalize(data));
+    if (isGroup && colors) saveGroupColors(data.id, colors);
     if (parentId) openIds.add(parentId);
     openIds.add(data.id);
     saveOpen();
@@ -399,22 +508,43 @@
   async function renameNode(id) {
     const node = nodes.get(id);
     if (!node) return;
-    const name = await askName({ title: 'Renommer', initial: node.name, okLabel: 'Enregistrer' });
-    if (!name || name === node.name) return;
+    const isGroup = node.parent_id === null;
 
-    const client = getClient();
-    if (!client) return;
-
-    spinnerOn();
-    const { error } = await client.from(TABLE).update({ name }).eq('id', id);
-    spinnerOff();
-
-    if (error) {
-      console.error('[FX-FUND] Erreur renommage :', error);
-      setStatus(friendlyError(error, 'Impossible de renommer'));
-      return;
+    let name;
+    let colors = null;
+    if (isGroup) {
+      const res = await askGroup({
+        title: 'Modifier le groupe',
+        initial: node.name,
+        okLabel: 'Enregistrer',
+        colors: getGroupColors(id),
+      });
+      if (!res) return;
+      name = res.name;
+      colors = res.colors;
+    } else {
+      name = await askName({ title: 'Renommer', initial: node.name, okLabel: 'Enregistrer' });
+      if (!name) return;
     }
-    node.name = name;
+
+    if (colors) saveGroupColors(id, colors); // personnel : thème du compte, pas la table partagée
+
+    if (name !== node.name) {
+      const client = getClient();
+      if (!client) return;
+
+      spinnerOn();
+      const { error } = await client.from(TABLE).update({ name }).eq('id', id);
+      spinnerOff();
+
+      if (error) {
+        console.error('[FX-FUND] Erreur renommage :', error);
+        setStatus(friendlyError(error, 'Impossible de renommer'));
+        render();
+        return;
+      }
+      node.name = name;
+    }
     setStatus('');
     render();
   }
@@ -447,6 +577,7 @@
       return;
     }
     removeLocal(id);
+    if (node.parent_id === null) saveGroupColors(id, { bg: null, border: null, text: null });
     setStatus('');
     render();
   }
@@ -621,6 +752,11 @@
     els.dialogError = document.getElementById('fundDialogError');
     els.dialogOk = document.getElementById('fundDialogOk');
     els.dialogCancel = document.getElementById('fundDialogCancel');
+    els.customToggle = document.getElementById('fundDialogCustomToggle');
+    els.custom = document.getElementById('fundDialogCustom');
+    els.preview = document.getElementById('fundDialogPreview');
+    els.swatches = Array.from(document.querySelectorAll('.fund-dialog-swatch'));
+    els.colorReset = document.getElementById('fundDialogColorReset');
     if (!els.tree || !els.dialog) return;
 
     els.addGroupBtn.addEventListener('click', () => addNode(null));
@@ -630,9 +766,24 @@
     els.dialog.addEventListener('click', (event) => {
       if (event.target === els.dialog) finishDialog(null);
     });
-    els.dialogInput.addEventListener('input', () => { els.dialogError.hidden = true; });
+    els.dialogInput.addEventListener('input', () => {
+      els.dialogError.hidden = true;
+      refreshColorUI();
+    });
+    els.customToggle.addEventListener('click', () => setCustomOpen(els.custom.hidden));
+    els.swatches.forEach((btn) => btn.addEventListener('click', () => pickGroupColor(btn.dataset.key)));
+    els.colorReset.addEventListener('click', () => {
+      if (!dialogState || !dialogState.colors) return;
+      dialogState.colors = { bg: null, border: null, text: null };
+      refreshColorUI();
+    });
+    // Le thème peut changer ailleurs (autre appareil du même compte, réinitialisation).
+    window.addEventListener('fx-theme-changed', () => render());
     document.addEventListener('keydown', (event) => {
       if (!dialogState) return;
+      // Le sélecteur de couleur gère lui-même sa fermeture.
+      const cp = document.getElementById('cpOverlay');
+      if (cp && cp.classList.contains('is-open')) return;
       if (event.key === 'Escape') {
         finishDialog(null);
       } else if (event.key === 'Enter' && event.target === els.dialogInput) {

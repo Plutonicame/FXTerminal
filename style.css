@@ -2584,12 +2584,6 @@ button {
   --fund-icon-btn-hover-text: var(--text);
   --fund-delete-hover: var(--red-light);
 
-  /* Bouton « + Ajouter un onglet » */
-  --fund-add-bg: transparent;
-  --fund-add-border: var(--border-dim);
-  --fund-add-text: var(--text-dim);
-  --fund-add-hover-border: var(--border);
-  --fund-add-hover-text: var(--text);
 
   /* Fenêtre de saisie */
   --fund-dialog-overlay: #000000;
@@ -2689,10 +2683,15 @@ button {
 }
 
 .fund-node--group > .fund-row {
-  background: var(--fund-group-bg);
-  border-color: var(--fund-group-border);
-  color: var(--fund-group-text);
+  /* --fund-g-* : couleurs propres à CE groupe (posées en ligne par fundamental.js) */
+  background: var(--fund-g-bg, var(--fund-group-bg));
+  border-color: var(--fund-g-border, var(--fund-group-border));
+  color: var(--fund-g-text, var(--fund-group-text));
   border-radius: 14px;
+}
+
+.fund-node--group > .fund-row .fund-chevron {
+  color: var(--fund-g-text, var(--fund-chevron));
 }
 
 .fund-node--tab > .fund-row {
@@ -2750,7 +2749,6 @@ button {
 
 .fund-toggle:focus-visible,
 .fund-icon-btn:focus-visible,
-.fund-add-btn:focus-visible,
 .fund-primary-btn:focus-visible,
 .fund-dialog-btn:focus-visible {
   outline: 2px solid var(--fund-text-focus-border);
@@ -2759,7 +2757,7 @@ button {
 
 @media (hover: hover) {
   .fund-node--group > .fund-row:hover {
-    background: var(--fund-group-hover-bg);
+    background: var(--fund-g-hover-bg, var(--fund-group-hover-bg));
   }
   .fund-node--tab > .fund-row:hover {
     background: var(--fund-tab-hover-bg);
@@ -2842,27 +2840,6 @@ button {
   border-color: var(--fund-text-focus-border);
 }
 
-.fund-add-btn {
-  align-self: flex-start;
-  padding: 9px 14px;
-  background: var(--fund-add-bg);
-  border: 1px dashed var(--fund-add-border);
-  border-radius: var(--radius-sm);
-  color: var(--fund-add-text);
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-@media (hover: hover) {
-  .fund-add-btn:hover {
-    border-color: var(--fund-add-hover-border);
-    color: var(--fund-add-hover-text);
-  }
-}
-
 @media (max-width: 640px) {
   .fund-body {
     margin-left: 6px;
@@ -2871,13 +2848,21 @@ button {
   .fund-toggle {
     padding: 12px 10px;
   }
+  .fund-icon-btn {
+    width: 32px;
+    height: 32px;
+  }
+  .fund-actions {
+    gap: 4px;
+    padding-right: 8px;
+  }
 }
 
 /* ---------- Fenêtre de saisie (nom / confirmation) ---------- */
 .fund-dialog {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 300; /* sous le sélecteur de couleur (400), qui s'ouvre par-dessus */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2982,6 +2967,84 @@ button {
   color: var(--fund-danger-text);
 }
 
-.fund-add-btn[hidden] {
+.fund-icon-btn--add {
+  font-size: 18px;
+}
+
+.fund-icon-btn[hidden] {
   display: none;
+}
+
+/* ---------- Personnalisation des couleurs d'un groupe (dans la fenêtre) ---------- */
+.fund-dialog-custom-toggle {
+  align-self: flex-start;
+  padding: 7px 12px;
+  background: transparent;
+  border: 1px solid var(--fund-input-border);
+  border-radius: var(--radius-sm);
+  color: var(--fund-dialog-text);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.fund-dialog-custom-toggle[aria-expanded="true"] {
+  color: var(--fund-dialog-title);
+  border-color: var(--fund-dialog-border);
+}
+
+.fund-dialog-custom-toggle[hidden],
+.fund-dialog-custom[hidden] {
+  display: none;
+}
+
+.fund-dialog-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fund-dialog-preview {
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.fund-dialog-color-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: var(--fund-dialog-text);
+}
+
+.fund-dialog-swatch {
+  width: 44px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--fund-dialog-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.fund-dialog-color-reset {
+  align-self: flex-start;
+  padding: 4px 0;
+  background: transparent;
+  border: 0;
+  color: var(--fund-dialog-text);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
 }

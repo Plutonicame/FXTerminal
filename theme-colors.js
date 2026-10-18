@@ -180,18 +180,13 @@ const THEME_FIELDS = {
     { v: '--fund-text-placeholder', l: "Texte d'invite (« Écrire du texte... »)", category: 'Onglets', section: 'Zone de texte' },
     { v: '--fund-text-focus-border', l: 'Bordure pendant la saisie', category: 'Onglets', section: 'Zone de texte' },
 
-    { v: '--fund-icon-btn-bg', l: 'Fond', category: 'Boutons', section: 'Renommer et supprimer (✎ ✕)' },
-    { v: '--fund-icon-btn-border', l: 'Bordure', category: 'Boutons', section: 'Renommer et supprimer (✎ ✕)' },
-    { v: '--fund-icon-btn-text', l: 'Icône', category: 'Boutons', section: 'Renommer et supprimer (✎ ✕)' },
-    { v: '--fund-icon-btn-hover-border', l: 'Bordure au survol', category: 'Boutons', section: 'Renommer et supprimer (✎ ✕)' },
-    { v: '--fund-icon-btn-hover-text', l: 'Icône au survol', category: 'Boutons', section: 'Renommer et supprimer (✎ ✕)' },
-    { v: '--fund-delete-hover', l: 'Croix de suppression au survol', category: 'Boutons', section: 'Renommer et supprimer (✎ ✕)' },
+    { v: '--fund-icon-btn-bg', l: 'Fond', category: 'Boutons', section: 'Boutons ✎  +  ✕ (renommer, ajouter, supprimer)' },
+    { v: '--fund-icon-btn-border', l: 'Bordure', category: 'Boutons', section: 'Boutons ✎  +  ✕ (renommer, ajouter, supprimer)' },
+    { v: '--fund-icon-btn-text', l: 'Icône', category: 'Boutons', section: 'Boutons ✎  +  ✕ (renommer, ajouter, supprimer)' },
+    { v: '--fund-icon-btn-hover-border', l: 'Bordure au survol', category: 'Boutons', section: 'Boutons ✎  +  ✕ (renommer, ajouter, supprimer)' },
+    { v: '--fund-icon-btn-hover-text', l: 'Icône au survol', category: 'Boutons', section: 'Boutons ✎  +  ✕ (renommer, ajouter, supprimer)' },
+    { v: '--fund-delete-hover', l: 'Croix de suppression au survol', category: 'Boutons', section: 'Boutons ✎  +  ✕ (renommer, ajouter, supprimer)' },
 
-    { v: '--fund-add-bg', l: 'Fond', category: 'Boutons', section: 'Bouton « + Ajouter un onglet »' },
-    { v: '--fund-add-border', l: 'Bordure', category: 'Boutons', section: 'Bouton « + Ajouter un onglet »' },
-    { v: '--fund-add-text', l: 'Texte', category: 'Boutons', section: 'Bouton « + Ajouter un onglet »' },
-    { v: '--fund-add-hover-border', l: 'Bordure au survol', category: 'Boutons', section: 'Bouton « + Ajouter un onglet »' },
-    { v: '--fund-add-hover-text', l: 'Texte au survol', category: 'Boutons', section: 'Bouton « + Ajouter un onglet »' },
 
     { v: '--fund-dialog-overlay', l: 'Voile derrière', category: 'Fenêtre de saisie', section: 'Fenêtre' },
     { v: '--fund-dialog-bg', l: 'Fond', category: 'Fenêtre de saisie', section: 'Fenêtre' },
@@ -772,6 +767,7 @@ async function pullCloudTheme() {
     previewThemeVars();
     try { localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(themeVars)); } catch (e) {}
     renderAllThemeFields();
+    window.dispatchEvent(new Event('fx-theme-changed'));
     console.log('🔵 [FX-THEME]', 'Paramètres récupérés depuis le cloud pour ce compte.');
   }
 }
@@ -810,6 +806,7 @@ function subscribeCloudTheme() {
           previewThemeVars();
           try { localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(themeVars)); } catch (e) {}
           renderAllThemeFields();
+          window.dispatchEvent(new Event('fx-theme-changed'));
           console.log('🔵 [FX-THEME]', 'Thème mis à jour en direct depuis un autre appareil.');
         }
       }
@@ -850,11 +847,44 @@ function applyThemeVars() {
 }
 
 function resetThemeVars() {
-  themeVars = {};
+  // Les couleurs choisies pour chaque groupe d'« Analyse fondamentale »
+  // (clés "--fgc-...") ne sont pas réglables dans ce panneau : on les garde.
+  const kept = {};
+  Object.keys(themeVars).forEach((k) => {
+    if (k.startsWith('--fgc-')) kept[k] = themeVars[k];
+  });
+  themeVars = kept;
   saveThemeVars();
   document.documentElement.removeAttribute('style');
+  Object.entries(kept).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
   renderAllThemeFields();
   pushCloudTheme();
+  window.dispatchEvent(new Event('fx-theme-changed'));
+}
+
+/* Petite API pour les autres fichiers (ex. fundamental.js : couleur propre à
+   chaque groupe). Les valeurs sont enregistrées dans le thème du compte,
+   donc personnelles et synchronisées entre SES appareils, jamais partagées. */
+function getThemeVar(name) {
+  return themeVars[name] || null;
+}
+
+function setThemeVars(map) {
+  let changed = false;
+  Object.entries(map).forEach(([name, value]) => {
+    if (value === null || value === undefined) {
+      if (name in themeVars) {
+        delete themeVars[name];
+        document.documentElement.style.removeProperty(name);
+        changed = true;
+      }
+    } else if (themeVars[name] !== value) {
+      themeVars[name] = value;
+      document.documentElement.style.setProperty(name, value);
+      changed = true;
+    }
+  });
+  if (changed) applyThemeVars();
 }
 
 /* =========================================================
@@ -872,6 +902,10 @@ window.ThemeColors = {
   init: initThemeColors,
   apply: applyThemeVars,
   reset: resetThemeVars,
+  getVar: getThemeVar,
+  setVars: setThemeVars,
+  getColor: currentValueFor,
+  pickColor: openColorPicker,
 };
 
 document.addEventListener('DOMContentLoaded', () => {
