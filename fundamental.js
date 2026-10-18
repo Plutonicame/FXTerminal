@@ -175,28 +175,41 @@
     ta.scrollTop = state.scroll;
   }
 
+  // Règle : un onglet contient SOIT du texte, SOIT des sous-onglets.
+  //  - vide                -> les deux choix sont proposés (zone de texte + « Ajouter un onglet »)
+  //  - dès qu'il y a du texte      -> « Ajouter un onglet » disparaît
+  //  - dès qu'il y a un sous-onglet -> la zone de texte disparaît
+  // Un groupe, lui, ne contient que des onglets.
   function buildBody(node, isGroup, depth) {
     const body = el('div', 'fund-body');
+    const kids = childrenOf(node.id);
+    const hasKids = kids.length > 0;
+    const showText = !isGroup && !hasKids;
 
-    if (!isGroup) {
+    const addBtn = el('button', 'fund-add-btn', '+ Ajouter un onglet');
+    addBtn.type = 'button';
+    addBtn.addEventListener('click', () => addNode(node.id));
+
+    if (showText) {
       const ta = el('textarea', 'fund-text');
       ta.dataset.id = node.id;
       ta.value = node.content;
       ta.placeholder = 'Écrire du texte...';
       ta.setAttribute('aria-label', 'Texte de ' + node.name);
+      addBtn.hidden = node.content.trim() !== '';
       ta.addEventListener('input', () => {
         autosize(ta);
         const n = nodes.get(node.id);
         if (!n) return;
         n.content = ta.value;
+        addBtn.hidden = ta.value.trim() !== '';
         scheduleSave(node.id);
       });
       ta.addEventListener('blur', () => flushSave(node.id));
       body.appendChild(ta);
     }
 
-    const kids = childrenOf(node.id);
-    if (kids.length) {
+    if (hasKids) {
       const list = el('div', 'fund-children');
       kids.forEach((kid) => list.appendChild(buildNode(kid, depth + 1)));
       body.appendChild(list);
@@ -204,12 +217,15 @@
       body.appendChild(el('p', 'fund-empty', 'Aucun onglet pour le moment.'));
     }
 
-    const addBtn = el('button', 'fund-add-btn', '+ Ajouter un onglet');
-    addBtn.type = 'button';
-    addBtn.addEventListener('click', () => addNode(node.id));
     body.appendChild(addBtn);
-
     return body;
+  }
+
+  // Met à jour la visibilité de « Ajouter un onglet » quand le texte change à distance.
+  function syncAddButton(id) {
+    const n = nodes.get(id);
+    const btn = els.tree && els.tree.querySelector('.fund-node[data-id="' + id + '"] > .fund-body > .fund-add-btn');
+    if (n && btn && textareaFor(id)) btn.hidden = n.content.trim() !== '';
   }
 
   function buildNode(node, depth) {
@@ -539,6 +555,7 @@
       if (ta) {
         ta.value = row.content;
         autosize(ta);
+        syncAddButton(row.id);
       }
     }
 

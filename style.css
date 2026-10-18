@@ -2983,3 +2983,7 @@ button {
   border-color: var(--fund-danger-border);
   color: var(--fund-danger-text);
 }
+
+.fund-add-btn[hidden] {
+  display: none;
+}
