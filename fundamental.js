@@ -830,6 +830,116 @@
     moveRelative(id, sibs[j].id, dir < 0 ? 'before' : 'after');
   }
 
+  /* =========================================================
+     Copier / coller
+     Copier = le nœud + son contenu DIRECT uniquement :
+       - son texte, ou ses sous-onglets du premier niveau (avec leur texte) ;
+       - les sous-onglets des sous-onglets ne sont PAS copiés.
+     (Copier l'onglet 1 prend l'onglet 1 + l'onglet 2 ; l'onglet 3, qui est
+     dans l'onglet 2, reste de côté. Copier l'onglet 2 prend l'onglet 2 + 3.)
+     Au collage, seul l'élément principal peut être renommé.
+     ========================================================= */
+  let clip = null; // { kind: 'group' | 'tab', name, content, colors, kids: [{ name, content }] }
+
+  function copyNode(id) {
+    const n = nodes.get(id);
+    if (!n) return;
+    const kids = childrenOf(id);
+    clip = {
+      kind: n.parent_id === null ? 'group' : 'tab',
+      name: n.name,
+      content: kids.length ? '' : n.content,
+      colors: n.parent_id === null ? getGroupColors(id) : null,
+      kids: kids.map((k) => ({ name: k.name, content: childrenOf(k.id).length ? '' : k.content })),
+    };
+    setStatus('');
+  }
+
+  // where : 'inside' (dans la cible, à la fin) | 'after' (juste après la cible, même niveau)
+  function canPaste(targetId, where) {
+    const t = nodes.get(targetId);
+    if (!clip || !t) return false;
+    if (clip.kind === 'group') return where === 'after' && t.parent_id === null;
+    if (where === 'inside') return canAddChild(t);
+    return t.parent_id !== null;
+  }
+
+  async function pasteClip(targetId, where) {
+    const c = clip;
+    if (!c || !canPaste(targetId, where)) return;
+
+    let name;
+    let colors = null;
+    if (c.kind === 'group') {
+      const res = await askGroup({ title: 'Coller le groupe', initial: c.name, okLabel: 'Coller', colors: c.colors });
+      if (!res) return;
+      name = res.name;
+      colors = res.colors;
+    } else {
+      name = await askName({ title: 'Coller l\'onglet', initial: c.name, okLabel: 'Coller' });
+      if (!name) return;
+    }
+
+    // L'arbre a pu changer pendant que la fenêtre était ouverte (temps réel).
+    const target = nodes.get(targetId);
+    if (!target || !canPaste(targetId, where)) {
+      setStatus('Impossible de coller ici : l\'élément a changé entre-temps.');
+      return;
+    }
+    const client = getClient();
+    if (!client) return;
+
+    const parentId = where === 'inside' ? targetId : target.parent_id;
+    const columns = hasOrder ? COLS : COLS_LEGACY;
+    const rootRow = { parent_id: parentId, name, content: c.content };
+    if (hasOrder) rootRow.sort_order = childrenOf(parentId).reduce((m, n) => Math.max(m, n.sort_order || 0), 0) + 1;
+
+    spinnerOn();
+    const first = await client.from(TABLE).insert(rootRow).select(columns).single();
+    if (first.error) {
+      spinnerOff();
+      console.error('[FX-FUND] Erreur collage :', first.error);
+      setStatus(friendlyError(first.error, 'Impossible de coller'));
+      return;
+    }
+    const root = first.data;
+    nodes.set(root.id, normalize(root));
+
+    let failure = null;
+    const rows = c.kids.map((k, i) => {
+      const r = { parent_id: root.id, name: k.name, content: k.content };
+      if (hasOrder) r.sort_order = i + 1;
+      return r;
+    });
+    if (rows.length && hasOrder) {
+      const res = await client.from(TABLE).insert(rows).select(columns);
+      if (res.error) failure = res.error;
+      else res.data.forEach((d) => nodes.set(d.id, normalize(d)));
+    } else {
+      // Sans colonne d'ordre, l'ordre vient de la date de création : on insère un par un.
+      for (const r of rows) {
+        const res = await client.from(TABLE).insert(r).select(columns).single();
+        if (res.error) { failure = res.error; break; }
+        nodes.set(res.data.id, normalize(res.data));
+      }
+    }
+    spinnerOff();
+
+    if (colors) saveGroupColors(root.id, colors);
+    if (parentId) openIds.add(parentId);
+    openIds.add(root.id);
+    saveOpen();
+    if (failure) {
+      console.error('[FX-FUND] Erreur collage (contenu) :', failure);
+      setStatus(friendlyError(failure, 'La copie est incomplète'));
+    } else {
+      setStatus('');
+    }
+    render();
+
+    if (where === 'after' && hasOrder) await moveRelative(root.id, targetId, 'after');
+  }
+
   /* ---------- Glisser-déposer à la souris ---------- */
   let drag = null; // { id, startX, startY, active, ghost, target, scrollEl, timer, lastX, lastY, pendingRender }
   let suppressClick = false;
@@ -1081,6 +1191,10 @@
       { label: isGroup ? 'Modifier / personnaliser…' : 'Renommer…', onClick: () => renameNode(id) },
       { label: 'Ajouter un onglet…', disabled: !canAddChild(node), onClick: () => addNode(id) },
       { sep: true },
+      { label: 'Copier', onClick: () => copyNode(id) },
+      { label: 'Coller à l\'intérieur…', disabled: !canPaste(id, 'inside'), onClick: () => pasteClip(id, 'inside') },
+      { label: 'Coller après…', disabled: !canPaste(id, 'after'), onClick: () => pasteClip(id, 'after') },
+      { sep: true },
       { label: 'Monter', disabled: idx <= 0, onClick: () => shiftNode(id, -1) },
       { label: 'Descendre', disabled: idx < 0 || idx >= sibs.length - 1, onClick: () => shiftNode(id, 1) },
       { sep: true },
@@ -1202,6 +1316,7 @@
   function stop() {
     if (!userId) return;
     userId = null;
+    clip = null;
     unsubscribe();
     nodes = new Map();
     dirty.clear();
