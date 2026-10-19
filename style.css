@@ -2748,7 +2748,6 @@ button {
 }
 
 .fund-toggle:focus-visible,
-.fund-icon-btn:focus-visible,
 .fund-primary-btn:focus-visible,
 .fund-dialog-btn:focus-visible {
   outline: 2px solid var(--fund-text-focus-border);
@@ -2767,38 +2766,92 @@ button {
   }
 }
 
-/* Boutons renommer / supprimer */
-.fund-actions {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 10px 0 0;
+/* Glisser-déposer : lignes non sélectionnables, repère de dépôt, fantôme */
+.fund-row {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.fund-icon-btn {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--fund-icon-btn-bg);
-  border: 1px solid var(--fund-icon-btn-border);
-  border-radius: var(--radius-sm);
-  color: var(--fund-icon-btn-text);
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
+body.fund-dragging,
+body.fund-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
-@media (hover: hover) {
-  .fund-icon-btn:hover {
-    border-color: var(--fund-icon-btn-hover-border);
-    color: var(--fund-icon-btn-hover-text);
-  }
-  .fund-icon-btn--delete:hover {
-    color: var(--fund-delete-hover);
-  }
+.fund-node.is-dragging {
+  opacity: 0.35;
+}
+
+.fund-drag-ghost {
+  position: fixed;
+  z-index: 500;
+  margin: 0;
+  pointer-events: none;
+  opacity: 0.92;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+.fund-node.fund-drop-before {
+  box-shadow: 0 -5px 0 0 var(--fund-text-focus-border);
+}
+
+.fund-node.fund-drop-after {
+  box-shadow: 0 5px 0 0 var(--fund-text-focus-border);
+}
+
+.fund-node > .fund-row.fund-drop-inside {
+  outline: 2px solid var(--fund-text-focus-border);
+  outline-offset: -2px;
+}
+
+/* Menu clic droit (style menu contextuel du bureau) */
+.fund-ctx {
+  position: fixed;
+  z-index: 450;
+  min-width: 220px;
+  padding: 4px;
+  background: var(--fund-dialog-bg);
+  border: 1px solid var(--fund-dialog-border);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  font-family: var(--sans);
+  font-size: 13px;
+  outline: none;
+}
+
+.fund-ctx-item {
+  display: block;
+  width: 100%;
+  padding: 7px 28px 7px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: var(--fund-dialog-title);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.fund-ctx-item:hover:not(:disabled),
+.fund-ctx-item:focus-visible {
+  background: color-mix(in srgb, var(--fund-dialog-title) 16%, transparent);
+  outline: none;
+}
+
+.fund-ctx-item:disabled {
+  opacity: 0.4;
+}
+
+.fund-ctx-item.is-danger {
+  color: var(--fund-delete-hover);
+}
+
+.fund-ctx-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--fund-dialog-border);
 }
 
 /* Contenu d'un groupe / onglet ouvert */
@@ -2893,14 +2946,6 @@ button {
   }
   .fund-toggle {
     padding: 12px 10px;
-  }
-  .fund-icon-btn {
-    width: 32px;
-    height: 32px;
-  }
-  .fund-actions {
-    gap: 4px;
-    padding-right: 8px;
   }
 }
 
@@ -3011,14 +3056,6 @@ button {
   background: var(--fund-danger-bg);
   border-color: var(--fund-danger-border);
   color: var(--fund-danger-text);
-}
-
-.fund-icon-btn--add {
-  font-size: 18px;
-}
-
-.fund-icon-btn[hidden] {
-  display: none;
 }
 
 /* ---------- Personnalisation des couleurs d'un groupe (dans la fenêtre) ---------- */

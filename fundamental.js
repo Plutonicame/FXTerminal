@@ -20,6 +20,10 @@
  *   elles viennent du thème de chaque compte (Paramètres > Thème).
  * - Seul l'état « ouvert / fermé » des flèches est mémorisé, en local,
  *   sur chaque appareil (ce n'est pas du contenu partagé).
+ * - Les actions (renommer, ajouter, monter/descendre, supprimer) sont dans
+ *   un menu clic droit (appui long sur mobile). Groupes et onglets se
+ *   déplacent à la souris (glisser-déposer) ; l'ordre est partagé et stocké
+ *   dans la colonne "sort_order" (voir supabase-fundamental-order.sql).
  */
 (function () {
   const TABLE = 'fundamental_nodes';
@@ -27,7 +31,11 @@
   const SAVE_DELAY_MS = 800;
   const NAME_MAX = 80;
 
-  let nodes = new Map(); // id -> { id, parent_id, name, content, created_at }
+  const COLS = 'id,parent_id,name,content,created_at,sort_order';
+  const COLS_LEGACY = 'id,parent_id,name,content,created_at';
+  let hasOrder = true; // passe à false si la colonne sort_order n'existe pas encore
+
+  let nodes = new Map(); // id -> { id, parent_id, name, content, created_at, sort_order }
   let openIds = loadOpen();
   let userId = null;
   let channel = null;
@@ -86,6 +94,9 @@
   function friendlyError(error, action) {
     const msg = (error && error.message) || '';
     const code = (error && error.code) || '';
+    if (/sort_order/.test(msg) || code === '42703' || code === 'PGRST204') {
+      return 'Colonne d\'ordre absente : exécute supabase-fundamental-order.sql dans le SQL Editor de Supabase.';
+    }
     if (code === '42P01' || code === 'PGRST205' || /does not exist|schema cache/i.test(msg)) {
       return 'La table "fundamental_nodes" n\'existe pas encore dans Supabase : ' +
         'exécute supabase-fundamental.sql dans le SQL Editor.';
@@ -100,6 +111,7 @@
       name: row.name,
       content: row.content || '',
       created_at: row.created_at || '',
+      sort_order: row.sort_order === undefined ? null : row.sort_order,
     };
   }
 
@@ -154,6 +166,9 @@
       if (n.parent_id === parentId) list.push(n);
     });
     list.sort((a, b) => {
+      const pa = a.sort_order == null ? Infinity : a.sort_order;
+      const pb = b.sort_order == null ? Infinity : b.sort_order;
+      if (pa !== pb) return pa < pb ? -1 : 1;
       if (a.created_at !== b.created_at) return a.created_at < b.created_at ? -1 : 1;
       return a.id < b.id ? -1 : 1;
     });
@@ -338,7 +353,7 @@
     return childrenOf(node.id).length > 0 || node.content.trim() === '';
   }
 
-  function buildBody(node, isGroup, depth, addBtn) {
+  function buildBody(node, isGroup, depth) {
     const body = el('div', 'fund-body');
     const kids = childrenOf(node.id);
     const hasKids = kids.length > 0;
@@ -355,7 +370,6 @@
         const n = nodes.get(node.id);
         if (!n) return;
         n.content = ta.value;
-        addBtn.hidden = !canAddChild(n);
         scheduleSave(node.id);
       });
       ta.addEventListener('blur', (ev) => {
@@ -396,13 +410,6 @@
     return body;
   }
 
-  // Met à jour le bouton « + » de la ligne quand le texte change à distance.
-  function syncAddButton(id) {
-    const n = nodes.get(id);
-    const btn = els.tree && els.tree.querySelector('.fund-node[data-id="' + id + '"] > .fund-row .fund-icon-btn--add');
-    if (n && btn) btn.hidden = !canAddChild(n);
-  }
-
   function buildNode(node, depth) {
     const isGroup = depth === 0;
     const isOpen = openIds.has(node.id);
@@ -422,36 +429,15 @@
     toggle.addEventListener('click', () => toggleNode(node.id));
     row.appendChild(toggle);
 
-    const actions = el('div', 'fund-actions');
-    const renameBtn = el('button', 'fund-icon-btn fund-icon-btn--rename', '✎\uFE0E');
-    renameBtn.type = 'button';
-    renameBtn.title = isGroup ? 'Renommer / personnaliser' : 'Renommer';
-    renameBtn.setAttribute('aria-label', (isGroup ? 'Renommer ou personnaliser ' : 'Renommer ') + node.name);
-    renameBtn.addEventListener('click', () => renameNode(node.id));
-    const addBtn = el('button', 'fund-icon-btn fund-icon-btn--add', '+');
-    addBtn.type = 'button';
-    addBtn.title = 'Ajouter un onglet';
-    addBtn.setAttribute('aria-label', 'Ajouter un onglet dans ' + node.name);
-    addBtn.hidden = !canAddChild(node);
-    addBtn.addEventListener('click', () => addNode(node.id));
-    const deleteBtn = el('button', 'fund-icon-btn fund-icon-btn--delete', '✕');
-    deleteBtn.type = 'button';
-    deleteBtn.title = 'Supprimer';
-    deleteBtn.setAttribute('aria-label', 'Supprimer ' + node.name);
-    deleteBtn.addEventListener('click', () => deleteNode(node.id));
-    actions.appendChild(renameBtn);
-    actions.appendChild(addBtn);
-    actions.appendChild(deleteBtn);
-    row.appendChild(actions);
-
     wrap.appendChild(row);
     if (isGroup) applyGroupColors(wrap, node.id);
-    if (isOpen) wrap.appendChild(buildBody(node, isGroup, depth, addBtn));
+    if (isOpen) wrap.appendChild(buildBody(node, isGroup, depth));
     return wrap;
   }
 
   function render() {
     if (!els.tree) return;
+    if (drag && drag.active) { drag.pendingRender = true; return; }
     const focus = captureFocus();
     const frag = document.createDocumentFragment();
     const groups = childrenOf(null);
@@ -619,10 +605,14 @@
     if (!client) return;
 
     spinnerOn();
+    const payload = { parent_id: parentId, name };
+    if (hasOrder) {
+      payload.sort_order = childrenOf(parentId).reduce((m, n) => Math.max(m, n.sort_order || 0), 0) + 1;
+    }
     const { data, error } = await client
       .from(TABLE)
-      .insert({ parent_id: parentId, name })
-      .select('id,parent_id,name,content,created_at')
+      .insert(payload)
+      .select(hasOrder ? COLS : COLS_LEGACY)
       .single();
     spinnerOff();
 
@@ -755,6 +745,350 @@
   }
 
   /* =========================================================
+     Déplacement (ordre + changement de parent)
+     ========================================================= */
+  // Où un nœud peut-il aller ?
+  //  - un groupe reste à la racine (on change seulement son ordre) ;
+  //  - un onglet va dans un groupe ou dans un autre onglet qui n'a pas de texte,
+  //    jamais dans lui-même ni dans un de ses sous-onglets.
+  function canDropAs(node, newParentId) {
+    if (node.parent_id === null) return newParentId === null;
+    if (newParentId === null || newParentId === node.id) return false;
+    const target = nodes.get(newParentId);
+    if (!target) return false;
+    if (descendantIds(node.id).includes(newParentId)) return false;
+    return canAddChild(target);
+  }
+
+  async function moveNode(id, newParentId, index) {
+    const node = nodes.get(id);
+    if (!node || !canDropAs(node, newParentId)) return;
+    if (!hasOrder) {
+      setStatus('Pour déplacer, exécute d\'abord supabase-fundamental-order.sql dans le SQL Editor de Supabase.');
+      return;
+    }
+    const client = getClient();
+    if (!client) return;
+
+    const sibs = childrenOf(newParentId).filter((n) => n.id !== id);
+    sibs.splice(Math.max(0, Math.min(index, sibs.length)), 0, node);
+
+    const updates = [];
+    sibs.forEach((n, i) => {
+      const pos = i + 1;
+      const parentChanged = n.id === id && n.parent_id !== newParentId;
+      if (n.sort_order !== pos || parentChanged) updates.push({ id: n.id, pos, parentChanged });
+    });
+    if (!updates.length) return;
+
+    // Affichage immédiat, puis envoi à Supabase (partagé en direct).
+    updates.forEach((u) => {
+      const n = nodes.get(u.id);
+      n.sort_order = u.pos;
+      if (u.parentChanged) n.parent_id = newParentId;
+    });
+    if (newParentId) openIds.add(newParentId);
+    saveOpen();
+    setStatus('');
+    render();
+
+    spinnerOn();
+    const results = await Promise.all(updates.map((u) => {
+      const patch = { sort_order: u.pos };
+      if (u.parentChanged) patch.parent_id = newParentId;
+      return client.from(TABLE).update(patch).eq('id', u.id);
+    }));
+    spinnerOff();
+
+    const failed = results.find((r) => r.error);
+    if (failed) {
+      console.error('[FX-FUND] Erreur déplacement :', failed.error);
+      setStatus(friendlyError(failed.error, 'Impossible de déplacer'));
+      load();
+    }
+  }
+
+  // where : 'before' | 'after' (frère de la cible) | 'inside' (dans la cible, à la fin)
+  function moveRelative(id, targetId, where) {
+    const t = nodes.get(targetId);
+    if (!t) return;
+    if (where === 'inside') {
+      return moveNode(id, targetId, childrenOf(targetId).filter((n) => n.id !== id).length);
+    }
+    const sibs = childrenOf(t.parent_id).filter((n) => n.id !== id);
+    const i = sibs.findIndex((n) => n.id === targetId);
+    if (i < 0) return;
+    return moveNode(id, t.parent_id, where === 'before' ? i : i + 1);
+  }
+
+  function shiftNode(id, dir) {
+    const n = nodes.get(id);
+    if (!n) return;
+    const sibs = childrenOf(n.parent_id);
+    const j = sibs.findIndex((x) => x.id === id) + dir;
+    if (j < 0 || j >= sibs.length) return;
+    moveRelative(id, sibs[j].id, dir < 0 ? 'before' : 'after');
+  }
+
+  /* ---------- Glisser-déposer à la souris ---------- */
+  let drag = null; // { id, startX, startY, active, ghost, target, scrollEl, timer, lastX, lastY, pendingRender }
+  let suppressClick = false;
+
+  function scrollParentOf(node) {
+    let e = node.parentElement;
+    while (e && e !== document.body && e !== document.documentElement) {
+      if (/(auto|scroll)/.test(getComputedStyle(e).overflowY) && e.scrollHeight > e.clientHeight) return e;
+      e = e.parentElement;
+    }
+    return null;
+  }
+
+  function onTreePointerDown(e) {
+    if (e.button !== 0 || e.pointerType !== 'mouse' || !els.tree) return;
+    const row = e.target.closest ? e.target.closest('.fund-row') : null;
+    if (!row || !els.tree.contains(row)) return;
+    const id = row.parentElement.dataset.id;
+    if (!nodes.has(id)) return;
+    drag = {
+      id, row, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY,
+      active: false, ghost: null, target: null, scrollEl: null, timer: null, pendingRender: false,
+    };
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd);
+    document.addEventListener('pointercancel', onDragCancel);
+    document.addEventListener('keydown', onDragKey, true);
+  }
+
+  function startDrag() {
+    const d = drag;
+    const wrap = d.row.parentElement;
+    d.active = true;
+    d.scrollEl = scrollParentOf(els.tree);
+    document.body.classList.add('fund-dragging');
+    wrap.classList.add('is-dragging');
+    const ghost = el('div', 'fund-node fund-drag-ghost ' + (wrap.classList.contains('fund-node--group') ? 'fund-node--group' : 'fund-node--tab'));
+    ghost.style.cssText = wrap.style.cssText; // couleurs propres au groupe
+    ghost.style.width = d.row.offsetWidth + 'px';
+    ghost.appendChild(d.row.cloneNode(true));
+    document.body.appendChild(ghost);
+    d.ghost = ghost;
+    d.offsetX = d.startX - d.row.getBoundingClientRect().left;
+    d.offsetY = d.startY - d.row.getBoundingClientRect().top;
+    try { window.getSelection().removeAllRanges(); } catch (err) { /* ignoré */ }
+    // Défilement automatique près des bords de l'écran.
+    d.timer = window.setInterval(() => {
+      if (!drag || !drag.active) return;
+      const top = d.scrollEl ? d.scrollEl.getBoundingClientRect().top : 0;
+      const bottom = d.scrollEl ? d.scrollEl.getBoundingClientRect().bottom : window.innerHeight;
+      let dy = 0;
+      if (d.lastY < top + 60) dy = -Math.ceil((top + 60 - d.lastY) / 4);
+      else if (d.lastY > bottom - 60) dy = Math.ceil((d.lastY - (bottom - 60)) / 4);
+      if (!dy) return;
+      if (d.scrollEl) d.scrollEl.scrollTop += dy; else window.scrollBy(0, dy);
+      updateDropTarget();
+    }, 30);
+  }
+
+  function computeDropTarget(x, y) {
+    const d = drag;
+    const hit = document.elementFromPoint(x, y);
+    const row = hit && hit.closest ? hit.closest('.fund-row') : null;
+    if (!row || !els.tree.contains(row)) return null;
+    const tid = row.parentElement.dataset.id;
+    const dragged = nodes.get(d.id);
+    const t = nodes.get(tid);
+    if (!dragged || !t || tid === d.id || descendantIds(d.id).includes(tid)) return null;
+
+    const rect = row.getBoundingClientRect();
+    const ratio = (y - rect.top) / Math.max(1, rect.height);
+    const tIsGroup = t.parent_id === null;
+
+    if (dragged.parent_id === null) { // un groupe ne se place qu'entre groupes
+      if (!tIsGroup) return null;
+      return { id: tid, where: ratio < 0.5 ? 'before' : 'after', row };
+    }
+    let where;
+    if (tIsGroup) {
+      where = 'inside';
+    } else if (ratio < 0.25) {
+      where = 'before';
+    } else if (ratio > 0.75) {
+      where = 'after';
+    } else {
+      where = canDropAs(dragged, tid) ? 'inside' : (ratio < 0.5 ? 'before' : 'after');
+    }
+    const newParent = where === 'inside' ? tid : t.parent_id;
+    if (!canDropAs(dragged, newParent)) return null;
+    return { id: tid, where, row };
+  }
+
+  function clearDropMarks() {
+    if (!els.tree) return;
+    els.tree.querySelectorAll('.fund-drop-before, .fund-drop-after, .fund-drop-inside').forEach((n) => {
+      n.classList.remove('fund-drop-before', 'fund-drop-after', 'fund-drop-inside');
+    });
+  }
+
+  function updateDropTarget() {
+    const d = drag;
+    if (!d || !d.active) return;
+    const target = computeDropTarget(d.lastX, d.lastY);
+    clearDropMarks();
+    d.target = target;
+    if (!target) return;
+    if (target.where === 'inside') target.row.classList.add('fund-drop-inside');
+    else target.row.parentElement.classList.add(target.where === 'before' ? 'fund-drop-before' : 'fund-drop-after');
+  }
+
+  function onDragMove(e) {
+    const d = drag;
+    if (!d) return;
+    d.lastX = e.clientX;
+    d.lastY = e.clientY;
+    if (!d.active) {
+      if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) < 6) return;
+      startDrag();
+    }
+    d.ghost.style.left = (e.clientX - d.offsetX) + 'px';
+    d.ghost.style.top = (e.clientY - d.offsetY) + 'px';
+    updateDropTarget();
+  }
+
+  function endDragCleanup() {
+    const d = drag;
+    drag = null;
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+    document.removeEventListener('pointercancel', onDragCancel);
+    document.removeEventListener('keydown', onDragKey, true);
+    if (!d) return null;
+    if (d.timer) window.clearInterval(d.timer);
+    if (d.ghost) d.ghost.remove();
+    document.body.classList.remove('fund-dragging');
+    clearDropMarks();
+    if (els.tree) els.tree.querySelectorAll('.is-dragging').forEach((n) => n.classList.remove('is-dragging'));
+    return d;
+  }
+
+  function onDragEnd() {
+    const d = endDragCleanup();
+    if (!d || !d.active) return;
+    // Évite qu'un clic fantôme ouvre/ferme l'onglet qu'on vient de lâcher.
+    suppressClick = true;
+    window.setTimeout(() => { suppressClick = false; }, 0);
+    if (d.target) moveRelative(d.id, d.target.id, d.target.where);
+    else if (d.pendingRender) render();
+  }
+
+  function onDragCancel() {
+    const d = endDragCleanup();
+    if (d && d.pendingRender) render();
+  }
+
+  function onDragKey(e) {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      onDragCancel();
+    }
+  }
+
+  /* =========================================================
+     Menu clic droit (comme un menu contextuel du bureau)
+     ========================================================= */
+  let ctx = null; // élément du menu ouvert
+
+  function closeMenu() {
+    if (!ctx) return;
+    ctx.remove();
+    ctx = null;
+    document.removeEventListener('pointerdown', onMenuOutside, true);
+    document.removeEventListener('keydown', onMenuKey, true);
+    document.removeEventListener('scroll', closeMenu, true);
+    window.removeEventListener('resize', closeMenu);
+    window.removeEventListener('blur', closeMenu);
+  }
+
+  function onMenuOutside(e) {
+    if (ctx && !ctx.contains(e.target)) closeMenu();
+  }
+
+  function onMenuKey(e) {
+    if (!ctx) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeMenu();
+      return;
+    }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const items = Array.from(ctx.querySelectorAll('.fund-ctx-item:not(:disabled)'));
+    if (!items.length) return;
+    const i = items.indexOf(document.activeElement);
+    const next = e.key === 'ArrowDown' ? (i + 1) % items.length : (i <= 0 ? items.length - 1 : i - 1);
+    items[next].focus();
+  }
+
+  function openMenu(x, y, items) {
+    closeMenu();
+    const menu = el('div', 'fund-ctx');
+    menu.setAttribute('role', 'menu');
+    menu.tabIndex = -1;
+    items.forEach((it) => {
+      if (it.sep) {
+        menu.appendChild(el('div', 'fund-ctx-sep'));
+        return;
+      }
+      const b = el('button', 'fund-ctx-item' + (it.danger ? ' is-danger' : ''), it.label);
+      b.type = 'button';
+      b.setAttribute('role', 'menuitem');
+      b.disabled = !!it.disabled;
+      b.addEventListener('click', () => {
+        closeMenu();
+        it.onClick();
+      });
+      menu.appendChild(b);
+    });
+    menu.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.body.appendChild(menu);
+
+    const w = menu.offsetWidth;
+    const h = menu.offsetHeight;
+    menu.style.left = Math.max(4, Math.min(x, window.innerWidth - w - 4)) + 'px';
+    menu.style.top = Math.max(4, Math.min(y, window.innerHeight - h - 4)) + 'px';
+    ctx = menu;
+    menu.focus({ preventScroll: true });
+
+    document.addEventListener('pointerdown', onMenuOutside, true);
+    document.addEventListener('keydown', onMenuKey, true);
+    document.addEventListener('scroll', closeMenu, true);
+    window.addEventListener('resize', closeMenu);
+    window.addEventListener('blur', closeMenu);
+  }
+
+  function onTreeContextMenu(e) {
+    const row = e.target.closest ? e.target.closest('.fund-row') : null;
+    if (!row || !els.tree.contains(row)) return; // zone de texte : menu normal (copier/coller)
+    const id = row.parentElement.dataset.id;
+    const node = nodes.get(id);
+    if (!node) return;
+    e.preventDefault();
+    if (drag && drag.active) return;
+
+    const isGroup = node.parent_id === null;
+    const sibs = childrenOf(node.parent_id);
+    const idx = sibs.findIndex((n) => n.id === id);
+    openMenu(e.clientX, e.clientY, [
+      { label: isGroup ? 'Modifier / personnaliser…' : 'Renommer…', onClick: () => renameNode(id) },
+      { label: 'Ajouter un onglet…', disabled: !canAddChild(node), onClick: () => addNode(id) },
+      { sep: true },
+      { label: 'Monter', disabled: idx <= 0, onClick: () => shiftNode(id, -1) },
+      { label: 'Descendre', disabled: idx < 0 || idx >= sibs.length - 1, onClick: () => shiftNode(id, 1) },
+      { sep: true },
+      { label: 'Supprimer', danger: true, onClick: () => deleteNode(id) },
+    ]);
+  }
+
+  /* =========================================================
      Chargement et temps réel
      ========================================================= */
   async function load() {
@@ -762,10 +1096,12 @@
     if (!client || !userId || loading) return;
     loading = true;
 
-    const { data, error } = await client
-      .from(TABLE)
-      .select('id,parent_id,name,content,created_at')
-      .order('created_at', { ascending: true });
+    let res = await client.from(TABLE).select(hasOrder ? COLS : COLS_LEGACY).order('created_at', { ascending: true });
+    if (res.error && hasOrder && (/sort_order/.test(res.error.message || '') || res.error.code === '42703')) {
+      hasOrder = false; // colonne pas encore créée : l'appli marche, mais sans déplacement
+      res = await client.from(TABLE).select(COLS_LEGACY).order('created_at', { ascending: true });
+    }
+    const { data, error } = res;
     loading = false;
 
     if (error) {
@@ -819,6 +1155,11 @@
       needsRender = true;
     }
 
+    if (row.sort_order !== undefined && existing.sort_order !== row.sort_order) {
+      existing.sort_order = row.sort_order;
+      needsRender = true;
+    }
+
     // Le texte n'est mis à jour que si je ne suis pas en train de l'écrire.
     // (Supabase peut omettre "content" quand il n'a pas changé : on ignore alors.)
     const protect = dirty.has(row.id) || isEditing(row.id) || !!(dict && dict.id === row.id);
@@ -828,7 +1169,6 @@
       if (ta) {
         ta.value = row.content;
         autosize(ta);
-        syncAddButton(row.id);
       }
     }
 
@@ -897,6 +1237,14 @@
 
     els.addGroupBtn.addEventListener('click', () => addNode(null));
 
+    els.tree.addEventListener('pointerdown', onTreePointerDown);
+    els.tree.addEventListener('contextmenu', onTreeContextMenu);
+    els.tree.addEventListener('click', (e) => {
+      if (!suppressClick) return;
+      e.stopPropagation();
+      e.preventDefault();
+    }, true);
+
     els.dialogOk.addEventListener('click', submitDialog);
     els.dialogCancel.addEventListener('click', () => finishDialog(null));
     els.dialog.addEventListener('click', (event) => {
@@ -933,6 +1281,7 @@
       else if (userId && isTabActive()) load();
     });
     window.addEventListener('pagehide', flushAll);
+    window.addEventListener('pagehide', closeMenu);
     window.addEventListener('resize', () => {
       els.tree.querySelectorAll('.fund-text').forEach(autosize);
     });
