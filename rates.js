@@ -25,7 +25,7 @@
     { key: 'other',  label: 'Autre (50 pb ou plus)', css: 'other' },
   ];
 
-  const REFRESH_MS = 5 * 60 * 1000;
+  const REFRESH_MS = 60 * 1000; // le bot met les prix à jour chaque minute
   const STALE_MS = 2 * 3600 * 1000;
 
   let rows = {};
@@ -55,6 +55,7 @@
     if (!section) {
       section = document.createElement('div');
       section.className = 'rates';
+      section.dataset.code = code;
       const calendar = panel.querySelector('.calendar');
       panel.insertBefore(section, calendar ? calendar.nextSibling : panel.firstChild);
     }
@@ -107,6 +108,10 @@
 
     const sig = `${row.event_slug}|${row.updated_at}`;
     if (section.dataset.sig === sig) return;
+    // Pendant qu'on survole le graphique, on ne le redessine pas (l'infobulle resterait coupée) :
+    // la mise à jour est appliquée dès que le curseur le quitte.
+    const liveChart = section.querySelector('.rates-chart');
+    if (liveChart && liveChart._hover) { section._pending = true; return; }
     section.dataset.sig = sig;
 
     const cur = row.current || {};
@@ -237,13 +242,18 @@
     const tip = host.querySelector('.rates-tooltip');
     const hdots = Array.from(host.querySelectorAll('.rates-hdot'));
 
+    host._hover = false;
     const hide = () => {
+      host._hover = false;
+      const sec = host.closest('.rates');
+      if (sec && sec._pending) { sec._pending = false; renderCode(sec.dataset.code); }
       cursor.setAttribute('visibility', 'hidden');
       hdots.forEach((c) => c.setAttribute('visibility', 'hidden'));
       tip.hidden = true;
     };
 
     const show = (ev) => {
+      host._hover = true;
       const rect = svg.getBoundingClientRect();
       const px = Math.max(ml, Math.min(W - mr, ev.clientX - rect.left));
       const t = t0 + ((px - ml) / pw) * span;

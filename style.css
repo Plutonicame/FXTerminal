@@ -2584,6 +2584,23 @@ button {
   --fund-icon-btn-hover-text: var(--text);
   --fund-delete-hover: var(--red-light);
 
+  /* Menu clic droit */
+  --fund-ctx-bg: var(--fund-dialog-bg);
+  --fund-ctx-border: var(--fund-dialog-border);
+  --fund-ctx-text: var(--fund-dialog-title);
+  --fund-ctx-hover-bg: #2c2c2c;
+  --fund-ctx-hover-text: var(--fund-dialog-title);
+  --fund-ctx-danger-text: var(--fund-delete-hover);
+  --fund-ctx-sep: var(--fund-dialog-border);
+
+  /* Micro de dictée */
+  --fund-mic-text: var(--fund-icon-btn-text);
+  --fund-mic-hover-text: var(--fund-text-focus-border);
+  --fund-mic-active: var(--red);
+
+  /* Glisser-déposer */
+  --fund-drop-line: var(--fund-text-focus-border);
+
 
   /* Fenêtre de saisie */
   --fund-dialog-overlay: #000000;
@@ -2793,15 +2810,15 @@ body.fund-dragging * {
 }
 
 .fund-node.fund-drop-before {
-  box-shadow: 0 -5px 0 0 var(--fund-text-focus-border);
+  box-shadow: 0 -5px 0 0 var(--fund-drop-line);
 }
 
 .fund-node.fund-drop-after {
-  box-shadow: 0 5px 0 0 var(--fund-text-focus-border);
+  box-shadow: 0 5px 0 0 var(--fund-drop-line);
 }
 
 .fund-node > .fund-row.fund-drop-inside {
-  outline: 2px solid var(--fund-text-focus-border);
+  outline: 2px solid var(--fund-drop-line);
   outline-offset: -2px;
 }
 
@@ -2811,8 +2828,8 @@ body.fund-dragging * {
   z-index: 450;
   min-width: 220px;
   padding: 4px;
-  background: var(--fund-dialog-bg);
-  border: 1px solid var(--fund-dialog-border);
+  background: var(--fund-ctx-bg);
+  border: 1px solid var(--fund-ctx-border);
   border-radius: 6px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   font-family: var(--sans);
@@ -2827,7 +2844,7 @@ body.fund-dragging * {
   background: transparent;
   border: 0;
   border-radius: 4px;
-  color: var(--fund-dialog-title);
+  color: var(--fund-ctx-text);
   font: inherit;
   text-align: left;
   white-space: nowrap;
@@ -2836,7 +2853,8 @@ body.fund-dragging * {
 
 .fund-ctx-item:hover:not(:disabled),
 .fund-ctx-item:focus-visible {
-  background: color-mix(in srgb, var(--fund-dialog-title) 16%, transparent);
+  background: var(--fund-ctx-hover-bg);
+  color: var(--fund-ctx-hover-text);
   outline: none;
 }
 
@@ -2845,13 +2863,13 @@ body.fund-dragging * {
 }
 
 .fund-ctx-item.is-danger {
-  color: var(--fund-delete-hover);
+  color: var(--fund-ctx-danger-text);
 }
 
 .fund-ctx-sep {
   height: 1px;
   margin: 4px 6px;
-  background: var(--fund-dialog-border);
+  background: var(--fund-ctx-sep);
 }
 
 /* Contenu d'un groupe / onglet ouvert */
@@ -2903,7 +2921,7 @@ body.fund-dragging * {
   padding: 4px;
   background: none;
   border: none;
-  color: var(--fund-icon-btn-text);
+  color: var(--fund-mic-text);
   cursor: pointer;
   touch-action: none;
   user-select: none;
@@ -2917,11 +2935,11 @@ body.fund-dragging * {
 }
 
 .fund-mic:hover {
-  color: var(--fund-text-focus-border);
+  color: var(--fund-mic-hover-text);
 }
 
 .fund-mic.is-listening {
-  color: var(--red);
+  color: var(--fund-mic-active);
   animation: fund-mic-pulse 1s infinite;
 }
 
@@ -3135,19 +3153,55 @@ body.fund-dragging * {
 
 /* =====================================================================
    Attentes de taux (Polymarket) — rates.js
+   Toutes ces couleurs sont modifiables dans Paramètres > Analyse.
    ===================================================================== */
 :root {
-  --rates-card-bg: var(--bg-card);
-  --rates-card-border: var(--border-dim);
-  --rates-title: var(--text);
-  --rates-dim: var(--text-dim);
-  --rates-grid: #2a2a2a;
+  /* Couleurs principales des issues (cases, courbes, légende) */
   --rates-none: #b8b8b8;
   --rates-up: #2ecc71;
   --rates-down: #fe1111;
   --rates-other: #f5a623;
+
+  /* Bandeau */
+  --rates-toolbar-bg: var(--bg-card);
+  --rates-toolbar-border: var(--border-dim);
+  --rates-toolbar-title: var(--text);
+  --rates-toolbar-info: var(--text-dim);
+  --rates-empty-text: var(--text-dim);
+
+  /* Cases KPI */
+  --rates-kpi-bg: var(--bg-card);
+  --rates-kpi-border: var(--border-dim);
+  --rates-kpi-label: var(--text-dim);
+  --rates-kpi-value: var(--text);
+  --rates-kpi-sub: var(--text-dim);
+  --rates-kpi-bar-none: var(--rates-none);
+  --rates-kpi-bar-up: var(--rates-up);
+  --rates-kpi-bar-down: var(--rates-down);
+  --rates-kpi-bar-other: var(--rates-other);
+
+  /* Graphique */
+  --rates-card-bg: var(--bg-card);
+  --rates-card-border: var(--border-dim);
+  --rates-chart-title: var(--text);
+  --rates-chart-sub: var(--text-dim);
+  --rates-link: var(--blue-light);
+  --rates-grid: #2a2a2a;
+  --rates-axis: var(--text-dim);
+  --rates-cursor: var(--text-dim);
+  --rates-legend-text: var(--text-dim);
+
+  /* Courbes */
+  --rates-line-none: var(--rates-none);
+  --rates-line-up: var(--rates-up);
+  --rates-line-down: var(--rates-down);
+  --rates-line-other: var(--rates-other);
+
+  /* Infobulle */
   --rates-tooltip-bg: #0c0c0c;
   --rates-tooltip-border: var(--border-dim);
+  --rates-tooltip-text: var(--text);
+  --rates-tooltip-date: var(--text-dim);
 }
 
 .rates {
@@ -3162,8 +3216,8 @@ body.fund-dragging * {
   flex-wrap: wrap;
   margin: 0 0 10px;
   padding: 10px 14px;
-  background: var(--rates-card-bg);
-  border: 1px solid var(--rates-card-border);
+  background: var(--rates-toolbar-bg);
+  border: 1px solid var(--rates-toolbar-border);
   border-radius: var(--radius-card);
 }
 
@@ -3173,14 +3227,14 @@ body.fund-dragging * {
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--rates-title);
+  color: var(--rates-toolbar-title);
 }
 
 .rates-toolbar-info {
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.5px;
-  color: var(--rates-dim);
+  color: var(--rates-toolbar-info);
 }
 
 .rates-empty {
@@ -3188,7 +3242,7 @@ body.fund-dragging * {
   padding: 14px;
   font-family: var(--sans);
   font-size: 13px;
-  color: var(--rates-dim);
+  color: var(--rates-empty-text);
 }
 
 .rates-kpis {
@@ -3199,28 +3253,28 @@ body.fund-dragging * {
 }
 
 .rates-kpi {
-  --kpi: var(--rates-none);
+  --kpi: var(--rates-kpi-bar-none);
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 12px 14px;
-  background: var(--rates-card-bg);
-  border: 1px solid var(--rates-card-border);
+  background: var(--rates-kpi-bg);
+  border: 1px solid var(--rates-kpi-border);
   border-left: 4px solid var(--kpi);
   border-radius: var(--radius-card);
 }
 
-.rates-kpi--none { --kpi: var(--rates-none); }
-.rates-kpi--up { --kpi: var(--rates-up); }
-.rates-kpi--down { --kpi: var(--rates-down); }
-.rates-kpi--other { --kpi: var(--rates-other); }
+.rates-kpi--none { --kpi: var(--rates-kpi-bar-none); }
+.rates-kpi--up { --kpi: var(--rates-kpi-bar-up); }
+.rates-kpi--down { --kpi: var(--rates-kpi-bar-down); }
+.rates-kpi--other { --kpi: var(--rates-kpi-bar-other); }
 
 .rates-kpi-label {
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: var(--rates-dim);
+  color: var(--rates-kpi-label);
 }
 
 .rates-kpi-value {
@@ -3228,14 +3282,14 @@ body.fund-dragging * {
   font-size: 26px;
   font-weight: 700;
   line-height: 1.1;
-  color: var(--rates-title);
+  color: var(--rates-kpi-value);
 }
 
 .rates-kpi-sub {
   min-height: 14px;
   font-family: var(--sans);
   font-size: 11px;
-  color: var(--rates-dim);
+  color: var(--rates-kpi-sub);
 }
 
 .rates-chart-card {
@@ -3259,7 +3313,7 @@ body.fund-dragging * {
   font-family: var(--sans);
   font-size: 15px;
   font-weight: 700;
-  color: var(--rates-title);
+  color: var(--rates-chart-title);
 }
 
 .rates-chart-sub {
@@ -3267,13 +3321,13 @@ body.fund-dragging * {
   margin-top: 2px;
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--rates-dim);
+  color: var(--rates-chart-sub);
 }
 
 .rates-link {
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--blue-light);
+  color: var(--rates-link);
   text-decoration: none;
 }
 
@@ -3298,7 +3352,7 @@ body.fund-dragging * {
 }
 
 .rates-axis {
-  fill: var(--rates-dim);
+  fill: var(--rates-axis);
   font-family: var(--mono);
   font-size: 10px;
 }
@@ -3310,13 +3364,13 @@ body.fund-dragging * {
   stroke-linecap: round;
 }
 
-.rates-line--none { stroke: var(--rates-none); }
-.rates-line--up { stroke: var(--rates-up); }
-.rates-line--down { stroke: var(--rates-down); }
-.rates-line--other { stroke: var(--rates-other); }
+.rates-line--none { stroke: var(--rates-line-none); }
+.rates-line--up { stroke: var(--rates-line-up); }
+.rates-line--down { stroke: var(--rates-line-down); }
+.rates-line--other { stroke: var(--rates-line-other); }
 
 .rates-cursor {
-  stroke: var(--rates-dim);
+  stroke: var(--rates-cursor);
   stroke-width: 1;
   stroke-dasharray: 3 3;
 }
@@ -3326,10 +3380,10 @@ body.fund-dragging * {
   stroke-width: 2;
 }
 
-.rates-hdot--none { fill: var(--rates-none); }
-.rates-hdot--up { fill: var(--rates-up); }
-.rates-hdot--down { fill: var(--rates-down); }
-.rates-hdot--other { fill: var(--rates-other); }
+.rates-hdot--none { fill: var(--rates-line-none); }
+.rates-hdot--up { fill: var(--rates-line-up); }
+.rates-hdot--down { fill: var(--rates-line-down); }
+.rates-hdot--other { fill: var(--rates-line-other); }
 
 .rates-tooltip {
   position: absolute;
@@ -3342,7 +3396,7 @@ body.fund-dragging * {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
   font-family: var(--sans);
   font-size: 12px;
-  color: var(--rates-title);
+  color: var(--rates-tooltip-text);
   pointer-events: none;
 }
 
@@ -3354,7 +3408,7 @@ body.fund-dragging * {
   margin-bottom: 6px;
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--rates-dim);
+  color: var(--rates-tooltip-date);
 }
 
 .rates-tip-row {
@@ -3377,7 +3431,7 @@ body.fund-dragging * {
   margin-top: 8px;
   font-family: var(--sans);
   font-size: 11px;
-  color: var(--rates-dim);
+  color: var(--rates-legend-text);
 }
 
 .rates-dot {
