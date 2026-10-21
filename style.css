@@ -3131,3 +3131,264 @@ body.fund-dragging * {
   text-decoration: underline;
   cursor: pointer;
 }
+
+
+/* =====================================================================
+   Attentes de taux (Polymarket) — rates.js
+   ===================================================================== */
+:root {
+  --rates-card-bg: var(--bg-card);
+  --rates-card-border: var(--border-dim);
+  --rates-title: var(--text);
+  --rates-dim: var(--text-dim);
+  --rates-grid: #2a2a2a;
+  --rates-none: #b8b8b8;
+  --rates-up: #2ecc71;
+  --rates-down: #fe1111;
+  --rates-other: #f5a623;
+  --rates-tooltip-bg: #0c0c0c;
+  --rates-tooltip-border: var(--border-dim);
+}
+
+.rates {
+  margin-top: 16px;
+}
+
+.rates-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  background: var(--rates-card-bg);
+  border: 1px solid var(--rates-card-border);
+  border-radius: var(--radius-card);
+}
+
+.rates-toolbar-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--rates-title);
+}
+
+.rates-toolbar-info {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: var(--rates-dim);
+}
+
+.rates-empty {
+  margin: 0;
+  padding: 14px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--rates-dim);
+}
+
+.rates-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.rates-kpi {
+  --kpi: var(--rates-none);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--rates-card-bg);
+  border: 1px solid var(--rates-card-border);
+  border-left: 4px solid var(--kpi);
+  border-radius: var(--radius-card);
+}
+
+.rates-kpi--none { --kpi: var(--rates-none); }
+.rates-kpi--up { --kpi: var(--rates-up); }
+.rates-kpi--down { --kpi: var(--rates-down); }
+.rates-kpi--other { --kpi: var(--rates-other); }
+
+.rates-kpi-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--rates-dim);
+}
+
+.rates-kpi-value {
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--rates-title);
+}
+
+.rates-kpi-sub {
+  min-height: 14px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--rates-dim);
+}
+
+.rates-chart-card {
+  padding: 12px 14px 10px;
+  background: var(--rates-card-bg);
+  border: 1px solid var(--rates-card-border);
+  border-radius: var(--radius-card);
+}
+
+.rates-chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.rates-chart-title {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--rates-title);
+}
+
+.rates-chart-sub {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--rates-dim);
+}
+
+.rates-link {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--blue-light);
+  text-decoration: none;
+}
+
+.rates-link:hover {
+  text-decoration: underline;
+}
+
+.rates-chart {
+  position: relative;
+  width: 100%;
+  min-height: 60px;
+}
+
+.rates-chart svg {
+  display: block;
+  touch-action: pan-y;
+}
+
+.rates-grid {
+  stroke: var(--rates-grid);
+  stroke-width: 1;
+}
+
+.rates-axis {
+  fill: var(--rates-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.rates-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.rates-line--none { stroke: var(--rates-none); }
+.rates-line--up { stroke: var(--rates-up); }
+.rates-line--down { stroke: var(--rates-down); }
+.rates-line--other { stroke: var(--rates-other); }
+
+.rates-cursor {
+  stroke: var(--rates-dim);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.rates-hdot {
+  stroke: var(--rates-card-bg);
+  stroke-width: 2;
+}
+
+.rates-hdot--none { fill: var(--rates-none); }
+.rates-hdot--up { fill: var(--rates-up); }
+.rates-hdot--down { fill: var(--rates-down); }
+.rates-hdot--other { fill: var(--rates-other); }
+
+.rates-tooltip {
+  position: absolute;
+  z-index: 5;
+  min-width: 190px;
+  padding: 8px 10px;
+  background: var(--rates-tooltip-bg);
+  border: 1px solid var(--rates-tooltip-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--rates-title);
+  pointer-events: none;
+}
+
+.rates-tooltip[hidden] {
+  display: none;
+}
+
+.rates-tip-date {
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--rates-dim);
+}
+
+.rates-tip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 1px 0;
+}
+
+.rates-tip-row b {
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+.rates-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 8px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--rates-dim);
+}
+
+.rates-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--rates-none);
+}
+
+.rates-dot--up { background: var(--rates-up); }
+.rates-dot--down { background: var(--rates-down); }
+.rates-dot--other { background: var(--rates-other); }
