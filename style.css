@@ -79,6 +79,7 @@
   --currency-card-active-bg: #404040;
   --currency-card-active-border: var(--border);
   --currency-card-active-text: var(--text);
+  --currency-bar-bg: var(--bg);
 
   --calendar-bg: var(--bg-card);
   --calendar-border: var(--border-dim);
@@ -799,6 +800,13 @@ button {
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  /* Reste collée sous la barre de navigation quand on descend dans la page :
+     on peut changer de devise sans remonter. Le fond (couleur de la page par
+     défaut) empêche le contenu de transparaître entre les boutons. */
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 98; /* sous la barre de navigation (100) et la barre de filtres (99) */
+  background: var(--currency-bar-bg);
 }
 
 .currency-bar::-webkit-scrollbar {

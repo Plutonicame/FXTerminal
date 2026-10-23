@@ -73,6 +73,7 @@ const THEME_FIELDS = {
     { v: '--auth-google-text-color', l: 'Texte', section: 'Bouton Google' },
   ],
   analyse: [
+    { v: '--currency-bar-bg', l: 'Fond de la barre (derrière les boutons, quand elle reste collée en haut)', section: 'Barre des devises' },
     { v: '--currency-card-bg', l: 'Fond', section: 'Boutons des devises' },
     { v: '--currency-card-border', l: 'Bordure', section: 'Boutons des devises' },
     { v: '--currency-card-text', l: 'Texte (USD, EUR...)', section: 'Boutons des devises' },
