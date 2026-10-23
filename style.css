@@ -3454,3 +3454,255 @@ body.fund-dragging * {
 .rates-dot--up { background: var(--rates-up); }
 .rates-dot--down { background: var(--rates-down); }
 .rates-dot--other { background: var(--rates-other); }
+
+
+/* =====================================================================
+   COT (positionnement CFTC) — cot.js
+   Toutes ces couleurs sont modifiables dans Paramètres > Analyse.
+   ===================================================================== */
+:root {
+  /* Camemberts : retail */
+  --cot-retail-long: #2ecc71;
+  --cot-retail-short: #fe1111;
+  /* Camemberts : institutionnels */
+  --cot-inst-long: #2ecc71;
+  --cot-inst-short: #fe1111;
+  --cot-slice-border: var(--bg-card);
+  --cot-slice-label: #ffffff;
+
+  /* Bandeau */
+  --cot-toolbar-bg: var(--bg-card);
+  --cot-toolbar-border: var(--border-dim);
+  --cot-toolbar-title: var(--text);
+  --cot-toolbar-info: var(--text-dim);
+  --cot-empty-text: var(--text-dim);
+
+  /* Cartes */
+  --cot-card-bg: var(--bg-card);
+  --cot-card-border: var(--border-dim);
+  --cot-title: var(--text);
+  --cot-subtitle: var(--text-dim);
+  --cot-text: var(--text);
+  --cot-value: var(--text);
+  --cot-dim: var(--text-dim);
+  --cot-sep: var(--border-dim);
+
+  /* Variations sur la semaine */
+  --cot-delta-up: #2ecc71;
+  --cot-delta-down: #fe1111;
+}
+
+.cot {
+  margin-top: 16px;
+}
+
+.cot-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  background: var(--cot-toolbar-bg);
+  border: 1px solid var(--cot-toolbar-border);
+  border-radius: var(--radius-card);
+}
+
+.cot-toolbar-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--cot-toolbar-title);
+}
+
+.cot-toolbar-info {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--cot-toolbar-info);
+}
+
+.cot-empty {
+  margin: 0;
+  padding: 14px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--cot-empty-text);
+}
+
+.cot-card {
+  margin-bottom: 10px;
+  padding: 14px 16px;
+  background: var(--cot-card-bg);
+  border: 1px solid var(--cot-card-border);
+  border-radius: var(--radius-card);
+}
+
+.cot-card-head {
+  margin-bottom: 12px;
+}
+
+.cot-card-title {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cot-title);
+}
+
+.cot-card-sub {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--cot-subtitle);
+}
+
+.cot-body {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.cot-pie-wrap {
+  flex: 0 0 200px;
+  width: 200px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.cot-pie {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.cot-pie-empty {
+  padding: 60px 0;
+  text-align: center;
+  color: var(--cot-dim);
+}
+
+.cot-slice {
+  stroke: var(--cot-slice-border);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  transition: opacity 0.15s;
+}
+
+.cot-slice:hover {
+  opacity: 0.82;
+}
+
+.cot-slice--retail-long { fill: var(--cot-retail-long); }
+.cot-slice--retail-short { fill: var(--cot-retail-short); }
+.cot-slice--inst-long { fill: var(--cot-inst-long); }
+.cot-slice--inst-short { fill: var(--cot-inst-short); }
+
+.cot-slice-label {
+  fill: var(--cot-slice-label);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.cot-details {
+  flex: 1 1 280px;
+  min-width: 240px;
+}
+
+.cot-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--cot-sep);
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+.cot-row--sep {
+  margin-top: 4px;
+}
+
+.cot-row-label {
+  color: var(--cot-text);
+}
+
+.cot-row-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--cot-dim);
+  text-align: right;
+}
+
+.cot-row-value b,
+.cot-cat-line b {
+  color: var(--cot-value);
+  font-weight: 700;
+}
+
+.cot-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 50%;
+}
+
+.cot-dot--retail-long { background: var(--cot-retail-long); }
+.cot-dot--retail-short { background: var(--cot-retail-short); }
+.cot-dot--inst-long { background: var(--cot-inst-long); }
+.cot-dot--inst-short { background: var(--cot-inst-short); }
+
+.cot-delta {
+  margin-left: 4px;
+  font-size: 11px;
+  color: var(--cot-dim);
+}
+
+.cot-delta--up { color: var(--cot-delta-up); }
+.cot-delta--down { color: var(--cot-delta-down); }
+
+.cot-bias {
+  margin: 10px 0 0;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cot-value);
+}
+
+.cot-cats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.cot-cat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--cot-sep);
+}
+
+.cot-cat-name {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cot-text);
+}
+
+.cot-cat-line {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--cot-dim);
+}
