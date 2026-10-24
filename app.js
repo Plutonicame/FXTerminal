@@ -508,6 +508,162 @@ function resolveEventTitle(title) {
   return String(title);
 }
 
+// =========================================================
+// Présentation de certains événements : CPI, PPI, NFP, ISM
+//   - CPI et PPI : quatre intitulés fixes, dans cet ordre (seuls ceux qui
+//     sortent sont affichés) :
+//         CPI m/m · Core CPI m/m · CPI y/y · Core CPI y/y
+//         PPI m/m · Core PPI m/m · PPI y/y · Core PPI y/y
+//     Pour un indice national de la zone euro (« French CPI », « German PPI »...),
+//     le pays est ajouté à droite.
+//   - Non-Farm Payrolls, quel que soit le nom d'origine : « NFP »
+//     (« Private Nonfarm Payrolls » : « NFP privé » ; ADP : « ADP NFP »).
+//   - ISM : « ISM PMI manufacturier » et « ISM PMI services » (« ISM Services PMI »
+//     et « ISM Non-Manufacturing PMI » désignent le même indice).
+//   Le nom d'origine reste visible au survol / maintien. Une sortie publiée sous
+//   plusieurs noms n'est affichée qu'une fois.
+//   Ne sont PAS concernés (autres indicateurs) : HICP, PCE, anticipations
+//   d'inflation, CPI « Trimmed / Median / Common », CPI de Tokyo, IPPI, sous-indices
+//   ISM (emploi, prix), PMI S&P Global / HCOB.
+//   Certains CPI/PPI n'indiquent pas leur période dans leur nom (« French CPI »,
+//   « CPI »...). Elle est alors déduite ainsi :
+//     1. une ligne du même jour, même devise, même pays avec une période
+//        explicite et les mêmes chiffres = la même sortie : doublon masqué ;
+//     2. sinon, pour les indices nationaux seulement : toutes les valeurs sous 1
+//        = m/m, une valeur à partir de 2 = y/y ;
+//     3. sinon la période reste inconnue et le nom s'affiche sans période.
+// =========================================================
+const EVENT_COUNTRY_FR = { french: 'France', german: 'Allemagne', spanish: 'Espagne', italian: 'Italie' };
+const INDEX_EXCLUDED = /\b(hicp|pce|expectations?|trimmed|median|common|tokyo|price index|prices)\b/i;
+const INDEX_LABEL_ORDER = [
+  'CPI m/m', 'Core CPI m/m', 'CPI y/y', 'Core CPI y/y',
+  'PPI m/m', 'Core PPI m/m', 'PPI y/y', 'Core PPI y/y',
+];
+const FIXED_EVENT_NAMES = [
+  { re: /^non-?farm (employment change|payrolls)$/i, label: 'NFP', currency: 'USD' },
+  { re: /^private non-?farm payrolls$/i, label: 'NFP privé', currency: 'USD' },
+  { re: /^adp non-?farm employment change$/i, label: 'ADP NFP', currency: 'USD' },
+  { re: /^ism manufacturing pmi$/i, label: 'ISM PMI manufacturier', currency: 'USD' },
+  { re: /^ism (services|non-manufacturing) pmi$/i, label: 'ISM PMI services', currency: 'USD' },
+];
+
+function parseEventTitle(ev) {
+  const t = String(ev.title || '').trim();
+  for (const f of FIXED_EVENT_NAMES) {
+    if (f.currency === ev.currency && f.re.test(t)) return { fixed: true, label: f.label, country: null };
+  }
+  const k = t.match(/\b(cpi|ppi)\b/i);
+  if (!k || INDEX_EXCLUDED.test(t)) return null;
+  let period = null;
+  if (/\bm\/m\b/i.test(t)) period = 'm/m';
+  else if (/\by\/y\b/i.test(t)) period = 'y/y';
+  else if (/\bq\/q\b/i.test(t)) period = 'q/q';
+  const c = t.match(/\b(french|german|spanish|italian)\b/i);
+  return { kind: k[1].toUpperCase(), core: /\bcore\b/i.test(t), period, country: c ? EVENT_COUNTRY_FR[c[1].toLowerCase()] : null };
+}
+
+function eventSameNumber(a, b) {
+  const x = parseCalendarNumber(a);
+  const y = parseCalendarNumber(b);
+  return x !== null && y !== null && Math.abs(x - y) < 1e-9;
+}
+
+function eventHasValue(v) {
+  return v !== null && v !== undefined && String(v).trim() !== '';
+}
+
+// Même sortie publiée sous deux noms ? Prévision identique, et « Sortie » ou « Avant » identique.
+// Deux « Sortie » différentes = deux données différentes : jamais un doublon.
+function eventSameRelease(a, b) {
+  if (eventHasValue(a.actual) && eventHasValue(b.actual) && !eventSameNumber(a.actual, b.actual)) return false;
+  return eventSameNumber(a.forecast_mid, b.forecast_mid)
+    && (eventSameNumber(a.actual, b.actual) || eventSameNumber(a.previous, b.previous));
+}
+
+function indexPeriodFromValues(ev) {
+  const vals = [ev.previous, ev.forecast_mid, ev.actual].map(parseCalendarNumber).filter((v) => v !== null);
+  if (!vals.length) return null;
+  if (vals.every((v) => Math.abs(v) < 1)) return 'm/m';
+  if (vals.some((v) => Math.abs(v) >= 2)) return 'y/y';
+  return null;
+}
+
+function eventLabel(info) {
+  if (info.fixed) return info.label;
+  return `${info.core ? 'Core ' : ''}${info.kind}${info.period ? ' ' + info.period : ''}`;
+}
+
+function applyEventPresentation(events) {
+  if (!Array.isArray(events)) return events;
+  const items = events.map((ev) => ({ ev, info: parseEventTitle(ev), explicit: false }));
+  if (!items.some((i) => i.info)) return events;
+
+  const day = (ev) => String(ev.event_time).slice(0, 10);
+  const sameGroup = (a, b) => a.ev.currency === b.ev.currency && a.info.kind === b.info.kind
+    && a.info.core === b.info.core && a.info.country === b.info.country && day(a.ev) === day(b.ev);
+
+  items.forEach((it) => { if (it.info && (it.info.fixed || it.info.period)) it.explicit = true; });
+  const explicit = items.filter((i) => i.explicit && !i.info.fixed);
+
+  // 1) Période des CPI/PPI qui ne l'indiquent pas
+  for (const it of items) {
+    if (!it.info || it.info.fixed || it.info.period) continue;
+    const twin = explicit.find((e) => sameGroup(e, it) && eventSameRelease(e.ev, it.ev));
+    let period = twin ? twin.info.period : null;
+    if (!period && it.info.country) period = indexPeriodFromValues(it.ev);
+    it.info = { ...it.info, period };
+  }
+
+  // 2) Doublons : même devise / intitulé / pays / jour -> une seule ligne
+  //    (celle dont le nom indiquait la période, sinon celle qui a une « Sortie »)
+  const kept = new Map();
+  const dropped = new Set();
+  for (const it of items) {
+    if (!it.info || (!it.info.fixed && !it.info.period)) continue;
+    const key = [it.ev.currency, it.info.country, eventLabel(it.info), day(it.ev)].join('|');
+    const rep = kept.get(key);
+    if (!rep) { kept.set(key, it); continue; }
+    const better = (!rep.explicit && it.explicit) || (rep.explicit === it.explicit && !eventHasValue(rep.ev.actual) && eventHasValue(it.ev.actual));
+    const [winner, loser] = better ? [it, rep] : [rep, it];
+    if (!eventHasValue(winner.ev.actual) && eventHasValue(loser.ev.actual)) winner.actualFrom = loser.ev.actual;
+    dropped.add(loser);
+    kept.set(key, winner);
+  }
+
+  // 3) Résultat : lignes concernées remplacées par une copie portant l'intitulé fixe
+  const out = [];
+  for (const it of items) {
+    if (dropped.has(it)) continue;
+    if (!it.info) { out.push(it.ev); continue; }
+    const ev = { ...it.ev, shown: { label: eventLabel(it.info), country: it.info.country } };
+    if (it.actualFrom !== undefined) ev.actual = it.actualFrom;
+    out.push(ev);
+  }
+
+  // 4) Ordre : pour une même devise et une même heure, CPI m/m, Core CPI m/m, CPI y/y, Core CPI y/y (idem PPI)
+  const rank = (ev) => {
+    const i = INDEX_LABEL_ORDER.indexOf(ev.shown.label);
+    return i === -1 ? INDEX_LABEL_ORDER.length : i;
+  };
+  const result = [];
+  const done = new Set();
+  for (const ev of out) {
+    if (!ev.shown) { result.push(ev); continue; }
+    const k = `${ev.currency}|${ev.event_time}`;
+    if (done.has(k)) continue;
+    done.add(k);
+    const group = out.filter((x) => x.shown && x.currency === ev.currency && x.event_time === ev.event_time);
+    group.sort((a, b) => rank(a) - rank(b) || String(a.shown.country || '').localeCompare(String(b.shown.country || '')));
+    result.push(...group);
+  }
+  return result;
+}
+
+// Pays à droite du nom (CPI/PPI nationaux de la zone euro uniquement).
+function eventCountryTag(ev) {
+  return ev.shown && ev.shown.country ? `<span class="calendar-country">${escapeHtml(ev.shown.country)}</span>` : '';
+}
+
 async function translateToFrench(text) {
   const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=fr&dt=t&q=${encodeURIComponent(text)}`;
   const res = await fetch(url);
@@ -644,7 +800,7 @@ function renderCalendar(code, events, errorNote) {
     return;
   }
 
-  const visibleEvents = applyCalendarViewFilters(events);
+  const visibleEvents = applyEventPresentation(applyCalendarViewFilters(events));
   if (!visibleEvents.length) {
     html += '<div class="calendar-scroll"><p class="calendar-empty">Aucun événement pour ces filtres</p></div>';
     container.innerHTML = html;
@@ -657,7 +813,7 @@ function renderCalendar(code, events, errorNote) {
       <td class="calendar-col-date">${escapeHtml(formatCalendarDateInline(ev.event_time))}</td>
       <td class="calendar-col-name">
         <button type="button" class="calendar-date-btn" data-event-time="${escapeHtml(ev.event_time)}" aria-label="Voir la date et l'heure">${CALENDAR_DATE_ICON}</button>
-        <span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(resolveEventTitle(ev.title))}</span>
+        <span class="calendar-impact calendar-impact--${impact}"></span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(ev.shown ? ev.shown.label : resolveEventTitle(ev.title))}</span>${eventCountryTag(ev)}
       </td>
       ${calendarCell(ev.actual, 'calendar-value--actual' + (actualDirection(ev) ? ' calendar-value--' + actualDirection(ev) : ''))}
       ${calendarCell(ev.forecast_mid)}
@@ -1218,7 +1374,7 @@ function renderNewsCalendar(events, errorNote) {
 
   // Un seul tableau continu, du plus ancien au plus récent, sans séparation
   // entre les jours. Sur plusieurs jours, la colonne affiche « date + heure ».
-  const rows = events.map((ev) => {
+  const rows = applyEventPresentation(events).map((ev) => {
     const d = new Date(ev.event_time);
     const impact = ev.impact === 'high' ? 'high' : 'medium';
     const clock = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -1228,7 +1384,7 @@ function renderNewsCalendar(events, errorNote) {
       <td class="calendar-col-date news-col-time">${escapeHtml(time)}</td>
       <td class="calendar-col-name">
         <button type="button" class="calendar-date-btn" data-event-time="${escapeHtml(ev.event_time)}" aria-label="Voir la date et l'heure">${CALENDAR_DATE_ICON}</button>
-        <span class="calendar-impact calendar-impact--${impact}"></span><span class="news-cur">${escapeHtml(ev.currency)}</span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(resolveEventTitle(ev.title))}</span>
+        <span class="calendar-impact calendar-impact--${impact}"></span><span class="news-cur">${escapeHtml(ev.currency)}</span><span class="calendar-name" title="${escapeHtml(ev.title)}">${escapeHtml(ev.shown ? ev.shown.label : resolveEventTitle(ev.title))}</span>${eventCountryTag(ev)}
       </td>
       ${calendarCell(ev.actual, 'calendar-value--actual' + (actualDirection(ev) ? ' calendar-value--' + actualDirection(ev) : ''))}
       ${calendarCell(ev.forecast_mid)}

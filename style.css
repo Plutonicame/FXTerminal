@@ -87,6 +87,9 @@
   --calendar-head-bg: var(--bg);
   --calendar-head-text: var(--text-dim);
   --calendar-name-text: var(--text);
+  --calendar-country-text: var(--text-dim);
+  --calendar-country-bg: transparent;
+  --calendar-country-border: var(--border);
   --calendar-value-text: var(--text);
   --calendar-actual-text: var(--blue-light);
   --calendar-actual-up: #35c46b;
@@ -1094,6 +1097,20 @@ button {
 
 .calendar-impact--high { background: var(--calendar-impact-high); }
 .calendar-impact--medium { background: var(--calendar-impact-medium); }
+
+/* Pays à droite du nom (CPI nationaux de la zone euro : France, Allemagne...) */
+.calendar-country {
+  float: right;
+  margin: 1px 0 0 12px;
+  padding: 1px 8px;
+  background: var(--calendar-country-bg);
+  border: 1px solid var(--calendar-country-border);
+  border-radius: 10px;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--calendar-country-text);
+}
 
 .calendar-name {
   font-family: var(--sans);
