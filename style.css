@@ -865,6 +865,18 @@ button {
   }
 }
 
+/* Téléphone : onglets de devises 2 fois plus larges (41 px -> 84 px) pour qu'ils
+   ressemblent à de vraies fenêtres et non à des fanions. La barre défile
+   horizontalement pour atteindre les autres devises. */
+@media (max-width: 719px) {
+  .currency-card {
+    flex: 0 0 auto;
+    min-width: 84px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+}
+
 /* =========================================================
    Calendrier économique (dans chaque fenêtre de devise)
    ========================================================= */
@@ -3705,4 +3717,262 @@ body.fund-dragging * {
   font-family: var(--mono);
   font-size: 12px;
   color: var(--cot-dim);
+}
+
+
+/* =====================================================================
+   Retail intraday (Myfxbook / OANDA) — retail.js
+   Toutes ces couleurs sont modifiables dans Paramètres > Analyse.
+   ===================================================================== */
+:root {
+  /* Camemberts */
+  --intra-retail-long: var(--cot-retail-long);
+  --intra-retail-short: var(--cot-retail-short);
+  --intra-contra-long: #4d94ff;
+  --intra-contra-short: #f5a623;
+  --intra-slice-border: var(--bg-card);
+  --intra-slice-label: #ffffff;
+
+  /* Bandeau */
+  --intra-toolbar-bg: var(--cot-toolbar-bg);
+  --intra-toolbar-border: var(--cot-toolbar-border);
+  --intra-toolbar-title: var(--cot-toolbar-title);
+  --intra-toolbar-info: var(--cot-toolbar-info);
+  --intra-empty-text: var(--cot-empty-text);
+
+  /* Cartes */
+  --intra-card-bg: var(--cot-card-bg);
+  --intra-card-border: var(--cot-card-border);
+  --intra-title: var(--cot-title);
+  --intra-subtitle: var(--cot-subtitle);
+  --intra-text: var(--cot-text);
+  --intra-value: var(--cot-value);
+  --intra-dim: var(--cot-dim);
+  --intra-sep: var(--cot-sep);
+  --intra-link: var(--blue-light);
+}
+
+.intra {
+  margin-top: 16px;
+}
+
+.intra-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  background: var(--intra-toolbar-bg);
+  border: 1px solid var(--intra-toolbar-border);
+  border-radius: var(--radius-card);
+}
+
+.intra-toolbar-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--intra-toolbar-title);
+}
+
+.intra-toolbar-info {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--intra-toolbar-info);
+}
+
+.intra-empty {
+  margin: 0;
+  padding: 14px;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--intra-empty-text);
+}
+
+.intra-card {
+  margin-bottom: 10px;
+  padding: 14px 16px;
+  background: var(--intra-card-bg);
+  border: 1px solid var(--intra-card-border);
+  border-radius: var(--radius-card);
+}
+
+.intra-card-head {
+  margin-bottom: 12px;
+}
+
+.intra-card-title {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--intra-title);
+}
+
+.intra-card-sub {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--intra-subtitle);
+}
+
+.intra-body {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.intra-pie-wrap {
+  flex: 0 0 200px;
+  width: 200px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.intra-pie {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.intra-pie-empty {
+  padding: 60px 0;
+  text-align: center;
+  color: var(--intra-dim);
+}
+
+.intra-slice {
+  stroke: var(--intra-slice-border);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  transition: opacity 0.15s;
+}
+
+.intra-slice:hover {
+  opacity: 0.82;
+}
+
+.intra-slice--retail-long { fill: var(--intra-retail-long); }
+.intra-slice--retail-short { fill: var(--intra-retail-short); }
+.intra-slice--contra-long { fill: var(--intra-contra-long); }
+.intra-slice--contra-short { fill: var(--intra-contra-short); }
+
+.intra-slice-label {
+  fill: var(--intra-slice-label);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.intra-details {
+  flex: 1 1 280px;
+  min-width: 240px;
+}
+
+.intra-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--intra-sep);
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+.intra-row--sep {
+  margin-top: 4px;
+}
+
+.intra-row-label {
+  color: var(--intra-text);
+}
+
+.intra-row-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--intra-dim);
+  text-align: right;
+}
+
+.intra-row-value b {
+  color: var(--intra-value);
+  font-weight: 700;
+}
+
+.intra-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 50%;
+}
+
+.intra-dot--retail-long { background: var(--intra-retail-long); }
+.intra-dot--retail-short { background: var(--intra-retail-short); }
+.intra-dot--contra-long { background: var(--intra-contra-long); }
+.intra-dot--contra-short { background: var(--intra-contra-short); }
+
+.intra-bias {
+  margin: 10px 0 0;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--intra-value);
+}
+
+.intra-note {
+  margin: 8px 0 0;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--intra-dim);
+}
+
+.intra-pairs {
+  margin-top: 10px;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--intra-text);
+}
+
+.intra-pairs summary {
+  cursor: pointer;
+  color: var(--intra-link);
+}
+
+.intra-pair-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.intra-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--intra-sep);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.intra-pair-name {
+  min-width: 56px;
+  font-weight: 700;
+  color: var(--intra-value);
+}
+
+.intra-pair-val,
+.intra-pair-src {
+  color: var(--intra-dim);
 }

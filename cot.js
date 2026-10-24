@@ -41,7 +41,7 @@
     const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number);
     return new Date(y, (m || 1) - 1, d || 1, 12, 0, 0);
   }
-  const fmtLong = (d) => d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+  const fmtDate = (d) => d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const fmtShortDay = (d) => d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: '2-digit' });
   const fmtTime = (ms) => new Date(ms).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
@@ -155,7 +155,7 @@
       <div class="cot-card">
         <div class="cot-card-head">
           <h3 class="cot-card-title">COT Retail</h3>
-          <span class="cot-card-sub">Petits traders (positions « non déclarables ») · ${esc(c.contract_name)}</span>
+          <span class="cot-card-sub">Petits traders (positions « non déclarables ») · hebdomadaire · ${esc(c.contract_name)}</span>
         </div>
         <div class="cot-body">
           <div class="cot-pie-wrap">${pieSvg(cur.long, cur.short, 'retail', labels)}</div>
@@ -185,7 +185,7 @@
       <div class="cot-card">
         <div class="cot-card-head">
           <h3 class="cot-card-title">COT Institutionnels</h3>
-          <span class="cot-card-sub">Gestionnaires d'actifs + fonds à effet de levier · ${esc(c.contract_name)}</span>
+          <span class="cot-card-sub">Gestionnaires d'actifs + fonds à effet de levier · hebdomadaire · ${esc(c.contract_name)}</span>
         </div>
         <div class="cot-body">
           <div class="cot-pie-wrap">${pieSvg(cur.long, cur.short, 'inst', labels)}</div>
@@ -250,7 +250,7 @@
     const nxt = nextRelease(c.report_date);
     const waiting = Date.now() > nxt.at + 2 * 3600 * 1000;
     const info = [
-      `données du ${esc(fmtLong(rep))}`,
+      `Dernière mise à jour : le ${esc(fmtDate(rep))}`,
       `prochain rapport : ${esc(fmtShortDay(nxt.day))} vers ${esc(fmtTime(nxt.at))}${waiting ? ' (en attente de la CFTC)' : ''}`,
       `<span class="cot-checked">${esc(checkedTxt)}</span>`,
     ].filter(Boolean).join(' · ');
